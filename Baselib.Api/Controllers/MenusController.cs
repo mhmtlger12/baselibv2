@@ -8,7 +8,7 @@ using Baselib.Core.Results;
 namespace Baselib.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 [Authorize(Policy = "DynamicPermission")]
 public class MenusController : ControllerBase
 {
@@ -26,14 +26,14 @@ public class MenusController : ControllerBase
         return Ok(DataResult<IEnumerable<MenuDto>>.SuccessDataResult(menus));
     }
 
-    [HttpGet("user/{userId}")]
+    [HttpGet("user/{userId:int}")]
     public async Task<IActionResult> GetByUser(int userId)
     {
         var menus = await _menuService.GetMenusByUserIdAsync(userId);
         return Ok(DataResult<IEnumerable<MenuDto>>.SuccessDataResult(menus));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
         var menu = await _menuService.GetByIdAsync(id);
@@ -50,14 +50,14 @@ public class MenusController : ControllerBase
             DataResult<MenuDto>.SuccessDataResult(menu, Messages.General.Saved));
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMenuDto dto)
     {
         await _menuService.UpdateAsync(id, dto);
         return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _menuService.DeleteAsync(id);

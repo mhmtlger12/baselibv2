@@ -8,7 +8,7 @@ using Baselib.Core.Results;
 namespace Baselib.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 [Authorize(Policy = "DynamicPermission")]
 public class DepartmentsController : ControllerBase
 {
@@ -33,7 +33,7 @@ public class DepartmentsController : ControllerBase
         return Ok(DataResult<IEnumerable<DepartmentDto>>.SuccessDataResult(departments));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
         var department = await _departmentService.GetByIdAsync(id);
@@ -50,14 +50,14 @@ public class DepartmentsController : ControllerBase
             DataResult<DepartmentDto>.SuccessDataResult(department, Messages.General.Saved));
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentDto dto)
     {
         await _departmentService.UpdateAsync(id, dto);
         return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _departmentService.DeleteAsync(id);

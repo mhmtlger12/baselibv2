@@ -7,10 +7,12 @@ public class UserDto
     public string Email { get; set; } = string.Empty;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string FullName => $"{FirstName} {LastName}".Trim();
     public string? Phone { get; set; }
     public int? DepartmentId { get; set; }
     public string? DepartmentName { get; set; }
     public List<string> Roles { get; set; } = new();
+    public List<int> RoleIds { get; set; } = new();
     public bool IsActive { get; set; }
     public DateTime CreatedDate { get; set; }
 }
@@ -29,10 +31,14 @@ public class CreateUserDto
 
 public class UpdateUserDto
 {
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Password { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Phone { get; set; }
     public int? DepartmentId { get; set; }
+    public List<int> RoleIds { get; set; } = new();
     public bool IsActive { get; set; }
 }
 
@@ -48,4 +54,9 @@ public class AuthResultDto
     public string RefreshToken { get; set; } = string.Empty;
     public DateTime ExpiryDate { get; set; }
     public UserDto User { get; set; } = null!;
+}
+
+public class RefreshTokenRequestDto
+{
+    public string RefreshToken { get; set; } = string.Empty;
 }

@@ -1,29 +1,29 @@
-// Roles Page JavaScript
 let roles = [];
-let permissions = [];
-let rolePermissions = {};
+let basePermissionGroups = [];
+let activePermissionGroups = [];
 let modal;
 
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async () => {
     modal = new bootstrap.Modal(document.getElementById('roleModal'));
+    document.getElementById('openRoleModal')?.addEventListener('click', openModal);
+    document.getElementById('saveRoleButton')?.addEventListener('click', saveRole);
+    document.querySelector('#roleTable tbody')?.addEventListener('click', handleTableAction);
     await loadData();
 });
 
 async function loadData() {
     try {
         showLoading();
-        const [rolesRes, permsRes] = await Promise.all([
+        const [rolesRes, permissionGroupsRes] = await Promise.all([
             api.get('/api/roles'),
-            api.get('/api/permissions')
+            api.get('/api/permissions/grouped')
         ]);
-        
+
         roles = rolesRes || [];
-        permissions = permsRes || [];
-        
+        basePermissionGroups = permissionGroupsRes || [];
         renderTable();
-        renderPermissionGroups();
-    } catch (e) {
-        showToast('Veriler yüklenirken hata oluştu', 'error');
+    } catch (error) {
+        showToast(error.message || 'Veriler yüklenirken hata oluştu', 'error');
     } finally {
         hideLoading();
     }
@@ -32,22 +32,22 @@ async function loadData() {
 function renderTable() {
     const tbody = document.querySelector('#roleTable tbody');
     if (!tbody) return;
-    
-    tbody.innerHTML = roles.map(r => `
+
+    tbody.innerHTML = roles.map(role => `
         <tr>
-            <td>${escapeHtml(r.name)}</td>
-            <td>${escapeHtml(r.description || '-')}</td>
+            <td>${escapeHtml(role.name)}</td>
+            <td>${escapeHtml(role.description || '-')}</td>
             <td>
-                <span class="badge ${r.isActive ? 'bg-success' : 'bg-secondary'}">
-                    ${r.isActive ? 'Aktif' : 'Pasif'}
+                <span class="badge ${role.isActive ? 'bg-success' : 'bg-secondary'}">
+                    ${role.isActive ? 'Aktif' : 'Pasif'}
                 </span>
             </td>
-            <td>${r.permissionCount || 0}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editRole(${r.id})" title="Düzenle">
+            <td>${role.permissionCount ?? role.permissions?.length ?? 0}</td>
+            <td class="table-actions">
+                <button class="btn btn-sm btn-outline-primary" type="button" data-action="edit" data-id="${role.id}" title="Düzenle">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteRole(${r.id})" title="Sil">
+                <button class="btn btn-sm btn-outline-danger" type="button" data-action="delete" data-id="${role.id}" title="Sil">
                     <i class="bi bi-trash"></i>
                 </button>
             </td>
@@ -55,51 +55,90 @@ function renderTable() {
     `).join('');
 }
 
+async function handleTableAction(event) {
+    const button = event.target.closest('[data-action]');
+    if (!button) return;
+
+    const id = Number.parseInt(button.dataset.id, 10);
+    if (button.dataset.action === 'edit') {
+        await editRole(id);
+        return;
+    }
+
+    if (button.dataset.action === 'delete')
+        await deleteRole(id);
+}
+
 function renderPermissionGroups() {
     const container = document.getElementById('permissionsList');
     if (!container) return;
-    
-    const grouped = {};
-    permissions.forEach(p => {
-        const ctrl = p.controllerName || 'Diğer';
-        if (!grouped[ctrl]) grouped[ctrl] = [];
-        grouped[ctrl].push(p);
+
+    if (!activePermissionGroups.length) {
+        container.innerHTML = '<p class="text-muted mb-0">Tanımlı izin bulunamadı.</p>';
+        return;
+    }
+
+    const middleIndex = Math.ceil(activePermissionGroups.length / 2);
+    const columns = [
+        activePermissionGroups.slice(0, middleIndex),
+        activePermissionGroups.slice(middleIndex)
+    ];
+
+    container.innerHTML = `
+        <div class="role-permission-grid">
+            ${columns.map(groups => `<div class="role-permission-column">${groups.map(renderPermissionGroup).join('')}</div>`).join('')}
+        </div>
+    `;
+
+    container.querySelectorAll('.controller-check').forEach(input => {
+        input.addEventListener('change', event => {
+            setControllerChecked(event.target.dataset.controller, event.target.checked);
+        });
     });
 
-    const controllers = Object.keys(grouped).sort();
-    container.innerHTML = controllers.map(ctrl => `
-        <div class="permission-group">
-            <div class="group-header">
-                <span>${ctrl}</span>
-                <div class="group-actions">
-                    <input type="checkbox" class="select-all" onchange="toggleGroup('${ctrl}', this.checked)">
-                    <label>Tümü</label>
-                </div>
-            </div>
-            <div class="group-items">
-                ${grouped[ctrl].map(p => `
-                    <div class="permission-item">
-                        <input type="checkbox" class="perm-check" 
-                               data-controller="${ctrl}" 
-                               data-id="${p.id}" 
-                               data-crud="${p.cRUDValue || p.crudValue || 0}"
-                               ${isPermissionSelected(ctrl, p.id) ? 'checked' : ''}>
-                        <label>${escapeHtml(p.actionName || p.name)}</label>
-                        <div class="crud-flags">
-                            ${(p.cRUDValue || p.crudValue || 0) & 1 ? '<span class="crud-flag crud-c">C</span>' : ''}
-                            ${(p.cRUDValue || p.crudValue || 0) & 2 ? '<span class="crud-flag crud-r">R</span>' : ''}
-                            ${(p.cRUDValue || p.crudValue || 0) & 4 ? '<span class="crud-flag crud-u">U</span>' : ''}
-                            ${(p.cRUDValue || p.crudValue || 0) & 8 ? '<span class="crud-flag crud-d">D</span>' : ''}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `).join('');
+    container.querySelectorAll('.perm-check').forEach(input => {
+        input.addEventListener('change', event => {
+            setPermissionChecked(Number.parseInt(event.target.value, 10), event.target.checked);
+        });
+    });
+
+    refreshControllerStates();
 }
 
-function isPermissionSelected(controller, permId) {
-    return rolePermissions[controller]?.includes(permId);
+function renderPermissionGroup(group) {
+    const controllerKey = escapeAttribute(group.controllerName);
+
+    return `
+        <section class="role-permission-card">
+            <div class="role-permission-header">
+                <label class="form-check">
+                    <input class="form-check-input controller-check"
+                           type="checkbox"
+                           data-controller="${controllerKey}">
+                    <span class="form-check-label">${escapeHtml(group.controllerName)}</span>
+                </label>
+            </div>
+            <div class="role-permission-actions">
+                ${group.controllerCrudList.map(permission => renderPermissionAction(group.controllerName, permission)).join('')}
+            </div>
+        </section>
+    `;
+}
+
+function renderPermissionAction(controllerName, permission) {
+    const label = permission.name || permission.actionName || permission.code || permission.crudActionType;
+    const title = [permission.actionName, permission.code].filter(Boolean).join(' - ');
+
+    return `
+        <label class="role-permission-action" title="${escapeAttribute(title)}">
+            <input class="form-check-input perm-check"
+                   type="checkbox"
+                   data-controller="${escapeAttribute(controllerName)}"
+                   value="${permission.permissionId}"
+                   ${permission.checked ? 'checked' : ''}>
+            <span>${escapeHtml(label)}</span>
+        </label>
+    `;
 }
 
 function openModal() {
@@ -108,63 +147,90 @@ function openModal() {
     document.getElementById('name').value = '';
     document.getElementById('description').value = '';
     document.getElementById('isActive').checked = true;
-    rolePermissions = {};
+
+    activePermissionGroups = cloneGroups(basePermissionGroups);
     renderPermissionGroups();
     modal.show();
 }
 
-function editRole(id) {
-    const role = roles.find(r => r.id === id);
+async function editRole(id) {
+    const role = roles.find(item => item.id === id);
     if (!role) return;
 
-    document.getElementById('modalTitle').textContent = 'Rol Düzenle';
-    document.getElementById('roleId').value = role.id;
-    document.getElementById('name').value = role.name || '';
-    document.getElementById('description').value = role.description || '';
-    document.getElementById('isActive').checked = role.isActive ?? true;
-    
-    // Load role permissions
-    rolePermissions = role.permissions || {};
-    renderPermissionGroups();
-    
-    modal.show();
+    try {
+        showLoading();
+        const groups = await api.get(`/api/roles/${id}/permissions`);
+
+        document.getElementById('modalTitle').textContent = 'Rol Düzenle';
+        document.getElementById('roleId').value = role.id;
+        document.getElementById('name').value = role.name || '';
+        document.getElementById('description').value = role.description || '';
+        document.getElementById('isActive').checked = role.isActive ?? true;
+
+        activePermissionGroups = cloneGroups(groups || []);
+        renderPermissionGroups();
+        modal.show();
+    } catch (error) {
+        showToast(error.message || 'Rol izinleri yüklenemedi', 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
-function toggleGroup(controller, checked) {
-    document.querySelectorAll(`.perm-check[data-controller="${controller}"]`).forEach(cb => {
-        cb.checked = checked;
-    });
-}
-
-function collectPermissions() {
-    const perms = {};
-    document.querySelectorAll('.permission-group').forEach(group => {
-        const controller = group.querySelector('.perm-check')?.dataset.controller;
-        if (!controller) return;
-        
-        const selectedIds = [];
-        let crudValue = 0;
-        
-        group.querySelectorAll('.perm-check:checked').forEach(cb => {
-            selectedIds.push(parseInt(cb.dataset.id));
-            crudValue |= parseInt(cb.dataset.crud || 0);
+function setControllerChecked(controllerName, checked) {
+    activePermissionGroups
+        .filter(group => group.controllerName === controllerName)
+        .forEach(group => {
+            group.checked = checked;
+            group.indeterminate = false;
+            group.controllerCrudList.forEach(permission => {
+                permission.checked = checked;
+            });
         });
-        
-        if (selectedIds.length > 0) {
-            perms[controller] = { ids: selectedIds, crud: crudValue };
-        }
+
+    renderPermissionGroups();
+}
+
+function setPermissionChecked(permissionId, checked) {
+    for (const group of activePermissionGroups) {
+        const permission = group.controllerCrudList.find(item => item.permissionId === permissionId);
+        if (!permission) continue;
+
+        permission.checked = checked;
+        const checkedCount = group.controllerCrudList.filter(item => item.checked).length;
+        group.checked = checkedCount > 0;
+        group.indeterminate = checkedCount > 0 && checkedCount < group.controllerCrudList.length;
+        break;
+    }
+
+    refreshControllerStates();
+}
+
+function refreshControllerStates() {
+    document.querySelectorAll('.controller-check').forEach(input => {
+        const group = activePermissionGroups.find(item => item.controllerName === input.dataset.controller);
+        if (!group) return;
+
+        const checkedCount = group.controllerCrudList.filter(item => item.checked).length;
+        input.checked = checkedCount > 0;
+        input.indeterminate = checkedCount > 0 && checkedCount < group.controllerCrudList.length;
     });
-    return perms;
+}
+
+function collectPermissionIds() {
+    return activePermissionGroups
+        .flatMap(group => group.controllerCrudList)
+        .filter(permission => permission.checked && permission.permissionId > 0)
+        .map(permission => permission.permissionId);
 }
 
 async function saveRole() {
     const id = document.getElementById('roleId').value;
     const data = {
-        id: id ? parseInt(id) : 0,
-        name: document.getElementById('name').value,
-        description: document.getElementById('description').value,
+        name: document.getElementById('name').value.trim(),
+        description: document.getElementById('description').value.trim(),
         isActive: document.getElementById('isActive').checked,
-        permissions: collectPermissions()
+        permissionIds: collectPermissionIds()
     };
 
     if (!data.name) {
@@ -179,11 +245,12 @@ async function saveRole() {
         } else {
             await api.post('/api/roles', data);
         }
+
         modal.hide();
         await loadData();
         showToast('Rol kaydedildi');
-    } catch (e) {
-        showToast('Kayıt başarısız', 'error');
+    } catch (error) {
+        showToast(error.message || 'Kayıt başarısız', 'error');
     } finally {
         hideLoading();
     }
@@ -191,28 +258,23 @@ async function saveRole() {
 
 async function deleteRole(id) {
     if (!confirmDelete()) return;
-    
+
     try {
         showLoading();
         await api.delete(`/api/roles/${id}`);
         await loadData();
         showToast('Rol silindi');
-    } catch (e) {
-        showToast('Silme başarısız', 'error');
+    } catch (error) {
+        showToast(error.message || 'Silme başarısız', 'error');
     } finally {
         hideLoading();
     }
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function cloneGroups(groups) {
+    return JSON.parse(JSON.stringify(groups || []));
 }
 
-window.openModal = openModal;
-window.editRole = editRole;
-window.saveRole = saveRole;
-window.deleteRole = deleteRole;
-window.toggleGroup = toggleGroup;
+function escapeAttribute(value) {
+    return escapeHtml(value).replaceAll('"', '&quot;');
+}

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Baselib.Data;
-using Baselib.Entities;
 
 namespace Baselib.Api.Attributes;
 
@@ -28,10 +28,11 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         }
 
         var routeData = httpContext.Request.RouteValues;
-        var controller = routeData["controller"]?.ToString();
-        var action = routeData["action"]?.ToString();
+        var actionDescriptor = httpContext.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
+        var controller = routeData["controller"]?.ToString() ?? actionDescriptor?.ControllerName;
+        var action = routeData["action"]?.ToString() ?? actionDescriptor?.ActionName;
 
-        if (string.IsNullOrEmpty(controller) || string.IsNullOrEmpty(action))
+        if (string.IsNullOrWhiteSpace(controller) || string.IsNullOrWhiteSpace(action))
         {
             context.Succeed(requirement);
             return;
@@ -39,7 +40,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
-        if (string.IsNullOrEmpty(userIdClaim))
+        if (!int.TryParse(userIdClaim, out var userId))
         {
             context.Fail();
             return;
@@ -49,7 +50,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var userRoleIds = await dbContext.UserRoles
-            .Where(ur => ur.UserId == int.Parse(userIdClaim))
+            .Where(ur => ur.UserId == userId)
             .Select(ur => ur.RoleId)
             .ToListAsync();
 
@@ -59,13 +60,15 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
             return;
         }
 
-        var permission = await dbContext.Permissions
-            .FirstOrDefaultAsync(p =>
+        var permissionIds = await dbContext.Permissions
+            .Where(p =>
                 p.ControllerName.ToUpper() == controller.ToUpper() &&
                 p.ActionName.ToUpper() == action.ToUpper() &&
-                p.IsActive);
+                p.IsActive)
+            .Select(p => p.Id)
+            .ToListAsync();
 
-        if (permission == null)
+        if (!permissionIds.Any())
         {
             context.Succeed(requirement);
             return;
@@ -74,7 +77,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         var hasAccess = await dbContext.RolePermissions
             .AnyAsync(rp =>
                 userRoleIds.Contains(rp.RoleId) &&
-                rp.PermissionId == permission.Id);
+                permissionIds.Contains(rp.PermissionId));
 
         if (hasAccess)
         {

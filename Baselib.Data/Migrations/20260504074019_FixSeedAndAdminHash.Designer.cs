@@ -4,6 +4,7 @@ using Baselib.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Baselib.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260504074019_FixSeedAndAdminHash")]
+    partial class FixSeedAndAdminHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -269,7 +272,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 1,
                             ActionName = "List",
-                            CRUDActionType = 1,
+                            CRUDActionType = 2,
                             Code = "Users_Read",
                             ControllerName = "Users",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -281,7 +284,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 2,
                             ActionName = "Add",
-                            CRUDActionType = 2,
+                            CRUDActionType = 1,
                             Code = "Users_Create",
                             ControllerName = "Users",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -293,7 +296,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 3,
                             ActionName = "Update",
-                            CRUDActionType = 3,
+                            CRUDActionType = 4,
                             Code = "Users_Update",
                             ControllerName = "Users",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -305,7 +308,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 4,
                             ActionName = "Delete",
-                            CRUDActionType = 6,
+                            CRUDActionType = 8,
                             Code = "Users_Delete",
                             ControllerName = "Users",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -317,7 +320,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 5,
                             ActionName = "List",
-                            CRUDActionType = 1,
+                            CRUDActionType = 2,
                             Code = "Roles_Read",
                             ControllerName = "Roles",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -329,7 +332,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 6,
                             ActionName = "Add",
-                            CRUDActionType = 2,
+                            CRUDActionType = 1,
                             Code = "Roles_Create",
                             ControllerName = "Roles",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -341,7 +344,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 7,
                             ActionName = "Update",
-                            CRUDActionType = 3,
+                            CRUDActionType = 4,
                             Code = "Roles_Update",
                             ControllerName = "Roles",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -353,7 +356,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 8,
                             ActionName = "Delete",
-                            CRUDActionType = 6,
+                            CRUDActionType = 8,
                             Code = "Roles_Delete",
                             ControllerName = "Roles",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -365,7 +368,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 9,
                             ActionName = "List",
-                            CRUDActionType = 1,
+                            CRUDActionType = 2,
                             Code = "Permissions_Read",
                             ControllerName = "Permissions",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -377,7 +380,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 10,
                             ActionName = "Add",
-                            CRUDActionType = 2,
+                            CRUDActionType = 1,
                             Code = "Permissions_Create",
                             ControllerName = "Permissions",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -389,7 +392,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 11,
                             ActionName = "Update",
-                            CRUDActionType = 3,
+                            CRUDActionType = 4,
                             Code = "Permissions_Update",
                             ControllerName = "Permissions",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -401,7 +404,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 12,
                             ActionName = "Delete",
-                            CRUDActionType = 6,
+                            CRUDActionType = 8,
                             Code = "Permissions_Delete",
                             ControllerName = "Permissions",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -413,7 +416,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 13,
                             ActionName = "List",
-                            CRUDActionType = 1,
+                            CRUDActionType = 2,
                             Code = "Departments_Read",
                             ControllerName = "Departments",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -425,7 +428,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 14,
                             ActionName = "Add",
-                            CRUDActionType = 2,
+                            CRUDActionType = 1,
                             Code = "Departments_Create",
                             ControllerName = "Departments",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -437,7 +440,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 15,
                             ActionName = "Update",
-                            CRUDActionType = 3,
+                            CRUDActionType = 4,
                             Code = "Departments_Update",
                             ControllerName = "Departments",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -449,7 +452,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 16,
                             ActionName = "Delete",
-                            CRUDActionType = 6,
+                            CRUDActionType = 8,
                             Code = "Departments_Delete",
                             ControllerName = "Departments",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -461,7 +464,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 17,
                             ActionName = "List",
-                            CRUDActionType = 1,
+                            CRUDActionType = 2,
                             Code = "Menus_Read",
                             ControllerName = "Menus",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -473,7 +476,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 18,
                             ActionName = "Add",
-                            CRUDActionType = 2,
+                            CRUDActionType = 1,
                             Code = "Menus_Create",
                             ControllerName = "Menus",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -485,7 +488,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 19,
                             ActionName = "Update",
-                            CRUDActionType = 3,
+                            CRUDActionType = 4,
                             Code = "Menus_Update",
                             ControllerName = "Menus",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -497,7 +500,7 @@ namespace Baselib.Data.Migrations
                         {
                             Id = 20,
                             ActionName = "Delete",
-                            CRUDActionType = 6,
+                            CRUDActionType = 8,
                             Code = "Menus_Delete",
                             ControllerName = "Menus",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),

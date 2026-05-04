@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Baselib.Presentation.Models;
@@ -58,14 +59,48 @@ public class ApiService
     private async Task<T?> ReadResponseAsync<T>(HttpResponseMessage response)
     {
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<ApiResponse<T>>(content, new JsonSerializerOptions
+
+        if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
-            PropertyNameCaseInsensitive = true
-        });
+            ClearAuthCookies();
+            throw new UnauthorizedAccessException("Oturum süresi doldu veya bu işlem için yetkiniz yok.");
+        }
+
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            if (response.IsSuccessStatusCode)
+                return default;
+
+            throw new HttpRequestException($"API isteği başarısız: {(int)response.StatusCode} {response.ReasonPhrase}");
+        }
+
+        ApiResponse<T>? result;
+        try
+        {
+            result = JsonSerializer.Deserialize<ApiResponse<T>>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("API beklenen JSON formatında cevap dönmedi.", ex);
+        }
         
         if (result == null)
             return default;
+
+        if (!response.IsSuccessStatusCode || !result.Success)
+            throw new InvalidOperationException(result.Message);
         
         return result.Data;
+    }
+
+    private void ClearAuthCookies()
+    {
+        var response = _httpContextAccessor.HttpContext?.Response;
+        response?.Cookies.Delete("AccessToken");
+        response?.Cookies.Delete("RefreshToken");
+        response?.Cookies.Delete("UserData");
     }
 }

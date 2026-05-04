@@ -1,26 +1,38 @@
-using Microsoft.EntityFrameworkCore;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Data;
+using Baselib.Core.Interfaces;
+using Baselib.Data.Interfaces;
 using Baselib.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Baselib.Business.Services;
 
 public class RoleService : IRoleService
 {
-    private readonly AppDbContext _context;
+    private readonly IRepository<Role> _roles;
+    private readonly IRepository<Permission> _permissions;
+    private readonly IRepository<RolePermission> _rolePermissions;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public RoleService(AppDbContext context)
+    public RoleService(
+        IRepository<Role> roles,
+        IRepository<Permission> permissions,
+        IRepository<RolePermission> rolePermissions,
+        IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _roles = roles;
+        _permissions = permissions;
+        _rolePermissions = rolePermissions;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<RoleDto>> GetAllAsync()
     {
-        var roles = await _context.Roles
+        var roles = await _roles.Query()
             .Include(r => r.RolePermissions)
                 .ThenInclude(rp => rp.Permission)
             .Where(r => r.IsActive)
+            .OrderBy(r => r.Name)
             .ToListAsync();
 
         return roles.Select(MapToDto);
@@ -28,7 +40,7 @@ public class RoleService : IRoleService
 
     public async Task<RoleDto?> GetByIdAsync(int id)
     {
-        var role = await _context.Roles
+        var role = await _roles.Query()
             .Include(r => r.RolePermissions)
                 .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(r => r.Id == id);
@@ -38,174 +50,195 @@ public class RoleService : IRoleService
 
     public async Task<RoleDto> CreateAsync(CreateRoleDto dto)
     {
-        if (await _context.Roles.AnyAsync(r => r.Name == dto.Name))
+        if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim()))
             throw new InvalidOperationException("Role name already exists");
 
         var role = new Role
         {
-            Name = dto.Name,
-            Description = dto.Description,
+            Name = dto.Name.Trim(),
+            Description = dto.Description?.Trim(),
             CreatedDate = DateTime.Now,
             IsActive = true
         };
 
-        _context.Roles.Add(role);
-        await _context.SaveChangesAsync();
+        await _roles.AddAsync(role);
+        await _unitOfWork.SaveChangesAsync();
 
-        if (dto.PermissionIds.Any())
-        {
-            foreach (var permissionId in dto.PermissionIds)
-            {
-                _context.RolePermissions.Add(new RolePermission
-                {
-                    RoleId = role.Id,
-                    PermissionId = permissionId
-                });
-            }
-            await _context.SaveChangesAsync();
-        }
+        await ReplaceRolePermissionsAsync(role.Id, dto.PermissionIds);
+        await _unitOfWork.SaveChangesAsync();
 
         return (await GetByIdAsync(role.Id))!;
     }
 
     public async Task UpdateAsync(int id, UpdateRoleDto dto)
     {
-        var role = await _context.Roles.FindAsync(id);
-        if (role == null) throw new KeyNotFoundException("Role not found");
+        var role = await _roles.GetByIdAsync(id);
+        if (role == null)
+            throw new KeyNotFoundException("Role not found");
 
-        if (await _context.Roles.AnyAsync(r => r.Name == dto.Name && r.Id != id))
+        if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim() && r.Id != id))
             throw new InvalidOperationException("Role name already exists");
 
-        role.Name = dto.Name;
-        role.Description = dto.Description;
+        role.Name = dto.Name.Trim();
+        role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
         role.UpdatedDate = DateTime.Now;
 
-        await _context.SaveChangesAsync();
+        await _roles.UpdateAsync(role);
+        await ReplaceRolePermissionsAsync(id, dto.PermissionIds);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var role = await _context.Roles.FindAsync(id);
-        if (role == null) throw new KeyNotFoundException("Role not found");
+        var role = await _roles.GetByIdAsync(id);
+        if (role == null)
+            throw new KeyNotFoundException("Role not found");
 
         role.IsActive = false;
         role.UpdatedDate = DateTime.Now;
-        await _context.SaveChangesAsync();
+        await _roles.UpdateAsync(role);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task AssignPermissionsAsync(int roleId, List<int> permissionIds)
     {
-        var role = await _context.Roles.FindAsync(roleId);
-        if (role == null) throw new KeyNotFoundException("Role not found");
+        if (!await _roles.AnyAsync(r => r.Id == roleId))
+            throw new KeyNotFoundException("Role not found");
 
-        var existingPermissions = _context.RolePermissions.Where(rp => rp.RoleId == roleId);
-        _context.RolePermissions.RemoveRange(existingPermissions);
-
-        foreach (var permissionId in permissionIds)
-        {
-            _context.RolePermissions.Add(new RolePermission
-            {
-                RoleId = roleId,
-                PermissionId = permissionId
-            });
-        }
-        await _context.SaveChangesAsync();
+        await ReplaceRolePermissionsAsync(roleId, permissionIds);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<PermissionGroupDto>> GetPermissionsByRoleIdAsync(int roleId)
     {
-        var allPermissions = await _context.Permissions
+        var allPermissions = await _permissions.Query()
             .Where(p => p.IsActive)
+            .OrderBy(p => p.ControllerName)
+            .ThenBy(p => p.CRUDActionType)
             .ToListAsync();
 
-        var rolePermissionIds = await _context.RolePermissions
+        var rolePermissionIds = await _rolePermissions.Query()
             .Where(rp => rp.RoleId == roleId)
             .Select(rp => rp.PermissionId)
             .ToListAsync();
 
-        var controllerNames = allPermissions
-            .Select(p => p.ControllerName)
-            .Distinct()
-            .OrderBy(c => c)
-            .ToList();
-
-        var result = new List<PermissionGroupDto>();
-
-        foreach (var controller in controllerNames)
-        {
-            var controllerPermissions = allPermissions
-                .Where(p => p.ControllerName == controller)
-                .ToList();
-
-            var group = new PermissionGroupDto
-            {
-                ControllerName = controller,
-                ControllerCrudList = new List<ControllerCrudDto>()
-            };
-
-            var crudTypes = new[] { CRUDActionTypes.Create, CRUDActionTypes.Read, CRUDActionTypes.Update, CRUDActionTypes.Delete };
-
-            foreach (var crud in crudTypes)
-            {
-                var permission = controllerPermissions.FirstOrDefault(p => p.CRUDActionType == crud);
-                var isChecked = permission != null && rolePermissionIds.Contains(permission.Id);
-
-                group.ControllerCrudList.Add(new ControllerCrudDto
-                {
-                    CRUDActionType = crud,
-                    Name = CRUDActionTypes.GetName(crud),
-                    Checked = isChecked
-                });
-            }
-
-            group.Checked = group.ControllerCrudList.All(c => c.Checked);
-            group.Indeterminate = group.ControllerCrudList.Any(c => c.Checked) && !group.Checked;
-
-            result.Add(group);
-        }
-
-        return result;
+        return BuildPermissionGroups(allPermissions, rolePermissionIds);
     }
 
     public async Task UpdateWithPermissionsAsync(int id, UpdateRoleDto dto, List<PermissionGroupDto> permissionGroups)
     {
-        var role = await _context.Roles.FindAsync(id);
-        if (role == null) throw new KeyNotFoundException("Role not found");
+        var role = await _roles.GetByIdAsync(id);
+        if (role == null)
+            throw new KeyNotFoundException("Role not found");
 
-        if (await _context.Roles.AnyAsync(r => r.Name == dto.Name && r.Id != id))
+        if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim() && r.Id != id))
             throw new InvalidOperationException("Role name already exists");
 
-        role.Name = dto.Name;
-        role.Description = dto.Description;
+        role.Name = dto.Name.Trim();
+        role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
         role.UpdatedDate = DateTime.Now;
 
-        var existingPermissions = _context.RolePermissions.Where(rp => rp.RoleId == id);
-        _context.RolePermissions.RemoveRange(existingPermissions);
+        await _roles.UpdateAsync(role);
+
+        var permissionIds = await ResolvePermissionIdsAsync(permissionGroups);
+        await ReplaceRolePermissionsAsync(id, permissionIds);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    private async Task ReplaceRolePermissionsAsync(int roleId, IEnumerable<int> permissionIds)
+    {
+        var existingPermissions = await _rolePermissions.Query()
+            .Where(rp => rp.RoleId == roleId)
+            .ToListAsync();
+
+        _rolePermissions.RemoveRange(existingPermissions);
+
+        var newPermissions = permissionIds
+            .Distinct()
+            .Select(permissionId => new RolePermission
+            {
+                RoleId = roleId,
+                PermissionId = permissionId
+            })
+            .ToList();
+
+        if (newPermissions.Count > 0)
+            await _rolePermissions.AddRangeAsync(newPermissions);
+    }
+
+    private async Task<List<int>> ResolvePermissionIdsAsync(List<PermissionGroupDto> permissionGroups)
+    {
+        var selected = permissionGroups
+            .SelectMany(group => group.ControllerCrudList)
+            .Where(crud => crud.Checked && crud.PermissionId > 0)
+            .Select(crud => crud.PermissionId)
+            .Distinct()
+            .ToList();
+
+        if (selected.Any())
+            return selected;
 
         foreach (var group in permissionGroups.Where(p => p.Checked || p.ControllerCrudList.Any(c => c.Checked)))
         {
-            foreach (var crud in group.ControllerCrudList.Where(c => c.Checked))
-            {
-                var permission = await _context.Permissions
-                    .FirstOrDefaultAsync(p =>
-                        p.ControllerName == group.ControllerName &&
-                        p.CRUDActionType == crud.CRUDActionType &&
-                        p.IsActive);
+            var crudTypes = group.ControllerCrudList
+                .Where(c => c.Checked)
+                .Select(c => c.CRUDActionType)
+                .ToList();
 
-                if (permission != null)
-                {
-                    _context.RolePermissions.Add(new RolePermission
-                    {
-                        RoleId = id,
-                        PermissionId = permission.Id
-                    });
-                }
-            }
+            var permissionIds = await _permissions.Query()
+                .Where(p => p.ControllerName == group.ControllerName && crudTypes.Contains(p.CRUDActionType) && p.IsActive)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            selected.AddRange(permissionIds);
         }
 
-        await _context.SaveChangesAsync();
+        return selected.Distinct().ToList();
+    }
+
+    private static List<PermissionGroupDto> BuildPermissionGroups(IEnumerable<Permission> permissions, IReadOnlyCollection<int> selectedIds)
+    {
+        return permissions
+            .GroupBy(p => p.ControllerName)
+            .OrderBy(g => g.Key)
+            .Select(group =>
+            {
+                var items = group
+                    .OrderBy(p => p.CRUDActionType)
+                    .ThenBy(p => p.ActionName)
+                    .Select(permission =>
+                    {
+                        return new ControllerCrudDto
+                        {
+                            PermissionId = permission.Id,
+                            CRUDActionType = permission.CRUDActionType,
+                            Name = GetPermissionActionName(permission),
+                            ActionName = permission.ActionName,
+                            Code = permission.Code,
+                            Checked = selectedIds.Contains(permission.Id)
+                        };
+                    })
+                    .ToList();
+
+                return new PermissionGroupDto
+                {
+                    ControllerName = group.Key,
+                    ControllerCrudList = items,
+                    Checked = items.All(c => c.Checked),
+                    Indeterminate = items.Any(c => c.Checked) && !items.All(c => c.Checked)
+                };
+            })
+            .ToList();
+    }
+
+    private static string GetPermissionActionName(Permission permission)
+    {
+        var crudName = CRUDActionTypes.GetName(permission.CRUDActionType);
+        return crudName == permission.CRUDActionType.ToString()
+            ? permission.ActionName
+            : crudName;
     }
 
     private static RoleDto MapToDto(Role role)

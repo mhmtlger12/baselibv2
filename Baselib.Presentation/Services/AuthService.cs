@@ -20,7 +20,7 @@ public class AuthService
 
     public async Task<AuthResultDto?> LoginAsync(string username, string password)
     {
-        var response = await _httpClient.PostAsJsonAsync("/api/Auth/Login", new { username, password });
+        var response = await _httpClient.PostAsJsonAsync("/api/auth/login", new { username, password });
 
         if (response.IsSuccessStatusCode)
         {
@@ -33,14 +33,14 @@ public class AuthService
                 _httpContextAccessor.HttpContext?.Response.Cookies.Append(TokenCookieName, token, new CookieOptions
                 {
                     HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
+                    SameSite = SameSiteMode.Lax,
                     Expires = DateTimeOffset.Now.AddMinutes(15)
                 });
 
                 _httpContextAccessor.HttpContext?.Response.Cookies.Append(RefreshTokenCookieName, result.Data.RefreshToken ?? "", new CookieOptions
                 {
                     HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
+                    SameSite = SameSiteMode.Lax,
                     Expires = DateTimeOffset.Now.AddDays(7)
                 });
 
@@ -56,13 +56,19 @@ public class AuthService
         return null;
     }
 
+    public async Task<bool> RegisterAsync(CreateUserDto dto)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/api/auth/register", dto);
+        return response.IsSuccessStatusCode;
+    }
+
     public async Task<bool> RefreshTokenAsync()
     {
         var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies[RefreshTokenCookieName];
         if (string.IsNullOrEmpty(refreshToken))
             return false;
 
-        var response = await _httpClient.PostAsJsonAsync("/api/Auth/Refresh", new { refreshToken });
+        var response = await _httpClient.PostAsJsonAsync("/api/auth/refresh", new { refreshToken });
         if (response.IsSuccessStatusCode)
         {
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResultDto>>();

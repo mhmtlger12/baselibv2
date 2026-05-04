@@ -11,6 +11,7 @@ public class MenuDto
     public int Order { get; set; }
     public int? PermissionId { get; set; }
     public string? PermissionCode { get; set; }
+    public bool IsActive { get; set; }
 }
 
 public class CreateMenuDto

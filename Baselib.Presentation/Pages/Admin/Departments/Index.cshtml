@@ -4,9 +4,12 @@
     ViewData["Title"] = "Departmanlar";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Departmanlar</h2>
-    <button class="btn btn-primary" onclick="openModal()">
+<div class="page-toolbar">
+    <div>
+        <h2>Departmanlar</h2>
+        <p>Organizasyon ağacını ve departman kodlarını yönetin.</p>
+    </div>
+    <button class="btn btn-primary" type="button" id="openDeptModal">
         <i class="bi bi-plus-lg"></i> Yeni Departman
     </button>
 </div>
@@ -31,6 +34,10 @@
                     <input type="text" class="form-control" id="name" required />
                 </div>
                 <div class="mb-3">
+                    <label class="form-label">Departman Kodu</label>
+                    <input type="text" class="form-control" id="code" required />
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Üst Departman</label>
                     <select class="form-select" id="parentId">
                         <option value="">Üst departman yok (Root)</option>
@@ -45,142 +52,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-primary" onclick="saveDept()">Kaydet</button>
+                <button type="button" class="btn btn-primary" id="saveDeptButton">Kaydet</button>
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.tree-view ul { list-style: none; padding-left: 20px; }
-.tree-view li { margin: 5px 0; }
-.tree-toggle { cursor: pointer; margin-right: 5px; }
-.tree-content { display: inline-flex; align-items: center; gap: 10px; }
-.tree-children { display: none; }
-.tree-children.expanded { display: block; }
-</style>
-
 @section Scripts {
-    <script>
-        let modal;
-        let departments = [];
-
-        document.addEventListener('DOMContentLoaded', function() {
-            modal = new bootstrap.Modal(document.getElementById('deptModal'));
-            loadData();
-        });
-
-        async function loadData() {
-            const res = await api.get('/api/departments');
-            departments = res || [];
-            renderTree();
-        }
-
-        function renderTree() {
-            const container = document.getElementById('departmentTree');
-            const roots = departments.filter(d => !d.parentId);
-            container.innerHTML = renderNodes(roots);
-            attachToggleEvents();
-        }
-
-        function renderNodes(nodes, level = 0) {
-            if (!nodes.length) return '';
-            return '<ul>' + nodes.map(n => {
-                const children = departments.filter(d => d.parentId === n.id);
-                const hasChildren = children.length > 0;
-                return `
-                    <li>
-                        <div class="tree-content">
-                            ${hasChildren ? '<span class="tree-toggle">▶</span>' : '<span style="width:20px;display:inline-block"></span>'}
-                            <span>${n.name}</span>
-                            <span class="badge bg-${n.isActive ? 'success' : 'secondary'}">${n.isActive ? 'Aktif' : 'Pasif'}</span>
-                            <button class="btn btn-sm btn-warning" onclick="editDept(${n.id})">✎</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteDept(${n.id})">🗑</button>
-                        </div>
-                        ${hasChildren ? `<div class="tree-children">${renderNodes(children, level + 1)}</div>` : ''}
-                    </li>
-                `;
-            }).join('') + '</ul>';
-        }
-
-        function attachToggleEvents() {
-            document.querySelectorAll('.tree-toggle').forEach(toggle => {
-                toggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const children = this.parentElement.nextElementSibling;
-                    if (children && children.classList.contains('tree-children')) {
-                        children.classList.toggle('expanded');
-                        this.textContent = children.classList.contains('expanded') ? '▼' : '▶';
-                    }
-                });
-            });
-        }
-
-        function renderParentSelect(excludeId = null) {
-            const select = document.getElementById('parentId');
-            const opts = departments.filter(d => d.id !== excludeId).map(d => 
-                `<option value="${d.id}">${d.name}</option>`
-            ).join('');
-            select.innerHTML = '<option value="">Üst departman yok (Root)</option>' + opts;
-        }
-
-        function openModal() {
-            document.getElementById('modalTitle').textContent = 'Yeni Departman';
-            document.getElementById('deptId').value = '';
-            document.getElementById('name').value = '';
-            document.getElementById('isActive').checked = true;
-            renderParentSelect();
-            modal.show();
-        }
-
-        function editDept(id) {
-            const dept = departments.find(d => d.id === id);
-            if (!dept) return;
-
-            document.getElementById('modalTitle').textContent = 'Departman Düzenle';
-            document.getElementById('deptId').value = dept.id;
-            document.getElementById('name').value = dept.name || '';
-            document.getElementById('isActive').checked = dept.isActive ?? true;
-            renderParentSelect(dept.id);
-            document.getElementById('parentId').value = dept.parentId || '';
-            modal.show();
-        }
-
-        async function saveDept() {
-            const id = document.getElementById('deptId').value;
-            const data = {
-                id: id ? parseInt(id) : 0,
-                name: document.getElementById('name').value,
-                parentId: document.getElementById('parentId').value ? parseInt(document.getElementById('parentId').value) : null,
-                isActive: document.getElementById('isActive').checked
-            };
-
-            if (!data.name) {
-                alert('Departman adı zorunludur');
-                return;
-            }
-
-            try {
-                if (id) {
-                    await api.put(`/api/departments/${id}`, data);
-                } else {
-                    await api.post('/api/departments', data);
-                }
-                modal.hide();
-                loadData();
-            } catch (e) {
-                alert('Hata: ' + (e.message || 'Kayıt başarısız'));
-            }
-        }
-
-        async function deleteDept(id) {
-            if (!confirm('Silmek istediğinize emin misiniz?')) return;
-            try {
-                await api.delete(`/api/departments/${id}`);
-                loadData();
-            } catch (e) {
-                alert('Hata: ' + (e.message || 'Silme başarısız'));
-            }
-        }
-    </script>
+    <script src="~/js/admin/departments.js" asp-append-version="true"></script>
 }

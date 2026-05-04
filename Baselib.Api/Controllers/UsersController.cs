@@ -8,7 +8,7 @@ using Baselib.Core.Results;
 namespace Baselib.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 [Authorize(Policy = "DynamicPermission")]
 public class UsersController : ControllerBase
 {
@@ -26,7 +26,7 @@ public class UsersController : ControllerBase
         return Ok(DataResult<IEnumerable<UserDto>>.SuccessDataResult(users));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
         var user = await _userService.GetByIdAsync(id);
@@ -43,21 +43,21 @@ public class UsersController : ControllerBase
             DataResult<UserDto>.SuccessDataResult(user, Messages.General.Saved));
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
         await _userService.UpdateAsync(id, dto);
         return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _userService.DeleteAsync(id);
         return Ok(Result.SuccessResult(Messages.General.Deleted));
     }
 
-    [HttpPut("{id}/roles")]
+    [HttpPut("{id:int}/roles")]
     public async Task<IActionResult> AssignRoles(int id, [FromBody] List<int> roleIds)
     {
         await _userService.AssignRolesAsync(id, roleIds);

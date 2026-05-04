@@ -8,7 +8,7 @@ using Baselib.Core.Results;
 namespace Baselib.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -18,21 +18,28 @@ public class AuthController : ControllerBase
         _userService = userService;
     }
 
-    [HttpPost]
+    [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
         var result = await _userService.LoginAsync(dto);    
         return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Refresh([FromBody] string refreshToken)
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
     {
-        var result = await _userService.RefreshTokenAsync(refreshToken);
+        var result = await _userService.RefreshTokenAsync(dto.RefreshToken);
         return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
     }
 
-    [HttpPost]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] CreateUserDto dto)
+    {
+        var user = await _userService.CreateAsync(dto);
+        return Ok(DataResult<UserDto>.SuccessDataResult(user, Messages.General.Saved));
+    }
+
+    [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout()
     {

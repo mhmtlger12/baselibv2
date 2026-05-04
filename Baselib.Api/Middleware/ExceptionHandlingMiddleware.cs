@@ -31,7 +31,6 @@ public class ExceptionHandlingMiddleware
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
 
         var response = exception switch
         {
@@ -40,6 +39,8 @@ public class ExceptionHandlingMiddleware
             InvalidOperationException => Result.ErrorResult(exception.Message, 400),
             _ => Result.ErrorResult("Bir hata oluştu", 500)
         };
+
+        context.Response.StatusCode = response.StatusCode;
 
         var json = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {

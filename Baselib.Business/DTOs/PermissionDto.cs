@@ -20,4 +20,5 @@ public class CreatePermissionDto
     public string? ControllerName { get; set; }
     public string? ActionName { get; set; }
     public int CRUDActionType { get; set; }
+    public bool IsActive { get; set; } = true;
 }

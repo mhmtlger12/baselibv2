@@ -8,7 +8,7 @@ using Baselib.Core.Results;
 namespace Baselib.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 [Authorize(Policy = "DynamicPermission")]
 public class PermissionsController : ControllerBase
 {
@@ -26,14 +26,14 @@ public class PermissionsController : ControllerBase
         return Ok(DataResult<IEnumerable<PermissionDto>>.SuccessDataResult(permissions));
     }
 
-    [HttpGet]
+    [HttpGet("grouped")]
     public async Task<IActionResult> GroupedList([FromQuery] int? roleId = null)
     {
         var permissions = await _permissionService.GetGroupedPermissionsAsync(roleId);
         return Ok(DataResult<IEnumerable<PermissionGroupDto>>.SuccessDataResult(permissions));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
         var permission = await _permissionService.GetByIdAsync(id);
@@ -50,21 +50,21 @@ public class PermissionsController : ControllerBase
             DataResult<PermissionDto>.SuccessDataResult(permission, Messages.General.Saved));
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] CreatePermissionDto dto)
     {
         await _permissionService.UpdateAsync(id, dto);
         return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _permissionService.DeleteAsync(id);
         return Ok(Result.SuccessResult(Messages.General.Deleted));
     }
 
-    [HttpPost("role/{roleId}/permissions")]
+    [HttpPost("role/{roleId:int}/permissions")]
     public async Task<IActionResult> SaveRolePermissions(int roleId, [FromBody] List<PermissionGroupDto> permissionGroups)
     {
         await _permissionService.SaveRolePermissionsAsync(roleId, permissionGroups);

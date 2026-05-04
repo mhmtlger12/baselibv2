@@ -107,31 +107,40 @@ public class AppDbContext : DbContext
         );
 
         modelBuilder.Entity<Permission>().HasData(
-            new Permission { Id = 1, Name = "Kullanıcı Listesi", ControllerName = "Users", ActionName = "Index", Code = "Users_Index", Description = "Kullanıcı Listesi", CRUDActionType = 15, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 2, Name = "Kullanıcı Oluştur", ControllerName = "Users", ActionName = "Create", Code = "Users_Create", Description = "Kullanıcı Oluştur", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 3, Name = "Kullanıcı Güncelle", ControllerName = "Users", ActionName = "Update", Code = "Users_Update", Description = "Kullanıcı Güncelle", CRUDActionType = 4, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 4, Name = "Kullanıcı Sil", ControllerName = "Users", ActionName = "Delete", Code = "Users_Delete", Description = "Kullanıcı Sil", CRUDActionType = 8, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 5, Name = "Rol Listesi", ControllerName = "Roles", ActionName = "Index", Code = "Roles_Index", Description = "Rol Listesi", CRUDActionType = 15, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 6, Name = "Rol Oluştur", ControllerName = "Roles", ActionName = "Create", Code = "Roles_Create", Description = "Rol Oluştur", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 7, Name = "Rol Güncelle", ControllerName = "Roles", ActionName = "Update", Code = "Roles_Update", Description = "Rol Güncelle", CRUDActionType = 4, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 8, Name = "Rol Sil", ControllerName = "Roles", ActionName = "Delete", Code = "Roles_Delete", Description = "Rol Sil", CRUDActionType = 8, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 9, Name = "İzin Listesi", ControllerName = "Permissions", ActionName = "Index", Code = "Permissions_Index", Description = "İzin Listesi", CRUDActionType = 15, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 10, Name = "Departman Listesi", ControllerName = "Departments", ActionName = "Index", Code = "Departments_Index", Description = "Departman Listesi", CRUDActionType = 15, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 11, Name = "Menü Listesi", ControllerName = "Menus", ActionName = "Index", Code = "Menus_Index", Description = "Menü Listesi", CRUDActionType = 15, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Permission { Id = 1, Name = "Kullanıcı Listele", ControllerName = "Users", ActionName = "List", Code = "Users_Read", Description = "Kullanıcı listeleme ve görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 2, Name = "Kullanıcı Oluştur", ControllerName = "Users", ActionName = "Add", Code = "Users_Create", Description = "Kullanıcı oluşturma", CRUDActionType = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 3, Name = "Kullanıcı Güncelle", ControllerName = "Users", ActionName = "Update", Code = "Users_Update", Description = "Kullanıcı güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 4, Name = "Kullanıcı Sil", ControllerName = "Users", ActionName = "Delete", Code = "Users_Delete", Description = "Kullanıcı silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 5, Name = "Rol Listele", ControllerName = "Roles", ActionName = "List", Code = "Roles_Read", Description = "Rol listeleme ve görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 6, Name = "Rol Oluştur", ControllerName = "Roles", ActionName = "Add", Code = "Roles_Create", Description = "Rol oluşturma", CRUDActionType = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 7, Name = "Rol Güncelle", ControllerName = "Roles", ActionName = "Update", Code = "Roles_Update", Description = "Rol güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 8, Name = "Rol Sil", ControllerName = "Roles", ActionName = "Delete", Code = "Roles_Delete", Description = "Rol silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 9, Name = "İzin Listele", ControllerName = "Permissions", ActionName = "List", Code = "Permissions_Read", Description = "İzin listeleme ve görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 10, Name = "İzin Oluştur", ControllerName = "Permissions", ActionName = "Add", Code = "Permissions_Create", Description = "İzin oluşturma", CRUDActionType = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 11, Name = "İzin Güncelle", ControllerName = "Permissions", ActionName = "Update", Code = "Permissions_Update", Description = "İzin güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 12, Name = "İzin Sil", ControllerName = "Permissions", ActionName = "Delete", Code = "Permissions_Delete", Description = "İzin silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 13, Name = "Departman Listele", ControllerName = "Departments", ActionName = "List", Code = "Departments_Read", Description = "Departman listeleme ve görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 14, Name = "Departman Oluştur", ControllerName = "Departments", ActionName = "Add", Code = "Departments_Create", Description = "Departman oluşturma", CRUDActionType = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 15, Name = "Departman Güncelle", ControllerName = "Departments", ActionName = "Update", Code = "Departments_Update", Description = "Departman güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 16, Name = "Departman Sil", ControllerName = "Departments", ActionName = "Delete", Code = "Departments_Delete", Description = "Departman silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 17, Name = "Menü Listele", ControllerName = "Menus", ActionName = "List", Code = "Menus_Read", Description = "Menü listeleme ve görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 18, Name = "Menü Oluştur", ControllerName = "Menus", ActionName = "Add", Code = "Menus_Create", Description = "Menü oluşturma", CRUDActionType = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 19, Name = "Menü Güncelle", ControllerName = "Menus", ActionName = "Update", Code = "Menus_Update", Description = "Menü güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 20, Name = "Menü Sil", ControllerName = "Menus", ActionName = "Delete", Code = "Menus_Delete", Description = "Menü silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<Menu>().HasData(
             new Menu { Id = 1, Name = "Dashboard", Url = "/Admin", Icon = "bi-speedometer2", Order = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 2, Name = "Kullanıcılar", Url = "/Admin/Users", Icon = "bi-people", Order = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 3, Name = "Roller", Url = "/Admin/Roles", Icon = "bi-shield-check", Order = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 4, Name = "İzinler", Url = "/Admin/Permissions", Icon = "bi-key", Order = 4, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 5, Name = "Departmanlar", Url = "/Admin/Departments", Icon = "bi-diagram-3", Order = 5, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 6, Name = "Menüler", Url = "/Admin/Menus", Icon = "bi-menu-button", Order = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Menu { Id = 2, Name = "Kullanıcılar", Url = "/Admin/Users", Icon = "bi-people", Order = 2, PermissionId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 3, Name = "Roller", Url = "/Admin/Roles", Icon = "bi-shield-check", Order = 3, PermissionId = 5, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 4, Name = "İzinler", Url = "/Admin/Permissions", Icon = "bi-key", Order = 4, PermissionId = 9, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 5, Name = "Departmanlar", Url = "/Admin/Departments", Icon = "bi-diagram-3", Order = 5, PermissionId = 13, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 6, Name = "Menüler", Url = "/Admin/Menus", Icon = "bi-menu-button", Order = 6, PermissionId = 17, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         // Admin user - password: admin
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, Username = "admin", Email = "admin@baselib.com", PasswordHash = "$2a$10$N9qo8uLOickgx2ZMRZoMye4kDgR8KD6CWJ5C3u0s0p0s0s0s0s0s0u", FirstName = "Admin", LastName = "User", DepartmentId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new User { Id = 1, Username = "admin", Email = "admin@baselib.com", PasswordHash = "$2b$10$br5S4nxaGpEKXOPtd/mdvuKBmNoiWHPoJ8MRF43wYnOB/JbBz2o7u", FirstName = "Admin", LastName = "User", DepartmentId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<UserRole>().HasData(
@@ -150,7 +159,16 @@ public class AppDbContext : DbContext
             new RolePermission { RoleId = 1, PermissionId = 8 },
             new RolePermission { RoleId = 1, PermissionId = 9 },
             new RolePermission { RoleId = 1, PermissionId = 10 },
-            new RolePermission { RoleId = 1, PermissionId = 11 }
+            new RolePermission { RoleId = 1, PermissionId = 11 },
+            new RolePermission { RoleId = 1, PermissionId = 12 },
+            new RolePermission { RoleId = 1, PermissionId = 13 },
+            new RolePermission { RoleId = 1, PermissionId = 14 },
+            new RolePermission { RoleId = 1, PermissionId = 15 },
+            new RolePermission { RoleId = 1, PermissionId = 16 },
+            new RolePermission { RoleId = 1, PermissionId = 17 },
+            new RolePermission { RoleId = 1, PermissionId = 18 },
+            new RolePermission { RoleId = 1, PermissionId = 19 },
+            new RolePermission { RoleId = 1, PermissionId = 20 }
         );
     }
 }

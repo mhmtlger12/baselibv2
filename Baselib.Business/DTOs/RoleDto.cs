@@ -6,6 +6,7 @@ public class RoleDto
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public List<PermissionDto> Permissions { get; set; } = new();
+    public int PermissionCount => Permissions.Count;
     public bool IsActive { get; set; }
     public DateTime CreatedDate { get; set; }
 }
@@ -21,5 +22,6 @@ public class UpdateRoleDto
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public List<int> PermissionIds { get; set; } = new();
     public bool IsActive { get; set; }
 }

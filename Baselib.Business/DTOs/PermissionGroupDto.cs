@@ -10,24 +10,31 @@ public class PermissionGroupDto
 
 public class ControllerCrudDto
 {
+    public int PermissionId { get; set; }
     public int CRUDActionType { get; set; }
     public bool Checked { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string ActionName { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
 }
 
 public static class CRUDActionTypes
 {
-    public const int Create = 1;
-    public const int Read = 2;
-    public const int Update = 4;
-    public const int Delete = 8;
+    public const int View = 1;
+    public const int Add = 2;
+    public const int Update = 3;
+    public const int Preview = 4;
+    public const int Option = 5;
+    public const int Delete = 6;
 
     public static string GetName(int value) => value switch
     {
-        Create => "Ekleme",
-        Read => "Okuma",
-        Update => "Güncelleme",
-        Delete => "Silme",
+        View => "View",
+        Add => "Add",
+        Update => "Update",
+        Preview => "Preview",
+        Option => "Option",
+        Delete => "Delete",
         _ => value.ToString()
     };
 }

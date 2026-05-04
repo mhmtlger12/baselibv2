@@ -8,7 +8,7 @@ using Baselib.Core.Results;
 namespace Baselib.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 [Authorize(Policy = "DynamicPermission")]
 public class RolesController : ControllerBase
 {
@@ -26,7 +26,7 @@ public class RolesController : ControllerBase
         return Ok(DataResult<IEnumerable<RoleDto>>.SuccessDataResult(roles));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
         var role = await _roleService.GetByIdAsync(id);
@@ -35,7 +35,7 @@ public class RolesController : ControllerBase
             : Ok(DataResult<RoleDto>.SuccessDataResult(role));
     }
 
-    [HttpGet("{id}/permissions")]
+    [HttpGet("{id:int}/permissions")]
     public async Task<IActionResult> GetPermissions(int id)
     {
         var permissions = await _roleService.GetPermissionsByRoleIdAsync(id);
@@ -50,28 +50,28 @@ public class RolesController : ControllerBase
             DataResult<RoleDto>.SuccessDataResult(role, Messages.General.Saved));
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
     {
         await _roleService.UpdateAsync(id, dto);
         return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 
-    [HttpPut("{id}/with-permissions")]
+    [HttpPut("{id:int}/with-permissions")]
     public async Task<IActionResult> UpdateWithPermissions(int id, [FromBody] RoleWithPermissionsDto dto)
     {
         await _roleService.UpdateWithPermissionsAsync(id, dto.Role, dto.PermissionGroups);
         return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _roleService.DeleteAsync(id);
         return Ok(Result.SuccessResult(Messages.General.Deleted));
     }
 
-    [HttpPut("{id}/permissions")]
+    [HttpPut("{id:int}/permissions")]
     public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds)
     {
         await _roleService.AssignPermissionsAsync(id, permissionIds);

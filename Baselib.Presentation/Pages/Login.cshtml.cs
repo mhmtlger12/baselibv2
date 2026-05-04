@@ -14,6 +14,9 @@ public class LoginModel : PageModel
 
     public string ErrorMessage { get; set; } = "";
 
+    [TempData]
+    public string? StatusMessage { get; set; }
+
     private readonly AuthService _authService;
 
     public LoginModel(AuthService authService)
@@ -43,6 +46,13 @@ public class LoginModel : PageModel
         if (result == null)
         {
             ErrorMessage = "Kullanıcı adı veya şifre hatalı";
+            return Page();
+        }
+
+        if (!result.User.Roles.Any())
+        {
+            _authService.Logout();
+            ErrorMessage = "Hesabınız için rol ataması yapılmamış. Lütfen yöneticinizle iletişime geçin.";
             return Page();
         }
 
