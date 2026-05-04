@@ -1,3 +1,5 @@
+using Baselib.Presentation.Models;
+
 namespace Baselib.Presentation.Services;
 
 public class AuthService
