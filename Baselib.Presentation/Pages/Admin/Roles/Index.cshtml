@@ -1,88 +1,65 @@
 @page
 @model Baselib.Presentation.Pages.Admin.Roles.IndexModel
 @{
-    Layout = "_AdminLayout";
     ViewData["Title"] = "Roller";
 }
 
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Roller</h2>
+    <button class="btn btn-primary" onclick="openModal()">
+        <i class="bi bi-plus-lg"></i> Yeni Rol
+    </button>
+</div>
+
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title">Rol Listesi</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#roleModal" onclick="clearForm()">
-            <i class="bi bi-plus-circle"></i> Yeni Rol Ekle
-        </button>
-    </div>
     <div class="card-body">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Rol Adı</th>
-                    <th>Açıklama</th>
-                    <th>İzin Sayısı</th>
-                    <th>Durum</th>
-                    <th>İşlemler</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var role in Model.Roles)
-                {
+        <div class="table-responsive">
+            <table class="table table-hover" id="roleTable">
+                <thead>
                     <tr>
-                        <td>@role.Id</td>
-                        <td><strong>@role.Name</strong></td>
-                        <td>@role.Description</td>
-                        <td><span class="badge bg-info">@role.Permissions.Count</span></td>
-                        <td>
-                            @if (role.IsActive)
-                            {
-                                <span class="badge bg-success">Aktif</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Pasif</span>
-                            }
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#roleModal"
-                                    onclick="editRole(@role.Id, '@role.Name', '@role.Description', @role.IsActive.ToString().ToLower())">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#permissionModal"
-                                    onclick="loadPermissions(@role.Id)">
-                                <i class="bi bi-key"></i> İzinler
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteRole(@role.Id)">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
+                        <th>Rol Adı</th>
+                        <th>Açıklama</th>
+                        <th>Durum</th>
+                        <th>İzin Sayısı</th>
+                        <th style="width: 120px;">İşlemler</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Role Modal -->
 <div class="modal fade" id="roleModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="roleModalTitle">Yeni Rol Ekle</h5>
+                <h5 class="modal-title" id="modalTitle">Yeni Rol</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="roleId" />
-                <div class="mb-3">
-                    <label class="form-label">Rol Adı</label>
-                    <input type="text" class="form-control" id="roleName" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Rol Adı</label>
+                        <input type="text" class="form-control" id="name" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Durum</label>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="isActive" checked />
+                            <label class="form-check-label">Aktif</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Açıklama</label>
-                    <textarea class="form-control" id="roleDescription" rows="3"></textarea>
+                    <textarea class="form-control" id="description" rows="2"></textarea>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="roleIsActive" checked>
-                    <label class="form-check-label">Aktif</label>
+                <div class="mb-3">
+                    <label class="form-label">İzinler</label>
+                    <div id="permissionsList" class="permission-groups"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -93,221 +70,7 @@
     </div>
 </div>
 
-<!-- Permission Modal -->
-<div class="modal fade" id="permissionModal" tabindex="-1" style="max-width: 900px;">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Rol İzinleri</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="permissionRoleId" />
-                <div class="permission-grid" id="permissionGrid">
-                    <!-- Permissions will be loaded here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-primary" onclick="savePermissions()">İzinleri Kaydet</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .permission-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-    .permission-controller {
-        border: 1px solid #dee2e6;
-        border-radius: 10px;
-        padding: 15px;
-    }
-    .permission-controller h6 {
-        margin-bottom: 10px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #dee2e6;
-    }
-    .permission-checkbox {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-</style>
-
 @section Scripts {
-    <script>
-        let allPermissions = [];
-        let currentPermissions = [];
-
-        async function loadRoles() {
-            location.reload();
-        }
-
-        function clearForm() {
-            document.getElementById('roleModalTitle').innerText = 'Yeni Rol Ekle';
-            document.getElementById('roleId').value = '';
-            document.getElementById('roleName').value = '';
-            document.getElementById('roleDescription').value = '';
-            document.getElementById('roleIsActive').checked = true;
-        }
-
-        function editRole(id, name, description, isActive) {
-            document.getElementById('roleModalTitle').innerText = 'Rol Düzenle';
-            document.getElementById('roleId').value = id;
-            document.getElementById('roleName').value = name;
-            document.getElementById('roleDescription').value = description;
-            document.getElementById('roleIsActive').checked = isActive;
-        }
-
-        async function saveRole() {
-            const id = document.getElementById('roleId').value;
-            const data = {
-                name: document.getElementById('roleName').value,
-                description: document.getElementById('roleDescription').value,
-                isActive: document.getElementById('roleIsActive').checked
-            };
-
-            if (!data.name) {
-                alert('Rol adı gereklidir');
-                return;
-            }
-
-            let url = 'https://localhost:7001/api/Roles/Add';
-            let method = 'POST';
-
-            if (id) {
-                url = `https://localhost:7001/api/Roles/Update/${id}`;
-                method = 'PUT';
-            }
-
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                $('#roleModal').modal('hide');
-                loadRoles();
-            } else {
-                alert('Bir hata oluştu');
-            }
-        }
-
-        async function deleteRole(id) {
-            if (!confirm('Bu rolü silmek istediğinize emin misiniz?')) return;
-
-            const response = await fetch(`https://localhost:7001/api/Roles/Delete/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                loadRoles();
-            } else {
-                alert('Bir hata oluştu');
-            }
-        }
-
-        async function loadPermissions(roleId) {
-            document.getElementById('permissionRoleId').value = roleId;
-
-            const [allRes, roleRes] = await Promise.all([
-                fetch('https://localhost:7001/api/Permissions/GroupedList'),
-                fetch(`https://localhost:7001/api/Roles/${roleId}/permissions`)
-            ]);
-
-            const allData = await allRes.json();
-            const roleData = await roleRes.json();
-
-            allPermissions = allData.data || [];
-            currentPermissions = roleData.data || [];
-
-            renderPermissions();
-        }
-
-        function renderPermissions() {
-            const grid = document.getElementById('permissionGrid');
-            grid.innerHTML = '';
-
-            allPermissions.forEach(group => {
-                const roleGroup = currentPermissions.find(p => p.controllerName === group.controllerName);
-                const checkedCount = group.controllerCrudList.filter(c => c.checked).length;
-                const isIndeterminate = checkedCount > 0 && checkedCount < 4;
-
-                let html = `
-                    <div class="permission-controller">
-                        <h6>
-                            <input type="checkbox" class="form-check-input" 
-                                   ${group.checked ? 'checked' : ''}
-                                   ${isIndeterminate ? 'indeterminate' : ''}
-                                   onchange="toggleController('${group.controllerName}', this.checked)"
-                                   id="ctrl_${group.controllerName}">
-                            <label for="ctrl_${group.controllerName}">${group.controllerName}</label>
-                        </h6>
-                `;
-
-                group.controllerCrudList.forEach(crud => {
-                    const isChecked = roleGroup?.controllerCrudList?.find(c => c.crudActionType === crud.crudActionType)?.checked || false;
-                    html += `
-                        <div class="permission-checkbox">
-                            <input type="checkbox" class="form-check-input" 
-                                   ${isChecked ? 'checked' : ''}
-                                   onchange="toggleCrud('${group.controllerName}', ${crud.crudActionType}, this.checked)"
-                                   id="crud_${group.controllerName}_${crud.crudActionType}">
-                            <label for="crud_${group.controllerName}_${crud.crudActionType}">${crud.name}</label>
-                        </div>
-                    `;
-                });
-
-                html += '</div>';
-                grid.innerHTML += html;
-            });
-        }
-
-        function toggleController(controllerName, checked) {
-            allPermissions.find(p => p.controllerName === controllerName).controllerCrudList.forEach(c => {
-                c.checked = checked;
-            });
-            renderPermissions();
-        }
-
-        function toggleCrud(controllerName, crudType, checked) {
-            const group = allPermissions.find(p => p.controllerName === controllerName);
-            const crud = group.controllerCrudList.find(c => c.crudActionType === crudType);
-            crud.checked = checked;
-            renderPermissions();
-        }
-
-        async function savePermissions() {
-            const roleId = document.getElementById('permissionRoleId').value;
-
-            const data = {
-                role: {
-                    id: parseInt(roleId),
-                    name: '',
-                    description: '',
-                    isActive: true
-                },
-                permissionGroups: allPermissions
-            };
-
-            const response = await fetch(`https://localhost:7001/api/Roles/${roleId}/with-permissions`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                $('#permissionModal').modal('hide');
-                alert('İzinler kaydedildi');
-            } else {
-                alert('Bir hata oluştu');
-            }
-        }
-    </script>
+    <script src="~/js/admin/common.js"></script>
+    <script src="~/js/admin/roles.js"></script>
 }
