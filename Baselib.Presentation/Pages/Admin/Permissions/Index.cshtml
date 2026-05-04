@@ -1,0 +1,233 @@
+@page
+@model Baselib.Presentation.Pages.Admin.Permissions.IndexModel
+@{
+    ViewData["Title"] = "İzinler";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>İzinler</h2>
+    <button class="btn btn-primary" onclick="openModal()">
+        <i class="bi bi-plus-lg"></i> Yeni İzin
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div id="permissionList" class="accordion"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="permModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Yeni İzin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="permId" />
+                <div class="mb-3">
+                    <label class="form-label">Controller Adı</label>
+                    <input type="text" class="form-control" id="controllerName" required placeholder="Users" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Action Adı</label>
+                    <input type="text" class="form-control" id="actionName" required placeholder="Index" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">CRUD İşlemleri</label>
+                    <div class="form-check">
+                        <input class="form-check-input crud-check" type="checkbox" value="1" id="create" />
+                        <label class="form-check-label" for="create">Oluşturma (Create)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input crud-check" type="checkbox" value="2" id="read" />
+                        <label class="form-check-label" for="read">Okuma (Read)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input crud-check" type="checkbox" value="4" id="update" />
+                        <label class="form-check-label" for="update">Güncelleme (Update)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input crud-check" type="checkbox" value="8" id="delete" />
+                        <label class="form-check-label" for="delete">Silme (Delete)</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Açıklama</label>
+                    <input type="text" class="form-control" id="description" />
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" checked />
+                        <label class="form-check-label">Aktif</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="savePerm()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.permission-group { margin-bottom: 10px; border: 1px solid #dee2e6; border-radius: 5px; }
+.permission-header { padding: 10px 15px; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.permission-header:hover { background: #e9ecef; }
+.permission-body { padding: 15px; display: none; }
+.permission-body.show { display: block; }
+</style>
+
+@section Scripts {
+    <script>
+        let modal;
+        let permissions = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            modal = new bootstrap.Modal(document.getElementById('permModal'));
+            loadData();
+        });
+
+        async function loadData() {
+            const res = await api.get('/api/permissions');
+            permissions = res || [];
+            renderByController();
+        }
+
+        function renderByController() {
+            const container = document.getElementById('permissionList');
+            const grouped = {};
+            
+            permissions.forEach(p => {
+                const ctrl = p.controllerName || 'Diğer';
+                if (!grouped[ctrl]) grouped[ctrl] = [];
+                grouped[ctrl].push(p);
+            });
+
+            const controllers = Object.keys(grouped).sort();
+            container.innerHTML = controllers.map(ctrl => `
+                <div class="permission-group">
+                    <div class="permission-header" onclick="toggleGroup(this)">
+                        <strong>${ctrl}</strong>
+                        <span>${grouped[ctrl].length} action</span>
+                    </div>
+                    <div class="permission-body">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>İzinler</th>
+                                    <th>Durum</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${grouped[ctrl].map(p => `
+                                    <tr>
+                                        <td>${p.actionName || ''}</td>
+                                        <td>
+                                            ${p.crudValue & 1 ? '<span class="badge bg-primary">C</span>' : ''}
+                                            ${p.crudValue & 2 ? '<span class="badge bg-success">R</span>' : ''}
+                                            ${p.crudValue & 4 ? '<span class="badge bg-warning">U</span>' : ''}
+                                            ${p.crudValue & 8 ? '<span class="badge bg-danger">D</span>' : ''}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-${p.isActive ? 'success' : 'secondary'}">
+                                                ${p.isActive ? 'Aktif' : 'Pasif'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-warning" onclick="editPerm(${p.id})">✎</button>
+                                            <button class="btn btn-sm btn-danger" onclick="deletePerm(${p.id})">🗑</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleGroup(header) {
+            const body = header.nextElementSibling;
+            body.classList.toggle('show');
+        }
+
+        function openModal() {
+            document.getElementById('modalTitle').textContent = 'Yeni İzin';
+            document.getElementById('permId').value = '';
+            document.getElementById('controllerName').value = '';
+            document.getElementById('actionName').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('isActive').checked = true;
+            document.querySelectorAll('.crud-check').forEach(c => c.checked = false);
+            modal.show();
+        }
+
+        function editPerm(id) {
+            const perm = permissions.find(p => p.id === id);
+            if (!perm) return;
+
+            document.getElementById('modalTitle').textContent = 'İzin Düzenle';
+            document.getElementById('permId').value = perm.id;
+            document.getElementById('controllerName').value = perm.controllerName || '';
+            document.getElementById('actionName').value = perm.actionName || '';
+            document.getElementById('description').value = perm.description || '';
+            document.getElementById('isActive').checked = perm.isActive ?? true;
+
+            document.querySelectorAll('.crud-check').forEach(c => {
+                const val = parseInt(c.value);
+                c.checked = (perm.crudValue & val) === val;
+            });
+            
+            modal.show();
+        }
+
+        async function savePerm() {
+            const id = document.getElementById('permId').value;
+            let crudValue = 0;
+            document.querySelectorAll('.crud-check:checked').forEach(c => {
+                crudValue += parseInt(c.value);
+            });
+
+            const data = {
+                id: id ? parseInt(id) : 0,
+                controllerName: document.getElementById('controllerName').value,
+                actionName: document.getElementById('actionName').value,
+                crudValue: crudValue,
+                description: document.getElementById('description').value,
+                isActive: document.getElementById('isActive').checked
+            };
+
+            if (!data.controllerName || !data.actionName) {
+                alert('Controller ve Action adı zorunludur');
+                return;
+            }
+
+            try {
+                if (id) {
+                    await api.put(`/api/permissions/${id}`, data);
+                } else {
+                    await api.post('/api/permissions', data);
+                }
+                modal.hide();
+                loadData();
+            } catch (e) {
+                alert('Hata: ' + (e.message || 'Kayıt başarısız'));
+            }
+        }
+
+        async function deletePerm(id) {
+            if (!confirm('Silmek istediğinize emin misiniz?')) return;
+            try {
+                await api.delete(`/api/permissions/${id}`);
+                loadData();
+            } catch (e) {
+                alert('Hata: ' + (e.message || 'Silme başarısız'));
+            }
+        }
+    </script>
+}

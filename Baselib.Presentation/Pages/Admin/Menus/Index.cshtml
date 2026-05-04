@@ -1,0 +1,208 @@
+@page
+@model Baselib.Presentation.Pages.Admin.Menus.IndexModel
+@{
+    ViewData["Title"] = "Menüler";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Menüler</h2>
+    <button class="btn btn-primary" onclick="openModal()">
+        <i class="bi bi-plus-lg"></i> Yeni Menü
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div id="menuTree" class="tree-view"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="menuModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Yeni Menü</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="menuId" />
+                <div class="mb-3">
+                    <label class="form-label">Menü Adı</label>
+                    <input type="text" class="form-control" id="name" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">URL</label>
+                    <input type="text" class="form-control" id="url" placeholder="/Admin/Users" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">İkon (Bootstrap Icons)</label>
+                    <input type="text" class="form-control" id="icon" placeholder="bi-person" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sıra</label>
+                    <input type="number" class="form-control" id="order" value="0" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Üst Menü</label>
+                    <select class="form-select" id="parentId">
+                        <option value="">Üst menü yok (Root)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" checked />
+                        <label class="form-check-label">Aktif</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="saveMenu()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.tree-view ul { list-style: none; padding-left: 20px; }
+.tree-view li { margin: 5px 0; }
+.tree-toggle { cursor: pointer; margin-right: 5px; display: inline-block; width: 20px; }
+.tree-content { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tree-children { display: none; }
+.tree-children.expanded { display: block; }
+</style>
+
+@section Scripts {
+    <script>
+        let modal;
+        let menus = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            modal = new bootstrap.Modal(document.getElementById('menuModal'));
+            loadData();
+        });
+
+        async function loadData() {
+            const res = await api.get('/api/menus');
+            menus = res || [];
+            renderTree();
+        }
+
+        function renderTree() {
+            const container = document.getElementById('menuTree');
+            const roots = menus.filter(m => !m.parentId);
+            container.innerHTML = renderNodes(roots);
+            attachToggleEvents();
+        }
+
+        function renderNodes(nodes) {
+            if (!nodes.length) return '';
+            return '<ul>' + nodes.map(m => {
+                const children = menus.filter(c => c.parentId === m.id);
+                const hasChildren = children.length > 0;
+                return `
+                    <li>
+                        <div class="tree-content">
+                            ${hasChildren ? '<span class="tree-toggle" onclick="toggleNode(this)">▶</span>' : '<span class="tree-toggle"></span>'}
+                            <i class="bi ${m.icon || 'bi-circle'}"></i>
+                            <strong>${m.name || ''}</strong>
+                            ${m.url ? `<small class="text-muted">${m.url}</small>` : ''}
+                            <span class="badge bg-${m.isActive ? 'success' : 'secondary'}">${m.isActive ? 'Aktif' : 'Pasif'}</span>
+                            <span class="badge bg-info">Sıra: ${m.order || 0}</span>
+                            <button class="btn btn-sm btn-warning" onclick="editMenu(${m.id})">✎</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteMenu(${m.id})">🗑</button>
+                        </div>
+                        ${hasChildren ? `<div class="tree-children">${renderNodes(children)}</div>` : ''}
+                    </li>
+                `;
+            }).join('') + '</ul>';
+        }
+
+        function toggleNode(span) {
+            const children = span.parentElement.nextElementSibling;
+            if (children && children.classList.contains('tree-children')) {
+                children.classList.toggle('expanded');
+                span.textContent = children.classList.contains('expanded') ? '▼' : '▶';
+            }
+        }
+
+        function attachToggleEvents() {
+        }
+
+        function renderParentSelect(excludeId = null) {
+            const select = document.getElementById('parentId');
+            const opts = menus.filter(m => m.id !== excludeId).map(m => 
+                `<option value="${m.id}">${m.name}</option>`
+            ).join('');
+            select.innerHTML = '<option value="">Üst menü yok (Root)</option>' + opts;
+        }
+
+        function openModal() {
+            document.getElementById('modalTitle').textContent = 'Yeni Menü';
+            document.getElementById('menuId').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('url').value = '';
+            document.getElementById('icon').value = '';
+            document.getElementById('order').value = '0';
+            document.getElementById('isActive').checked = true;
+            renderParentSelect();
+            modal.show();
+        }
+
+        function editMenu(id) {
+            const menu = menus.find(m => m.id === id);
+            if (!menu) return;
+
+            document.getElementById('modalTitle').textContent = 'Menü Düzenle';
+            document.getElementById('menuId').value = menu.id;
+            document.getElementById('name').value = menu.name || '';
+            document.getElementById('url').value = menu.url || '';
+            document.getElementById('icon').value = menu.icon || '';
+            document.getElementById('order').value = menu.order || 0;
+            document.getElementById('isActive').checked = menu.isActive ?? true;
+            renderParentSelect(menu.id);
+            document.getElementById('parentId').value = menu.parentId || '';
+            modal.show();
+        }
+
+        async function saveMenu() {
+            const id = document.getElementById('menuId').value;
+            const data = {
+                id: id ? parseInt(id) : 0,
+                name: document.getElementById('name').value,
+                url: document.getElementById('url').value,
+                icon: document.getElementById('icon').value,
+                order: parseInt(document.getElementById('order').value) || 0,
+                parentId: document.getElementById('parentId').value ? parseInt(document.getElementById('parentId').value) : null,
+                isActive: document.getElementById('isActive').checked
+            };
+
+            if (!data.name) {
+                alert('Menü adı zorunludur');
+                return;
+            }
+
+            try {
+                if (id) {
+                    await api.put(`/api/menus/${id}`, data);
+                } else {
+                    await api.post('/api/menus', data);
+                }
+                modal.hide();
+                loadData();
+            } catch (e) {
+                alert('Hata: ' + (e.message || 'Kayıt başarısız'));
+            }
+        }
+
+        async function deleteMenu(id) {
+            if (!confirm('Silmek istediğinize emin misiniz?')) return;
+            try {
+                await api.delete(`/api/menus/${id}`);
+                loadData();
+            } catch (e) {
+                alert('Hata: ' + (e.message || 'Silme başarısız'));
+            }
+        }
+    </script>
+}
