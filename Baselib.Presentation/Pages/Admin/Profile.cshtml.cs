@@ -5,14 +5,14 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Baselib.Presentation.Pages.Admin;
 
-public class IndexModel : PageModel
+public class ProfileModel : PageModel
 {
     private readonly ApiService _apiService;
 
-    public DashboardStatsDto? Stats { get; private set; }
+    public UserDto? UserProfile { get; private set; }
     public string? LoadError { get; private set; }
 
-    public IndexModel(ApiService apiService)
+    public ProfileModel(ApiService apiService)
     {
         _apiService = apiService;
     }
@@ -21,11 +21,11 @@ public class IndexModel : PageModel
     {
         try
         {
-            Stats = await _apiService.GetAsync<DashboardStatsDto>("/api/dashboard/stats");
+            UserProfile = await _apiService.GetAsync<UserDto>("/api/profile");
             
-            if (Stats == null)
+            if (UserProfile == null)
             {
-                Stats = new DashboardStatsDto();
+                LoadError = "Profil bilgileri bulunamadı.";
             }
         }
         catch (UnauthorizedAccessException)
@@ -34,8 +34,7 @@ public class IndexModel : PageModel
         }
         catch (Exception)
         {
-            LoadError = "Dashboard verileri alınamadı. API çalışıyor mu ve oturum geçerli mi kontrol edin.";
-            Stats = new DashboardStatsDto();
+            LoadError = "Profil verileri alınamadı. Lütfen tekrar giriş yapın.";
         }
 
         return Page();

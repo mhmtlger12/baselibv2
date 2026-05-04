@@ -1,0 +1,151 @@
+@page
+@model Baselib.Presentation.Pages.Admin.ProfileModel
+@{
+    ViewData["Title"] = "Profilim";
+}
+
+<div class="page-toolbar">
+    <div>
+        <h2>Hesap Ayarları</h2>
+        <p>Kişisel bilgilerinizi ve güvenlik ayarlarınızı buradan yönetebilirsiniz.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.LoadError))
+{
+    <div class="alert alert-danger" role="alert">@Model.LoadError</div>
+}
+else if (Model.UserProfile != null)
+{
+    var displayName = string.IsNullOrWhiteSpace(Model.UserProfile.FirstName) 
+        ? Model.UserProfile.Username 
+        : $"{Model.UserProfile.FirstName} {Model.UserProfile.LastName}";
+        
+    var avatarLetter = displayName[..1].ToUpperInvariant();
+
+    <div class="row g-4">
+        <!-- Sol Kolon: Profil Özeti -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body text-center pt-5">
+                    <div class="mb-4 d-flex justify-content-center">
+                        <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-accent) 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; box-shadow: 0 10px 25px -5px rgba(15, 159, 143, 0.4);">
+                            @avatarLetter
+                        </div>
+                    </div>
+                    <h4 class="mb-1 fw-bold">@displayName</h4>
+                    <p class="text-muted mb-3">@Model.UserProfile.Email</p>
+                    
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+                        @foreach(var role in Model.UserProfile.Roles)
+                        {
+                            <span class="badge bg-primary">@role</span>
+                        }
+                    </div>
+
+                    <ul class="list-group list-group-flush text-start">
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Kullanıcı Adı</span>
+                            <span class="fw-medium">@Model.UserProfile.Username</span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Departman</span>
+                            <span class="fw-medium">@(Model.UserProfile.DepartmentName ?? "-")</span>
+                        </li>
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Kayıt Tarihi</span>
+                            <span class="fw-medium">@Model.UserProfile.CreatedDate.ToString("dd.MM.yyyy")</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            @if (Model.UserProfile.Roles.Count > 1)
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Aktif Rol Yönetimi</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3" style="font-size: 14px;">Birden fazla role sahip olduğunuz için sistemde hangi yetkilerle işlem yapacağınızı seçebilirsiniz.</p>
+                        
+                        <div class="list-group list-group-flush">
+                            @for (int i = 0; i < Model.UserProfile.Roles.Count; i++)
+                            {
+                                var rName = Model.UserProfile.Roles[i];
+                                var rId = Model.UserProfile.RoleIds[i];
+                                var isActiveRole = Model.UserProfile.ActiveRoleId == rId || (Model.UserProfile.ActiveRoleId == null && i == 0);
+                                
+                                <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 role-switcher" data-role-id="@rId">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-shield-check fs-5 me-3 @(isActiveRole ? "text-success" : "text-muted")"></i>
+                                        <div>
+                                            <h6 class="mb-0 fw-medium">@rName</h6>
+                                            @if (isActiveRole)
+                                            {
+                                                <small class="text-success">Şu anki aktif rolünüz</small>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (!isActiveRole)
+                                    {
+                                        <span class="badge bg-light text-dark border">Geçiş Yap</span>
+                                    }
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Sağ Kolon: Şifre Değiştirme Formu -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Güvenlik Ayarları</h5>
+                </div>
+                <div class="card-body">
+                    <form id="changePasswordForm">
+                        <div class="alert alert-info d-flex align-items-center mb-4">
+                            <i class="bi bi-shield-lock-fill fs-4 me-3"></i>
+                            <div>
+                                Hesabınızın güvenliğini sağlamak için şifrenizi düzenli olarak değiştirmeniz önerilir. 
+                                Yeni şifrenizin karmaşık ve tahmin edilemez olmasına dikkat edin.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="CurrentPassword" class="form-label fw-medium">Mevcut Şifre</label>
+                            <input type="password" class="form-control" id="CurrentPassword" name="CurrentPassword" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="NewPassword" class="form-label fw-medium">Yeni Şifre</label>
+                                <input type="password" class="form-control" id="NewPassword" name="NewPassword" required minlength="6">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="ConfirmPassword" class="form-label fw-medium">Yeni Şifre (Tekrar)</label>
+                                <input type="password" class="form-control" id="ConfirmPassword" required minlength="6">
+                                <div class="invalid-feedback">
+                                    Şifreler birbiriyle eşleşmiyor.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary" id="btnChangePassword">
+                                <i class="bi bi-check2-circle me-1"></i> Şifreyi Güncelle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/admin/profile.js" asp-append-version="true"></script>
+}

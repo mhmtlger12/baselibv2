@@ -49,12 +49,42 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         using var scope = _serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var userRoleIds = await dbContext.UserRoles
+        var activeRoleIdClaim = context.User.FindFirst("ActiveRoleId")?.Value;
+        
+        // Veritabanından kullanıcının GÜNCEL rollerini çekiyoruz (Güvenlik için şart)
+        var currentUserRoleIds = await dbContext.UserRoles
             .Where(ur => ur.UserId == userId)
             .Select(ur => ur.RoleId)
             .ToListAsync();
 
-        if (!userRoleIds.Any())
+        if (!currentUserRoleIds.Any())
+        {
+            context.Fail();
+            return;
+        }
+
+        List<int> effectiveRoleIds;
+
+        if (!string.IsNullOrEmpty(activeRoleIdClaim) && int.TryParse(activeRoleIdClaim, out var activeRoleId))
+        {
+            // JWT içindeki aktif rol veritabanında HALA mevcut mu? (Revoke kontrolü)
+            if (currentUserRoleIds.Contains(activeRoleId))
+            {
+                effectiveRoleIds = new List<int> { activeRoleId };
+            }
+            else
+            {
+                // Rol geri alınmış ama token süresi bitmemiş. Erişimi reddet.
+                context.Fail();
+                return;
+            }
+        }
+        else
+        {
+            effectiveRoleIds = currentUserRoleIds;
+        }
+
+        if (!effectiveRoleIds.Any())
         {
             context.Fail();
             return;
@@ -76,7 +106,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 
         var hasAccess = await dbContext.RolePermissions
             .AnyAsync(rp =>
-                userRoleIds.Contains(rp.RoleId) &&
+                effectiveRoleIds.Contains(rp.RoleId) &&
                 permissionIds.Contains(rp.PermissionId));
 
         if (hasAccess)

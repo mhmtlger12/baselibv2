@@ -13,6 +13,8 @@ public class UserDto
     public string? DepartmentName { get; set; }
     public List<string> Roles { get; set; } = new();
     public List<int> RoleIds { get; set; } = new();
+    public int? ActiveRoleId { get; set; }
+    public string? ActiveRoleName { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedDate { get; set; }
 }

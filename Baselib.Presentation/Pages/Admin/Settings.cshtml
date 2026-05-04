@@ -1,0 +1,88 @@
+@page
+@model Baselib.Presentation.Pages.Admin.SettingsModel
+@{
+    ViewData["Title"] = "Sistem Ayarları";
+}
+
+<div class="page-toolbar">
+    <div>
+        <h2>Sistem Ayarları</h2>
+        <p>Uygulamanın genel yapılandırma ayarlarını yönetin.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Genel Ayarlar</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Ayar (Key)</th>
+                        <th style="width: 40%;">Değer (Value)</th>
+                        <th style="width: 30%;">Açıklama</th>
+                        <th style="width: 10%;" class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var setting in Model.Settings)
+                    {
+                        <tr>
+                            <td><strong>@setting.Key</strong></td>
+                            <td>
+                                @if(setting.Value == "true" || setting.Value == "false")
+                                {
+                                    <span class="badge @(setting.Value == "true" ? "bg-success" : "bg-danger")">
+                                        @(setting.Value == "true" ? "Açık" : "Kapalı")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>@setting.Value</span>
+                                }
+                            </td>
+                            <td class="text-muted small">@setting.Description</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary btn-edit-setting" data-id="@setting.Id" data-key="@setting.Key" data-value="@setting.Value">
+                                    <i class="bi bi-pencil"></i> Düzenle
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="settingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="settingForm">
+                <input type="hidden" id="SettingId" name="Id">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ayar Güncelle: <span id="SettingKeyDisplay" class="text-primary"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="SettingValue" class="form-label">Yeni Değer</label>
+                        <input type="text" class="form-control" id="SettingValue" name="Value" required>
+                        <div class="form-text">Eğer değer açık/kapalı (boolean) tipindeyse 'true' veya 'false' yazın.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveSetting">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/settings.js" asp-append-version="true"></script>
+}

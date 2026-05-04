@@ -41,15 +41,14 @@ public class UserService : IUserService
             .Include(u => u.Department)
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
-            .Where(u => u.IsActive)
             .OrderBy(u => u.FirstName)
             .ThenBy(u => u.LastName)
             .ToListAsync();
 
-        return users.Select(MapToDto);
+        return users.Select(u => MapToDto(u, null));
     }
 
-    public async Task<UserDto?> GetByIdAsync(int id)
+    public async Task<UserDto?> GetByIdAsync(int id, int? activeRoleId = null)
     {
         var user = await _users.Query()
             .Include(u => u.Department)
@@ -57,7 +56,7 @@ public class UserService : IUserService
                 .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == id);
 
-        return user == null ? null : MapToDto(user);
+        return user == null ? null : MapToDto(user, activeRoleId);
     }
 
     public async Task<UserDto> CreateAsync(CreateUserDto dto)
@@ -131,12 +130,14 @@ public class UserService : IUserService
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
             .Include(u => u.Department)
-            .FirstOrDefaultAsync(u => u.Username == dto.Username && u.IsActive);
+            .FirstOrDefaultAsync(u => u.Username == dto.Username);
 
         if (user == null || !IsPasswordValid(dto.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid username or password");
 
-        var accessToken = GenerateJwtToken(user);
+        var activeRole = user.UserRoles.FirstOrDefault()?.Role;
+
+        var accessToken = GenerateJwtToken(user, activeRole?.Id);
         var refreshToken = GenerateRefreshToken();
 
         var existingTokens = await _refreshTokens.Query()
@@ -159,7 +160,7 @@ public class UserService : IUserService
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiryDate = DateTime.UtcNow.AddMinutes(15),
-            User = MapToDto(user)
+            User = MapToDto(user, activeRole?.Id)
         };
     }
 
@@ -177,7 +178,13 @@ public class UserService : IUserService
             throw new UnauthorizedAccessException("Invalid refresh token");
 
         var user = token.User;
-        var newAccessToken = GenerateJwtToken(user);
+        
+        // Refresh token yaparken kullanıcının son aktif rolünü bilmediğimiz için 
+        // varsayılan olarak ilk rolü atıyoruz, ancak JWT'den ActiveRoleId okunabilir.
+        // Şimdilik default davranışı koruyalım.
+        var activeRole = user.UserRoles.FirstOrDefault()?.Role;
+
+        var newAccessToken = GenerateJwtToken(user, activeRole?.Id);
         var newRefreshToken = GenerateRefreshToken();
 
         token.Token = newRefreshToken;
@@ -190,12 +197,16 @@ public class UserService : IUserService
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
             ExpiryDate = DateTime.UtcNow.AddMinutes(15),
-            User = MapToDto(user)
+            User = MapToDto(user, activeRole?.Id)
         };
     }
 
-    public async Task LogoutAsync(int userId)
+    public async Task LogoutAsync(ClaimsPrincipal principal)
     {
+        var userIdStr = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            throw new UnauthorizedAccessException("Oturum bulunamadı.");
+
         var tokens = await _refreshTokens.Query()
             .Where(rt => rt.UserId == userId)
             .ToListAsync();
@@ -211,6 +222,93 @@ public class UserService : IUserService
 
         await ReplaceUserRolesAsync(userId, roleIds);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    {
+        var user = await _users.GetByIdAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        if (!IsPasswordValid(currentPassword, user.PasswordHash))
+            throw new UnauthorizedAccessException("Mevcut şifreniz yanlış.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        user.UpdatedDate = DateTime.UtcNow;
+
+        await _users.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task ChangeMyPasswordAsync(ClaimsPrincipal principal, string currentPassword, string newPassword)
+    {
+        var userIdStr = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            throw new UnauthorizedAccessException("Oturum bulunamadı.");
+
+        await ChangePasswordAsync(userId, currentPassword, newPassword);
+    }
+
+    public async Task<AuthResultDto> SwitchRoleAsync(ClaimsPrincipal principal, int newRoleId)
+    {
+        var userIdStr = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            throw new UnauthorizedAccessException("Oturum bulunamadı.");
+
+        var user = await _users.Query()
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+
+        if (!user.UserRoles.Any(ur => ur.RoleId == newRoleId))
+            throw new UnauthorizedAccessException("Bu role geçiş yetkiniz yok.");
+
+        var accessToken = GenerateJwtToken(user, newRoleId);
+        var refreshToken = GenerateRefreshToken();
+
+        var existingTokens = await _refreshTokens.Query()
+            .Where(rt => rt.UserId == user.Id)
+            .ToListAsync();
+
+        _refreshTokens.RemoveRange(existingTokens);
+
+        await _refreshTokens.AddAsync(new RefreshToken
+        {
+            UserId = user.Id,
+            Token = refreshToken,
+            ExpiryDate = DateTime.UtcNow.AddDays(7)
+        });
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return new AuthResultDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiryDate = DateTime.UtcNow.AddMinutes(15),
+            User = MapToDto(user, newRoleId)
+        };
+    }
+
+    public async Task<UserDto> GetMyProfileAsync(ClaimsPrincipal principal)
+    {
+        var userIdStr = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var activeRoleIdStr = principal.FindFirst("ActiveRoleId")?.Value;
+
+        if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            throw new UnauthorizedAccessException("Oturum bulunamadı.");
+
+        int? activeRoleId = int.TryParse(activeRoleIdStr, out var rId) ? rId : null;
+        var userDto = await GetByIdAsync(userId, activeRoleId);
+
+        if (userDto == null)
+            throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+
+        return userDto;
     }
 
     private async Task EnsureUniqueUserAsync(string username, string email, int? userId = null)
@@ -242,7 +340,7 @@ public class UserService : IUserService
             await _userRoles.AddRangeAsync(newRoles);
     }
 
-    private string GenerateJwtToken(User user)
+    private string GenerateJwtToken(User user, int? activeRoleId = null)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -254,9 +352,22 @@ public class UserService : IUserService
             new(ClaimTypes.Email, user.Email)
         };
 
-        foreach (var role in user.UserRoles.Select(ur => ur.Role.Name).Distinct())
+        if (activeRoleId.HasValue)
         {
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim("ActiveRoleId", activeRoleId.Value.ToString()));
+            
+            var activeRoleName = user.UserRoles.FirstOrDefault(ur => ur.RoleId == activeRoleId.Value)?.Role?.Name;
+            if (activeRoleName != null)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, activeRoleName));
+            }
+        }
+        else
+        {
+            foreach (var role in user.UserRoles.Select(ur => ur.Role.Name).Distinct())
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
         }
 
         var token = new JwtSecurityToken(
@@ -286,9 +397,9 @@ public class UserService : IUserService
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     }
 
-    private static UserDto MapToDto(User user)
+    private static UserDto MapToDto(User user, int? activeRoleId = null)
     {
-        return new UserDto
+        var dto = new UserDto
         {
             Id = user.Id,
             Username = user.Username,
@@ -303,5 +414,17 @@ public class UserService : IUserService
             IsActive = user.IsActive,
             CreatedDate = user.CreatedDate
         };
+
+        var defaultActiveRole = activeRoleId.HasValue 
+            ? user.UserRoles.FirstOrDefault(ur => ur.RoleId == activeRoleId.Value)?.Role 
+            : user.UserRoles.FirstOrDefault()?.Role;
+
+        if (defaultActiveRole != null)
+        {
+            dto.ActiveRoleId = defaultActiveRole.Id;
+            dto.ActiveRoleName = defaultActiveRole.Name;
+        }
+
+        return dto;
     }
 }

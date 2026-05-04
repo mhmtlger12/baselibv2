@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Baselib.Entities;
+using System.Linq.Expressions;
+using Baselib.Entities;
 
 namespace Baselib.Data;
 
@@ -15,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -95,6 +99,23 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<AppSetting>()
+            .HasKey(e => e.Id);
+
+        // Dynamic Global Query Filter for IsActive
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var parameter = Expression.Parameter(entityType.ClrType, "e");
+                var property = Expression.Property(parameter, nameof(BaseEntity.IsActive));
+                var condition = Expression.Equal(property, Expression.Constant(true));
+                var lambda = Expression.Lambda(condition, parameter);
+
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+            }
+        }
+
         // Seed Data
         modelBuilder.Entity<Role>().HasData(
             new Role { Id = 1, Name = "Admin", Description = "Yönetici", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
@@ -126,7 +147,12 @@ public class AppDbContext : DbContext
             new Permission { Id = 17, Name = "Menü Listele", ControllerName = "Menus", ActionName = "List", Code = "Menus_Read", Description = "Menü listeleme ve görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 18, Name = "Menü Oluştur", ControllerName = "Menus", ActionName = "Add", Code = "Menus_Create", Description = "Menü oluşturma", CRUDActionType = 2, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 19, Name = "Menü Güncelle", ControllerName = "Menus", ActionName = "Update", Code = "Menus_Update", Description = "Menü güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 20, Name = "Menü Sil", ControllerName = "Menus", ActionName = "Delete", Code = "Menus_Delete", Description = "Menü silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Permission { Id = 20, Name = "Menü Sil", ControllerName = "Menus", ActionName = "Delete", Code = "Menus_Delete", Description = "Menü silme", CRUDActionType = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 21, Name = "Ayar Listele", ControllerName = "Settings", ActionName = "List", Code = "Settings_Read", Description = "Sistem ayarlarını listeleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 22, Name = "Ayar Güncelle", ControllerName = "Settings", ActionName = "Update", Code = "Settings_Update", Description = "Sistem ayarlarını güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 23, Name = "Hareket Listele", ControllerName = "AuditLogs", ActionName = "List", Code = "AuditLogs_Read", Description = "Sistem hareketlerini (logları) görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 24, Name = "Çöp Kutusu Görüntüle", ControllerName = "RecycleBin", ActionName = "List", Code = "RecycleBin_Read", Description = "Silinmiş kayıtları görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 25, Name = "Çöp Kutusu Geri Yükle", ControllerName = "RecycleBin", ActionName = "Restore", Code = "RecycleBin_Restore", Description = "Silinmiş kayıtları geri yükleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<Menu>().HasData(
@@ -135,7 +161,10 @@ public class AppDbContext : DbContext
             new Menu { Id = 3, Name = "Roller", Url = "/Admin/Roles", Icon = "bi-shield-check", Order = 3, PermissionId = 5, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 4, Name = "İzinler", Url = "/Admin/Permissions", Icon = "bi-key", Order = 4, PermissionId = 9, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 5, Name = "Departmanlar", Url = "/Admin/Departments", Icon = "bi-diagram-3", Order = 5, PermissionId = 13, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 6, Name = "Menüler", Url = "/Admin/Menus", Icon = "bi-menu-button", Order = 6, PermissionId = 17, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Menu { Id = 6, Name = "Menüler", Url = "/Admin/Menus", Icon = "bi-menu-button", Order = 6, PermissionId = 17, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 7, Name = "Sistem Ayarları", Url = "/Admin/Settings", Icon = "bi-gear", Order = 7, PermissionId = 21, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 8, Name = "Sistem Hareketleri", Url = "/Admin/AuditLogs", Icon = "bi-activity", Order = 8, PermissionId = 23, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 9, Name = "Çöp Kutusu", Url = "/Admin/RecycleBin", Icon = "bi-trash3", Order = 9, PermissionId = 24, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         // Admin user - password: admin
@@ -168,7 +197,18 @@ public class AppDbContext : DbContext
             new RolePermission { RoleId = 1, PermissionId = 17 },
             new RolePermission { RoleId = 1, PermissionId = 18 },
             new RolePermission { RoleId = 1, PermissionId = 19 },
-            new RolePermission { RoleId = 1, PermissionId = 20 }
+            new RolePermission { RoleId = 1, PermissionId = 20 },
+            new RolePermission { RoleId = 1, PermissionId = 21 },
+            new RolePermission { RoleId = 1, PermissionId = 22 },
+            new RolePermission { RoleId = 1, PermissionId = 23 },
+            new RolePermission { RoleId = 1, PermissionId = 24 },
+            new RolePermission { RoleId = 1, PermissionId = 25 }
+        );
+
+        modelBuilder.Entity<AppSetting>().HasData(
+            new AppSetting { Id = 1, Key = "SiteName", Value = "Baselib", Description = "Uygulamanın genel adı", IsActive = true },
+            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true },
+            new AppSetting { Id = 3, Key = "MaintenanceMode", Value = "false", Description = "Sistemi bakım moduna alır", IsActive = true }
         );
     }
 }

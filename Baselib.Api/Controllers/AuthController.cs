@@ -43,8 +43,15 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        var userId = int.Parse(User.FindFirst("nameid")!.Value);
-        await _userService.LogoutAsync(userId);
+        await _userService.LogoutAsync(User);
         return Ok(Result.SuccessResult(Messages.Auth.LoggedOut));
+    }
+
+    [HttpPost("switch-role/{roleId:int}")]
+    [Authorize]
+    public async Task<IActionResult> SwitchRole(int roleId)
+    {
+        var result = await _userService.SwitchRoleAsync(User, roleId);
+        return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
     }
 }

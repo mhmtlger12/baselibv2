@@ -1,0 +1,89 @@
+@page
+@model Baselib.Presentation.Pages.Admin.AuditLogsModel
+@{
+    ViewData["Title"] = "Sistem Hareketleri";
+}
+
+<div class="page-toolbar">
+    <div>
+        <h2>Sistem Hareketleri (Audit Logs)</h2>
+        <p>Sistemde yapılan silme, güncelleme ve ekleme işlemlerinin kayıtları.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Tarih</th>
+                        <th style="width: 15%;">Kullanıcı</th>
+                        <th style="width: 10%;">İşlem</th>
+                        <th style="width: 15%;">Modül</th>
+                        <th style="width: 35%;">Detay</th>
+                        <th style="width: 10%;">Aksiyon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Logs != null && Model.Logs.Any())
+                    {
+                        foreach (var log in Model.Logs)
+                        {
+                            var badgeColor = log.Action == "POST" ? "bg-success" :
+                                           log.Action == "PUT" ? "bg-warning text-dark" :
+                                           log.Action == "DELETE" ? "bg-danger" : "bg-secondary";
+                            <tr>
+                                <td>@log.CreatedDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                <td>
+                                    <strong>@(log.Username ?? "Sistem/Anonim")</strong>
+                                </td>
+                                <td><span class="badge @badgeColor">@log.Action</span></td>
+                                <td><span class="badge bg-light text-dark border">@log.Controller</span></td>
+                                <td class="text-truncate" style="max-width: 250px;">
+                                    <small class="text-muted">@log.Details</small>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(log.Details))
+                                    {
+                                        <button class="btn btn-sm btn-outline-info btn-view-details" data-details="@log.Details">
+                                            İncele
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="bi bi-inbox fs-2 text-muted d-block mb-2"></i>
+                                Henüz kaydedilmiş bir hareket bulunmuyor.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">İşlem Detayları (JSON)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <pre id="jsonDetails" class="p-3" style="white-space: pre-wrap; font-size: 13px;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin/auditlogs.js" asp-append-version="true"></script>
+}

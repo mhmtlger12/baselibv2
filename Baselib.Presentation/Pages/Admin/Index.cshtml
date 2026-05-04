@@ -6,8 +6,8 @@
 
 <div class="page-toolbar">
     <div>
-        <h2>Genel Bakış</h2>
-        <p>Kullanıcı, rol ve yetki yönetimi için özet durum.</p>
+        <h2>Sistem Gösterge Paneli</h2>
+        <p>Kullanıcı, rol ve sistem istatistiklerinin güncel özeti.</p>
     </div>
 </div>
 
@@ -16,109 +16,93 @@
     <div class="alert alert-warning" role="alert">@Model.LoadError</div>
 }
 
+<!-- Üst İstatistik Kartları -->
 <div class="row g-3">
     <div class="col-md-6 col-xl-3">
-        <div class="metric-card">
-            <span class="metric-icon"><i class="bi bi-people"></i></span>
+        <div class="metric-card" style="border-left: 4px solid var(--admin-primary);">
+            <span class="metric-icon" style="color: var(--admin-primary); background: rgba(10, 25, 47, 0.1);"><i class="bi bi-people-fill"></i></span>
             <div>
-                <p class="metric-value">@Model.UserCount</p>
+                <p class="metric-value">@Model.Stats?.TotalUsers</p>
                 <p class="metric-label">Toplam Kullanıcı</p>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
-        <div class="metric-card">
-            <span class="metric-icon"><i class="bi bi-shield-check"></i></span>
+        <div class="metric-card" style="border-left: 4px solid #10b981;">
+            <span class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.1);"><i class="bi bi-person-check-fill"></i></span>
             <div>
-                <p class="metric-value">@Model.RoleCount</p>
-                <p class="metric-label">Roller</p>
+                <p class="metric-value">@Model.Stats?.ActiveUsers</p>
+                <p class="metric-label">Aktif Kullanıcı</p>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
-        <div class="metric-card">
-            <span class="metric-icon"><i class="bi bi-key"></i></span>
+        <div class="metric-card" style="border-left: 4px solid #f59e0b;">
+            <span class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="bi bi-shield-lock-fill"></i></span>
             <div>
-                <p class="metric-value">@Model.PermissionCount</p>
-                <p class="metric-label">İzinler</p>
+                <p class="metric-value">@Model.Stats?.TotalRoles</p>
+                <p class="metric-label">Tanımlı Rol</p>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
-        <div class="metric-card">
-            <span class="metric-icon"><i class="bi bi-diagram-3"></i></span>
+        <div class="metric-card" style="border-left: 4px solid #6366f1;">
+            <span class="metric-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.1);"><i class="bi bi-diagram-3-fill"></i></span>
             <div>
-                <p class="metric-value">@Model.DepartmentCount</p>
-                <p class="metric-label">Departmanlar</p>
+                <p class="metric-value">@Model.Stats?.TotalDepartments</p>
+                <p class="metric-label">Departman Sayısı</p>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Grafikler ve Aktiviteler -->
 <div class="row g-3 mt-1">
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title">Yönetim Kısayolları</h5>
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Rol Dağılımı</h5>
+                <i class="bi bi-pie-chart text-muted"></i>
             </div>
-            <div class="card-body">
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="bi bi-person-plus"></i></span>
-                        <div>
-                            <strong>Kullanıcı oluştur</strong>
-                            <p class="text-muted mb-0 small">Yeni kullanıcı ekleyip rol ataması yapın.</p>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="bi bi-shield-lock"></i></span>
-                        <div>
-                            <strong>Rol yetkilerini düzenle</strong>
-                            <p class="text-muted mb-0 small">Controller bazlı CRUD izinlerini yönetin.</p>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="bi bi-diagram-3"></i></span>
-                        <div>
-                            <strong>Organizasyonu güncelle</strong>
-                            <p class="text-muted mb-0 small">Departman ağacını ve menü sıralamasını düzenleyin.</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="card-body d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                @if (Model.Stats?.RoleDistributions != null && Model.Stats.RoleDistributions.Any())
+                {
+                    <canvas id="roleDistributionChart" width="400" height="400"></canvas>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Yeterli veri bulunamadı.</p>
+                }
             </div>
         </div>
     </div>
-    <div class="col-lg-6">
-        <div class="card">
+    <div class="col-lg-5">
+        <div class="card h-100">
             <div class="card-header">
-                <h5 class="card-title">Veri Durumu</h5>
+                <h5 class="card-title mb-0">Hızlı İşlemler</h5>
             </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Kullanıcı / Rol Dengesi</span>
-                        <span class="text-success">@Model.UserRoleRatio%</span>
+                <div class="activity-list">
+                    <div class="activity-item" style="cursor: pointer;" onclick="window.location.href='/Admin/Users'">
+                        <span class="activity-icon bg-light text-primary"><i class="bi bi-person-plus"></i></span>
+                        <div>
+                            <strong>Kullanıcı Yönetimi</strong>
+                            <p class="text-muted mb-0 small">Sisteme yeni kullanıcı ekleyin veya düzenleyin.</p>
+                        </div>
                     </div>
-                    <div class="progress">
-                        <div class="progress-bar bg-success" role="progressbar" aria-label="Kullanıcı rol dengesi" data-progress="@Model.UserRoleRatio"></div>
+                    <div class="activity-item" style="cursor: pointer;" onclick="window.location.href='/Admin/Roles'">
+                        <span class="activity-icon bg-light text-warning"><i class="bi bi-shield-check"></i></span>
+                        <div>
+                            <strong>Rol Yetkilendirmesi</strong>
+                            <p class="text-muted mb-0 small">Mevcut rolleri ve modül erişim izinlerini ayarlayın.</p>
+                        </div>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Yetki Kapsamı</span>
-                        <span class="text-warning">@Model.PermissionCoverage%</span>
-                    </div>
-                    <div class="progress">
-                        <div class="progress-bar bg-warning" role="progressbar" aria-label="Yetki kapsamı" data-progress="@Model.PermissionCoverage"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Departman Yapısı</span>
-                        <span class="text-info">@Model.DepartmentCoverage%</span>
-                    </div>
-                    <div class="progress">
-                        <div class="progress-bar bg-info" role="progressbar" aria-label="Departman yapısı" data-progress="@Model.DepartmentCoverage"></div>
+                    <div class="activity-item" style="cursor: pointer;" onclick="window.location.href='/Admin/Departments'">
+                        <span class="activity-icon bg-light text-info"><i class="bi bi-diagram-3"></i></span>
+                        <div>
+                            <strong>Departman Organizasyonu</strong>
+                            <p class="text-muted mb-0 small">Alt/üst departman hiyerarşisini güncelleyin.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -127,5 +111,12 @@
 </div>
 
 @section Scripts {
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Sunucudan gelen rol dağılım verilerini JavaScript'e aktarma
+        const roleData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Stats?.RoleDistributions ?? new List<Baselib.Business.DTOs.RoleDistributionDto>()));
+    </script>
     <script src="~/js/admin/admin-dashboard.js" asp-append-version="true"></script>
 }
