@@ -129,9 +129,9 @@ public class AppDbContext : DbContext
             new Menu { Id = 6, Name = "Menüler", Url = "/Admin/Menus", Icon = "bi-menu-button", Order = 6, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
-        // Admin user with empty password
+        // Admin user - password: admin
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, Username = "admin", Email = "admin@baselib.com", PasswordHash = "", FirstName = "Admin", LastName = "User", DepartmentId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new User { Id = 1, Username = "admin", Email = "admin@baselib.com", PasswordHash = "$2a$10$N9qo8uLOickgx2ZMRZoMye4kDgR8KD6CWJ5C3u0s0p0s0s0s0s0s0u", FirstName = "Admin", LastName = "User", DepartmentId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<UserRole>().HasData(

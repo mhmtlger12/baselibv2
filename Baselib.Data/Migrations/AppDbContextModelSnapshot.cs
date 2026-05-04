@@ -617,7 +617,7 @@ namespace Baselib.Data.Migrations
                             FirstName = "Admin",
                             IsActive = true,
                             LastName = "User",
-                            PasswordHash = "",
+                            PasswordHash = "$2a$10$N9qo8uLOickgx2ZMRZoMye4kDgR8KD6CWJ5C3u0s0p0s0s0s0s0s0u",
                             Username = "admin"
                         });
                 });

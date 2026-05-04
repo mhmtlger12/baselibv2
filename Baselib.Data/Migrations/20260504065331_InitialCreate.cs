@@ -322,7 +322,7 @@ namespace Baselib.Data.Migrations
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "Id", "CreatedBy", "CreatedDate", "DepartmentId", "Email", "FirstName", "IsActive", "LastName", "PasswordHash", "Phone", "UpdatedBy", "UpdatedDate", "Username" },
-                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "admin@baselib.com", "Admin", true, "User", "", null, null, null, "admin" });
+                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "admin@baselib.com", "Admin", true, "User", "$2a$10$N9qo8uLOickgx2ZMRZoMye4kDgR8KD6CWJ5C3u0s0p0s0s0s0s0s0u", null, null, null, "admin" });
 
             migrationBuilder.InsertData(
                 table: "UserRoles",

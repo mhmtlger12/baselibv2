@@ -6,50 +6,52 @@ namespace Baselib.Presentation.Services;
 
 public class ApiService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public ApiService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)
+    public ApiService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
     {
-        _httpClient = httpClient;
+        _httpClientFactory = httpClientFactory;
         _httpContextAccessor = httpContextAccessor;
     }
 
-    private void SetAuthorizationHeader()
+    private async Task<HttpClient> GetClient()
     {
+        var client = _httpClientFactory.CreateClient("ApiClient");
         var token = _httpContextAccessor.HttpContext?.Request.Cookies["AccessToken"];
         if (!string.IsNullOrEmpty(token))
         {
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            client.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         }
+        return client;
     }
 
     public async Task<T?> GetAsync<T>(string url)
     {
-        SetAuthorizationHeader();
-        var response = await _httpClient.GetAsync(url);
+        var client = await GetClient();
+        var response = await client.GetAsync(url);
         return await ReadResponseAsync<T>(response);
     }
 
     public async Task<T?> PostAsync<T>(string url, object? data = null)
     {
-        SetAuthorizationHeader();
-        var response = await _httpClient.PostAsJsonAsync(url, data);
+        var client = await GetClient();
+        var response = await client.PostAsJsonAsync(url, data);
         return await ReadResponseAsync<T>(response);
     }
 
     public async Task<T?> PutAsync<T>(string url, object? data = null)
     {
-        SetAuthorizationHeader();
-        var response = await _httpClient.PutAsJsonAsync(url, data);
+        var client = await GetClient();
+        var response = await client.PutAsJsonAsync(url, data);
         return await ReadResponseAsync<T>(response);
     }
 
     public async Task<T?> DeleteAsync<T>(string url)
     {
-        SetAuthorizationHeader();
-        var response = await _httpClient.DeleteAsync(url);
+        var client = await GetClient();
+        var response = await client.DeleteAsync(url);
         return await ReadResponseAsync<T>(response);
     }
 

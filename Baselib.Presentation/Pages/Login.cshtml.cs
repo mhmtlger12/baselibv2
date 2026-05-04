@@ -23,7 +23,7 @@ public class LoginModel : PageModel
 
     public IActionResult OnGet()
     {
-        if (_authService.IsAuthenticated)
+        if (_authService.IsAuthenticated())
         {
             return RedirectToPage("/Admin/Index");
         }

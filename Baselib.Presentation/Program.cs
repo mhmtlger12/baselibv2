@@ -4,6 +4,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5298");
+});
+
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ApiService>();
 

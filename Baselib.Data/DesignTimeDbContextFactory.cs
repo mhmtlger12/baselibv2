@@ -8,8 +8,8 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
     {
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseMySql(
-            "Server=localhost;Database=mugla;User=root;Password=;Port=3306;Pooling=true;MinPoolSize=10;MaxPoolSize=200;ConnectionTimeout=60;DefaultCommandTimeout=300;AllowUserVariables=true;UseAffectedRows=false;ConvertZeroDateTime=true;AllowZeroDateTime=true;",
-            ServerVersion.AutoDetect("Server=localhost;Database=mugla;User=root;Password=;Port=3306;Pooling=true;MinPoolSize=10;MaxPoolSize=200;ConnectionTimeout=60;DefaultCommandTimeout=300;AllowUserVariables=true;UseAffectedRows=false;ConvertZeroDateTime=true;AllowZeroDateTime=true;"));
+            "Server=localhost;Port=3306;Database=baselib;User=root;Password=;",
+            new MySqlServerVersion(new Version(8, 0, 0)));
         return new AppDbContext(optionsBuilder.Options);
     }
 }

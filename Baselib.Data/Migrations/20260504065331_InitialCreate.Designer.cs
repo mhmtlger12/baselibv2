@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Baselib.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260504064254_InitialCreate")]
+    [Migration("20260504065331_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -620,7 +620,7 @@ namespace Baselib.Data.Migrations
                             FirstName = "Admin",
                             IsActive = true,
                             LastName = "User",
-                            PasswordHash = "",
+                            PasswordHash = "$2a$10$N9qo8uLOickgx2ZMRZoMye4kDgR8KD6CWJ5C3u0s0p0s0s0s0s0s0u",
                             Username = "admin"
                         });
                 });
