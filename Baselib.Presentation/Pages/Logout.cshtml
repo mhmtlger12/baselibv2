@@ -1,0 +1,7 @@
+@page
+@{
+    Response.Cookies.Delete("AccessToken");
+    Response.Cookies.Delete("RefreshToken");
+    Response.Cookies.Delete("UserData");
+    Response.Redirect("/Login");
+}
