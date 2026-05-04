@@ -15,8 +15,8 @@ async function loadData() {
         showLoading();
         const results = await Promise.allSettled([
             api.get('/api/users'),
-            api.get('/api/roles'),
-            api.get('/api/departments')
+            api.get('/api/roles/selectOption'),
+            api.get('/api/departments/selectOption')
         ]);
 
         if (results[0].status === 'rejected') {

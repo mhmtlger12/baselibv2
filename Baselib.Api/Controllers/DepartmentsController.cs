@@ -26,6 +26,13 @@ public class DepartmentsController : ControllerBase
         return Ok(DataResult<IEnumerable<DepartmentDto>>.SuccessDataResult(departments));
     }
 
+    [HttpGet("selectOption")]
+    public async Task<IActionResult> SelectOption()
+    {
+        var departments = await _departmentService.GetAllAsync();
+        return Ok(DataResult<IEnumerable<DepartmentDto>>.SuccessDataResult(departments));
+    }
+
     [HttpGet("tree")]
     public async Task<IActionResult> Tree()
     {

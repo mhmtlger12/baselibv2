@@ -26,6 +26,13 @@ public class RolesController : ControllerBase
         return Ok(DataResult<IEnumerable<RoleDto>>.SuccessDataResult(roles));
     }
 
+    [HttpGet("selectOption")]
+    public async Task<IActionResult> SelectOption()
+    {
+        var roles = await _roleService.GetAllAsync();
+        return Ok(DataResult<IEnumerable<RoleDto>>.SuccessDataResult(roles));
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
