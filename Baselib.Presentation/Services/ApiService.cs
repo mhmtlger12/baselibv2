@@ -60,10 +60,15 @@ public class ApiService
     {
         var content = await response.Content.ReadAsStringAsync();
 
-        if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             ClearAuthCookies();
-            throw new UnauthorizedAccessException("Oturum süresi doldu veya bu işlem için yetkiniz yok.");
+            throw new UnauthorizedAccessException("Oturum süresi doldu, lütfen tekrar giriş yapın.");
+        }
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            throw new InvalidOperationException("Bu içeriği görüntülemek veya bu işlemi yapmak için yetkiniz bulunmuyor.");
         }
 
         if (string.IsNullOrWhiteSpace(content))

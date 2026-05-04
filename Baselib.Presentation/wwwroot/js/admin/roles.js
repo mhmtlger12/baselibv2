@@ -14,13 +14,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadData() {
     try {
         showLoading();
-        const [rolesRes, permissionGroupsRes] = await Promise.all([
+        const results = await Promise.allSettled([
             api.get('/api/roles'),
             api.get('/api/permissions/grouped')
         ]);
 
-        roles = rolesRes || [];
-        basePermissionGroups = permissionGroupsRes || [];
+        if (results[0].status === 'rejected') {
+            throw new Error(results[0].reason.message || 'Roller yüklenemedi');
+        }
+
+        roles = results[0].value || [];
+        basePermissionGroups = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
         renderTable();
     } catch (error) {
         showToast(error.message || 'Veriler yüklenirken hata oluştu', 'error');

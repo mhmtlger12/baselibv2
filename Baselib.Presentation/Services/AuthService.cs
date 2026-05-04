@@ -34,20 +34,20 @@ public class AuthService
                 {
                     HttpOnly = true,
                     SameSite = SameSiteMode.Lax,
-                    Expires = DateTimeOffset.Now.AddMinutes(15)
+                    Expires = DateTimeOffset.UtcNow.AddMinutes(15)
                 });
 
                 _httpContextAccessor.HttpContext?.Response.Cookies.Append(RefreshTokenCookieName, result.Data.RefreshToken ?? "", new CookieOptions
                 {
                     HttpOnly = true,
                     SameSite = SameSiteMode.Lax,
-                    Expires = DateTimeOffset.Now.AddDays(7)
+                    Expires = DateTimeOffset.UtcNow.AddDays(7)
                 });
 
                 var userJson = JsonSerializer.Serialize(user);
                 _httpContextAccessor.HttpContext?.Response.Cookies.Append(UserCookieName, userJson, new CookieOptions
                 {
-                    Expires = DateTimeOffset.Now.AddDays(7)
+                    Expires = DateTimeOffset.UtcNow.AddDays(7)
                 });
 
                 return result.Data;
@@ -78,7 +78,7 @@ public class AuthService
                 {
                     HttpOnly = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.Now.AddMinutes(15)
+                    Expires = DateTimeOffset.UtcNow.AddMinutes(15)
                 });
                 return true;
             }

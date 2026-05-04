@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 
-var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5298";
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7137";
 
 builder.Services.AddHttpClient("ApiClient", client =>
 {

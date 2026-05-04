@@ -1,4 +1,5 @@
 @inject AuthService AuthService
+@inject ApiService ApiService
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     var currentUser = AuthService.GetCurrentUser();
@@ -6,6 +7,19 @@
     if (string.IsNullOrWhiteSpace(displayName))
     {
         displayName = currentUser?.Username ?? "Kullanıcı";
+    }
+
+    List<Baselib.Business.DTOs.MenuDto> userMenus = new();
+    if (currentUser != null)
+    {
+        try
+        {
+            userMenus = await ApiService.GetAsync<List<Baselib.Business.DTOs.MenuDto>>($"/api/menus/user/{currentUser.Id}") ?? new();
+        }
+        catch
+        {
+            // Menüler yüklenirken hata oluşursa boş liste kalır
+        }
     }
 }
 
@@ -31,42 +45,58 @@
         </div>
 
         <ul class="sidebar-menu">
-            <li>
-                <a class="sidebar-link @(currentPage == "/Admin/Index" ? "active" : "")" asp-page="/Admin/Index">
-                    <i class="bi bi-grid-1x2"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a class="sidebar-link @(currentPage.Contains("Users") ? "active" : "")" asp-page="/Admin/Users/Index">
-                    <i class="bi bi-people"></i>
-                    <span>Kullanıcılar</span>
-                </a>
-            </li>
-            <li>
-                <a class="sidebar-link @(currentPage.Contains("Roles") ? "active" : "")" asp-page="/Admin/Roles/Index">
-                    <i class="bi bi-shield-check"></i>
-                    <span>Roller</span>
-                </a>
-            </li>
-            <li>
-                <a class="sidebar-link @(currentPage.Contains("Permissions") ? "active" : "")" asp-page="/Admin/Permissions/Index">
-                    <i class="bi bi-key"></i>
-                    <span>İzinler</span>
-                </a>
-            </li>
-            <li>
-                <a class="sidebar-link @(currentPage.Contains("Departments") ? "active" : "")" asp-page="/Admin/Departments/Index">
-                    <i class="bi bi-diagram-3"></i>
-                    <span>Departmanlar</span>
-                </a>
-            </li>
-            <li>
-                <a class="sidebar-link @(currentPage.Contains("Menus") ? "active" : "")" asp-page="/Admin/Menus/Index">
-                    <i class="bi bi-menu-button-wide"></i>
-                    <span>Menüler</span>
-                </a>
-            </li>
+            @if (userMenus.Any())
+            {
+                foreach (var menu in userMenus)
+                {
+                    bool isActive = false;
+                    var menuUrl = menu.Url ?? "";
+                    if (menuUrl == "/Admin" || menuUrl == "/Admin/Index")
+                    {
+                        isActive = currentPage == "/Admin/Index" || currentPage == "/Admin";
+                    }
+                    else if (!string.IsNullOrEmpty(menuUrl))
+                    {
+                        isActive = currentPage.StartsWith(menuUrl);
+                    }
+
+                    <li>
+                        <a class="sidebar-link @(isActive ? "active" : "")" href="@menuUrl">
+                            <i class="bi @(menu.Icon ?? "bi-circle")"></i>
+                            <span>@menu.Name</span>
+                        </a>
+                        @if (menu.SubMenus != null && menu.SubMenus.Any())
+                        {
+                            <ul class="sidebar-submenu" style="padding-left: 1.5rem; list-style: none;">
+                                @foreach (var sub in menu.SubMenus)
+                                {
+                                    bool isSubActive = false;
+                                    var subUrl = sub.Url ?? "";
+                                    if (!string.IsNullOrEmpty(subUrl))
+                                    {
+                                        isSubActive = currentPage.StartsWith(subUrl);
+                                    }
+                                    <li>
+                                        <a class="sidebar-link @(isSubActive ? "active" : "")" href="@subUrl">
+                                            <i class="bi @(sub.Icon ?? "bi-circle")"></i>
+                                            <span>@sub.Name</span>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </li>
+                }
+            }
+            else
+            {
+                <li>
+                    <a class="sidebar-link" href="#">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>Yetkili menü bulunamadı</span>
+                    </a>
+                </li>
+            }
         </ul>
 
         <div class="sidebar-footer">

@@ -13,15 +13,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadData() {
     try {
         showLoading();
-        const [usersRes, rolesRes, deptRes] = await Promise.all([
+        const results = await Promise.allSettled([
             api.get('/api/users'),
             api.get('/api/roles'),
             api.get('/api/departments')
         ]);
 
-        users = usersRes || [];
-        roles = rolesRes || [];
-        departments = deptRes || [];
+        if (results[0].status === 'rejected') {
+            throw new Error(results[0].reason.message || 'Kullanıcılar yüklenemedi');
+        }
+
+        users = results[0].value || [];
+        roles = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
+        departments = results[2].status === 'fulfilled' ? (results[2].value || []) : [];
 
         renderTable();
         renderDepartments();

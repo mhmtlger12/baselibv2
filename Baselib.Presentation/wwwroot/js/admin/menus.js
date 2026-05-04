@@ -12,13 +12,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadData() {
     try {
         showLoading();
-        const [menusRes, permissionsRes] = await Promise.all([
+        const results = await Promise.allSettled([
             api.get('/api/menus'),
             api.get('/api/permissions')
         ]);
 
-        menus = menusRes || [];
-        permissions = permissionsRes || [];
+        if (results[0].status === 'rejected') {
+            throw new Error(results[0].reason.message || 'Menüler yüklenemedi');
+        }
+
+        menus = results[0].value || [];
+        permissions = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
         renderTree();
         renderParentSelect();
         renderPermissionSelect();

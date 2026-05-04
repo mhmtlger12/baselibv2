@@ -73,7 +73,7 @@ public class UserService : IUserService
             LastName = dto.LastName?.Trim(),
             Phone = dto.Phone?.Trim(),
             DepartmentId = dto.DepartmentId,
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.UtcNow,
             IsActive = true
         };
 
@@ -101,7 +101,7 @@ public class UserService : IUserService
         user.Phone = dto.Phone?.Trim();
         user.DepartmentId = dto.DepartmentId;
         user.IsActive = dto.IsActive;
-        user.UpdatedDate = DateTime.Now;
+        user.UpdatedDate = DateTime.UtcNow;
 
         if (!string.IsNullOrWhiteSpace(dto.Password))
         {
@@ -120,7 +120,7 @@ public class UserService : IUserService
             throw new KeyNotFoundException("User not found");
 
         user.IsActive = false;
-        user.UpdatedDate = DateTime.Now;
+        user.UpdatedDate = DateTime.UtcNow;
         await _users.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
     }
@@ -149,7 +149,7 @@ public class UserService : IUserService
         {
             UserId = user.Id,
             Token = refreshToken,
-            ExpiryDate = DateTime.Now.AddDays(7)
+            ExpiryDate = DateTime.UtcNow.AddDays(7)
         });
 
         await _unitOfWork.SaveChangesAsync();
@@ -158,7 +158,7 @@ public class UserService : IUserService
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiryDate = DateTime.Now.AddMinutes(15),
+            ExpiryDate = DateTime.UtcNow.AddMinutes(15),
             User = MapToDto(user)
         };
     }
@@ -171,7 +171,7 @@ public class UserService : IUserService
                     .ThenInclude(ur => ur.Role)
             .Include(rt => rt.User)
                 .ThenInclude(u => u.Department)
-            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && rt.ExpiryDate > DateTime.Now);
+            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && rt.ExpiryDate > DateTime.UtcNow);
 
         if (token == null)
             throw new UnauthorizedAccessException("Invalid refresh token");
@@ -181,7 +181,7 @@ public class UserService : IUserService
         var newRefreshToken = GenerateRefreshToken();
 
         token.Token = newRefreshToken;
-        token.ExpiryDate = DateTime.Now.AddDays(7);
+        token.ExpiryDate = DateTime.UtcNow.AddDays(7);
         await _refreshTokens.UpdateAsync(token);
         await _unitOfWork.SaveChangesAsync();
 
@@ -189,7 +189,7 @@ public class UserService : IUserService
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
-            ExpiryDate = DateTime.Now.AddMinutes(15),
+            ExpiryDate = DateTime.UtcNow.AddMinutes(15),
             User = MapToDto(user)
         };
     }
@@ -263,7 +263,7 @@ public class UserService : IUserService
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddMinutes(15),
+            expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
