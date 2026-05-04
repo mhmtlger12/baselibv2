@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Baselib.Api/Baselib.Api.csproj" />
+  <Project Path="Baselib.Business/Baselib.Business.csproj" />
+  <Project Path="Baselib.Core/Baselib.Core.csproj" />
+  <Project Path="Baselib.Data/Baselib.Data.csproj" />
+  <Project Path="Baselib.Entities/Baselib.Entities.csproj" />
+  <Project Path="Baselib.Presentation/Baselib.Presentation.csproj" />
+</Solution>
