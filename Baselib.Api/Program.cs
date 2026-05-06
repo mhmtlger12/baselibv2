@@ -11,6 +11,7 @@ using Baselib.Core.Interfaces;
 using Baselib.Data;
 using Baselib.Data.Interfaces;
 using Baselib.Data.Repositories;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<Baselib.Api.Attributes.AuditLogFilterAttribute>();
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PresentationClient", policy =>
@@ -76,8 +77,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
