@@ -152,7 +152,9 @@ public class AppDbContext : DbContext
             new Permission { Id = 22, Name = "Ayar Güncelle", ControllerName = "Settings", ActionName = "Update", Code = "Settings_Update", Description = "Sistem ayarlarını güncelleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 23, Name = "Hareket Listele", ControllerName = "AuditLogs", ActionName = "List", Code = "AuditLogs_Read", Description = "Sistem hareketlerini (logları) görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 24, Name = "Çöp Kutusu Görüntüle", ControllerName = "RecycleBin", ActionName = "List", Code = "RecycleBin_Read", Description = "Silinmiş kayıtları görüntüleme", CRUDActionType = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 25, Name = "Çöp Kutusu Geri Yükle", ControllerName = "RecycleBin", ActionName = "Restore", Code = "RecycleBin_Restore", Description = "Silinmiş kayıtları geri yükleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Permission { Id = 25, Name = "Çöp Kutusu Geri Yükle", ControllerName = "RecycleBin", ActionName = "Restore", Code = "RecycleBin_Restore", Description = "Silinmiş kayıtları geri yükleme", CRUDActionType = 3, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 26, Name = "Rol Seçenekleri", ControllerName = "Roles", ActionName = "SelectOption", Code = "Roles_SelectOption", Description = "Rol seçim listelerini görüntüleme", CRUDActionType = 5, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 27, Name = "Departman Seçenekleri", ControllerName = "Departments", ActionName = "SelectOption", Code = "Departments_SelectOption", Description = "Departman seçim listelerini görüntüleme", CRUDActionType = 5, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<Menu>().HasData(
@@ -202,13 +204,15 @@ public class AppDbContext : DbContext
             new RolePermission { RoleId = 1, PermissionId = 22 },
             new RolePermission { RoleId = 1, PermissionId = 23 },
             new RolePermission { RoleId = 1, PermissionId = 24 },
-            new RolePermission { RoleId = 1, PermissionId = 25 }
+            new RolePermission { RoleId = 1, PermissionId = 25 },
+            new RolePermission { RoleId = 1, PermissionId = 26 },
+            new RolePermission { RoleId = 1, PermissionId = 27 }
         );
 
         modelBuilder.Entity<AppSetting>().HasData(
-            new AppSetting { Id = 1, Key = "SiteName", Value = "Baselib", Description = "Uygulamanın genel adı", IsActive = true },
-            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true },
-            new AppSetting { Id = 3, Key = "MaintenanceMode", Value = "false", Description = "Sistemi bakım moduna alır", IsActive = true }
+            new AppSetting { Id = 1, Key = "SiteName", Value = "Baselib", Description = "Uygulamanın genel adı", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new AppSetting { Id = 3, Key = "MaintenanceMode", Value = "false", Description = "Sistemi bakım moduna alır", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
     }
 }
