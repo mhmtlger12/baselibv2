@@ -7,7 +7,7 @@ public class RefreshToken
     public User User { get; set; } = null!;
     public string Token { get; set; } = string.Empty;
     public DateTime ExpiryDate { get; set; }
-    public DateTime CreatedDate { get; set; } = DateTime.Now;
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
 }

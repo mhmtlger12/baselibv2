@@ -8,9 +8,3 @@ public class DashboardStatsDto
     public int TotalDepartments { get; set; }
     public List<RoleDistributionDto> RoleDistributions { get; set; } = new();
 }
-
-public class RoleDistributionDto
-{
-    public string RoleName { get; set; } = string.Empty;
-    public int UserCount { get; set; }
-}

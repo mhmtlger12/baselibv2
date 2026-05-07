@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Baselib.Data.Interfaces;
+using Baselib.Entities;
 
 namespace Baselib.Data.Repositories;
 
@@ -96,5 +97,18 @@ public class Repository<T> : IRepository<T> where T : class
         return predicate == null
             ? await _dbSet.CountAsync()
             : await _dbSet.CountAsync(predicate);
+    }
+
+    public virtual async Task SoftDeleteAsync(int id)
+    {
+        var entity = await GetByIdAsync(id)
+            ?? throw new KeyNotFoundException("Kayıt bulunamadı");
+
+        if (entity is not BaseEntity baseEntity)
+            throw new InvalidOperationException("Bu entity soft-delete desteklemiyor.");
+
+        baseEntity.IsActive = false;
+        baseEntity.UpdatedDate = DateTime.UtcNow;
+        _dbSet.Update(entity);
     }
 }

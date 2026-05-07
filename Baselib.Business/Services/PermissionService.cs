@@ -1,6 +1,9 @@
+using AutoMapper;
 using Baselib.Business.DTOs;
+using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Data.Interfaces;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +15,18 @@ public class PermissionService : IPermissionService
     private readonly IRepository<Permission> _permissions;
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
     public PermissionService(
         IRepository<Permission> permissions,
         IRepository<RolePermission> rolePermissions,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMapper mapper)
     {
         _permissions = permissions;
         _rolePermissions = rolePermissions;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<PermissionDto>> GetAllAsync()
@@ -31,13 +37,13 @@ public class PermissionService : IPermissionService
             .ThenBy(p => p.CRUDActionType)
             .ToListAsync();
 
-        return permissions.Select(MapToDto);
+        return _mapper.Map<IEnumerable<PermissionDto>>(permissions);
     }
 
     public async Task<PermissionDto?> GetByIdAsync(int id)
     {
         var permission = await _permissions.GetByIdAsync(id);
-        return permission == null ? null : MapToDto(permission);
+        return permission == null ? null : _mapper.Map<PermissionDto>(permission);
     }
 
     public async Task<PermissionDto> CreateAsync(CreatePermissionDto dto)
@@ -45,35 +51,35 @@ public class PermissionService : IPermissionService
         var permission = BuildPermission(dto);
 
         if (await _permissions.AnyAsync(p => p.Code == permission.Code))
-            throw new InvalidOperationException("Permission code already exists");
+            throw new InvalidOperationException(Messages.Permission.CodeAlreadyExists);
 
         if (await _permissions.AnyAsync(p =>
                 p.ControllerName == permission.ControllerName &&
                 p.ActionName == permission.ActionName))
-            throw new InvalidOperationException("Permission already exists for this controller/action");
+            throw new InvalidOperationException(Messages.Permission.AlreadyExistsForAction);
 
         await _permissions.AddAsync(permission);
         await _unitOfWork.SaveChangesAsync();
 
-        return MapToDto(permission);
+        return _mapper.Map<PermissionDto>(permission);
     }
 
     public async Task UpdateAsync(int id, CreatePermissionDto dto)
     {
         var permission = await _permissions.GetByIdAsync(id);
         if (permission == null)
-            throw new KeyNotFoundException("Permission not found");
+            throw new KeyNotFoundException(Messages.Permission.NotFound);
 
         var normalized = BuildPermission(dto);
 
         if (await _permissions.AnyAsync(p => p.Code == normalized.Code && p.Id != id))
-            throw new InvalidOperationException("Permission code already exists");
+            throw new InvalidOperationException(Messages.Permission.CodeAlreadyExists);
 
         if (await _permissions.AnyAsync(p =>
                 p.Id != id &&
                 p.ControllerName == normalized.ControllerName &&
                 p.ActionName == normalized.ActionName))
-            throw new InvalidOperationException("Permission already exists for this controller/action");
+            throw new InvalidOperationException(Messages.Permission.AlreadyExistsForAction);
 
         permission.Name = normalized.Name;
         permission.Code = normalized.Code;
@@ -82,7 +88,7 @@ public class PermissionService : IPermissionService
         permission.ActionName = normalized.ActionName;
         permission.CRUDActionType = normalized.CRUDActionType;
         permission.IsActive = dto.IsActive;
-        permission.UpdatedDate = DateTime.Now;
+        permission.UpdatedDate = DateTime.UtcNow;
 
         await _permissions.UpdateAsync(permission);
         await _unitOfWork.SaveChangesAsync();
@@ -90,13 +96,7 @@ public class PermissionService : IPermissionService
 
     public async Task DeleteAsync(int id)
     {
-        var permission = await _permissions.GetByIdAsync(id);
-        if (permission == null)
-            throw new KeyNotFoundException("Permission not found");
-
-        permission.IsActive = false;
-        permission.UpdatedDate = DateTime.Now;
-        await _permissions.UpdateAsync(permission);
+        await _permissions.SoftDeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -115,7 +115,7 @@ public class PermissionService : IPermissionService
                 .ToListAsync()
             : new List<int>();
 
-        return BuildPermissionGroups(allPermissions, rolePermissionIds);
+        return PermissionGroupHelper.BuildGroups(allPermissions, rolePermissionIds);
     }
 
     public async Task SaveRolePermissionsAsync(int roleId, List<PermissionGroupDto> permissionGroups)
@@ -188,66 +188,8 @@ public class PermissionService : IPermissionService
             ControllerName = controller,
             ActionName = action,
             CRUDActionType = dto.CRUDActionType,
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.UtcNow,
             IsActive = dto.IsActive
-        };
-    }
-
-    private static List<PermissionGroupDto> BuildPermissionGroups(IEnumerable<Permission> permissions, IReadOnlyCollection<int> selectedIds)
-    {
-        return permissions
-            .GroupBy(p => p.ControllerName)
-            .OrderBy(g => g.Key)
-            .Select(group =>
-            {
-                var items = group
-                    .OrderBy(p => p.CRUDActionType)
-                    .ThenBy(p => p.ActionName)
-                    .Select(permission =>
-                    {
-                        return new ControllerCrudDto
-                        {
-                            PermissionId = permission.Id,
-                            CRUDActionType = permission.CRUDActionType,
-                            Name = GetPermissionActionName(permission),
-                            ActionName = permission.ActionName,
-                            Code = permission.Code,
-                            Checked = selectedIds.Contains(permission.Id)
-                        };
-                    })
-                    .ToList();
-
-                return new PermissionGroupDto
-                {
-                    ControllerName = group.Key,
-                    ControllerCrudList = items,
-                    Checked = items.All(c => c.Checked),
-                    Indeterminate = items.Any(c => c.Checked) && !items.All(c => c.Checked)
-                };
-            })
-            .ToList();
-    }
-
-    private static string GetPermissionActionName(Permission permission)
-    {
-        var crudName = CRUDActionTypes.GetName(permission.CRUDActionType);
-        return crudName == permission.CRUDActionType.ToString()
-            ? permission.ActionName
-            : crudName;
-    }
-
-    private static PermissionDto MapToDto(Permission permission)
-    {
-        return new PermissionDto
-        {
-            Id = permission.Id,
-            Name = permission.Name,
-            Code = permission.Code,
-            Description = permission.Description,
-            ControllerName = permission.ControllerName,
-            ActionName = permission.ActionName,
-            CRUDActionType = permission.CRUDActionType,
-            IsActive = permission.IsActive
         };
     }
 }

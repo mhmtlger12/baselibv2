@@ -1,6 +1,9 @@
+using AutoMapper;
 using Baselib.Business.DTOs;
+using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Data.Interfaces;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -13,17 +16,20 @@ public class RoleService : IRoleService
     private readonly IRepository<Permission> _permissions;
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
     public RoleService(
         IRepository<Role> roles,
         IRepository<Permission> permissions,
         IRepository<RolePermission> rolePermissions,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMapper mapper)
     {
         _roles = roles;
         _permissions = permissions;
         _rolePermissions = rolePermissions;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<RoleDto>> GetAllAsync()
@@ -35,7 +41,7 @@ public class RoleService : IRoleService
             .OrderBy(r => r.Name)
             .ToListAsync();
 
-        return roles.Select(MapToDto);
+        return _mapper.Map<IEnumerable<RoleDto>>(roles);
     }
 
     public async Task<RoleDto?> GetByIdAsync(int id)
@@ -45,19 +51,19 @@ public class RoleService : IRoleService
                 .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(r => r.Id == id);
 
-        return role == null ? null : MapToDto(role);
+        return role == null ? null : _mapper.Map<RoleDto>(role);
     }
 
     public async Task<RoleDto> CreateAsync(CreateRoleDto dto)
     {
         if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim()))
-            throw new InvalidOperationException("Role name already exists");
+            throw new InvalidOperationException(Messages.Role.NameAlreadyExists);
 
         var role = new Role
         {
             Name = dto.Name.Trim(),
             Description = dto.Description?.Trim(),
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.UtcNow,
             IsActive = true
         };
 
@@ -74,15 +80,15 @@ public class RoleService : IRoleService
     {
         var role = await _roles.GetByIdAsync(id);
         if (role == null)
-            throw new KeyNotFoundException("Role not found");
+            throw new KeyNotFoundException(Messages.Role.NotFound);
 
         if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim() && r.Id != id))
-            throw new InvalidOperationException("Role name already exists");
+            throw new InvalidOperationException(Messages.Role.NameAlreadyExists);
 
         role.Name = dto.Name.Trim();
         role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
-        role.UpdatedDate = DateTime.Now;
+        role.UpdatedDate = DateTime.UtcNow;
 
         await _roles.UpdateAsync(role);
         await ReplaceRolePermissionsAsync(id, dto.PermissionIds);
@@ -91,20 +97,14 @@ public class RoleService : IRoleService
 
     public async Task DeleteAsync(int id)
     {
-        var role = await _roles.GetByIdAsync(id);
-        if (role == null)
-            throw new KeyNotFoundException("Role not found");
-
-        role.IsActive = false;
-        role.UpdatedDate = DateTime.Now;
-        await _roles.UpdateAsync(role);
+        await _roles.SoftDeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task AssignPermissionsAsync(int roleId, List<int> permissionIds)
     {
         if (!await _roles.AnyAsync(r => r.Id == roleId))
-            throw new KeyNotFoundException("Role not found");
+            throw new KeyNotFoundException(Messages.Role.NotFound);
 
         await ReplaceRolePermissionsAsync(roleId, permissionIds);
         await _unitOfWork.SaveChangesAsync();
@@ -123,22 +123,22 @@ public class RoleService : IRoleService
             .Select(rp => rp.PermissionId)
             .ToListAsync();
 
-        return BuildPermissionGroups(allPermissions, rolePermissionIds);
+        return PermissionGroupHelper.BuildGroups(allPermissions, rolePermissionIds);
     }
 
     public async Task UpdateWithPermissionsAsync(int id, UpdateRoleDto dto, List<PermissionGroupDto> permissionGroups)
     {
         var role = await _roles.GetByIdAsync(id);
         if (role == null)
-            throw new KeyNotFoundException("Role not found");
+            throw new KeyNotFoundException(Messages.Role.NotFound);
 
         if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim() && r.Id != id))
-            throw new InvalidOperationException("Role name already exists");
+            throw new InvalidOperationException(Messages.Role.NameAlreadyExists);
 
         role.Name = dto.Name.Trim();
         role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
-        role.UpdatedDate = DateTime.Now;
+        role.UpdatedDate = DateTime.UtcNow;
 
         await _roles.UpdateAsync(role);
 
@@ -146,6 +146,8 @@ public class RoleService : IRoleService
         await ReplaceRolePermissionsAsync(id, permissionIds);
         await _unitOfWork.SaveChangesAsync();
     }
+
+    // ── Private Helpers ──────────────────────────────────────────
 
     private async Task ReplaceRolePermissionsAsync(int roleId, IEnumerable<int> permissionIds)
     {
@@ -196,71 +198,5 @@ public class RoleService : IRoleService
         }
 
         return selected.Distinct().ToList();
-    }
-
-    private static List<PermissionGroupDto> BuildPermissionGroups(IEnumerable<Permission> permissions, IReadOnlyCollection<int> selectedIds)
-    {
-        return permissions
-            .GroupBy(p => p.ControllerName)
-            .OrderBy(g => g.Key)
-            .Select(group =>
-            {
-                var items = group
-                    .OrderBy(p => p.CRUDActionType)
-                    .ThenBy(p => p.ActionName)
-                    .Select(permission =>
-                    {
-                        return new ControllerCrudDto
-                        {
-                            PermissionId = permission.Id,
-                            CRUDActionType = permission.CRUDActionType,
-                            Name = GetPermissionActionName(permission),
-                            ActionName = permission.ActionName,
-                            Code = permission.Code,
-                            Checked = selectedIds.Contains(permission.Id)
-                        };
-                    })
-                    .ToList();
-
-                return new PermissionGroupDto
-                {
-                    ControllerName = group.Key,
-                    ControllerCrudList = items,
-                    Checked = items.All(c => c.Checked),
-                    Indeterminate = items.Any(c => c.Checked) && !items.All(c => c.Checked)
-                };
-            })
-            .ToList();
-    }
-
-    private static string GetPermissionActionName(Permission permission)
-    {
-        var crudName = CRUDActionTypes.GetName(permission.CRUDActionType);
-        return crudName == permission.CRUDActionType.ToString()
-            ? permission.ActionName
-            : crudName;
-    }
-
-    private static RoleDto MapToDto(Role role)
-    {
-        return new RoleDto
-        {
-            Id = role.Id,
-            Name = role.Name,
-            Description = role.Description,
-            Permissions = role.RolePermissions.Select(rp => new PermissionDto
-            {
-                Id = rp.Permission.Id,
-                Name = rp.Permission.Name,
-                Code = rp.Permission.Code,
-                Description = rp.Permission.Description,
-                ControllerName = rp.Permission.ControllerName,
-                ActionName = rp.Permission.ActionName,
-                CRUDActionType = rp.Permission.CRUDActionType,
-                IsActive = rp.Permission.IsActive
-            }).ToList(),
-            IsActive = role.IsActive,
-            CreatedDate = role.CreatedDate
-        };
     }
 }

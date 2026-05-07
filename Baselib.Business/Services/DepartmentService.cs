@@ -1,6 +1,8 @@
+using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Data.Interfaces;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +13,13 @@ public class DepartmentService : IDepartmentService
 {
     private readonly IRepository<Department> _departments;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public DepartmentService(IRepository<Department> departments, IUnitOfWork unitOfWork)
+    public DepartmentService(IRepository<Department> departments, IUnitOfWork unitOfWork, IMapper mapper)
     {
         _departments = departments;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<DepartmentDto>> GetAllAsync()
@@ -26,7 +30,7 @@ public class DepartmentService : IDepartmentService
             .OrderBy(d => d.Name)
             .ToListAsync();
 
-        return departments.Select(MapToDto);
+        return departments.Select(d => _mapper.Map<DepartmentDto>(d));
     }
 
     public async Task<IEnumerable<DepartmentDto>> GetTreeAsync()
@@ -46,7 +50,7 @@ public class DepartmentService : IDepartmentService
             .Include(d => d.SubDepartments)
             .FirstOrDefaultAsync(d => d.Id == id);
 
-        return department == null ? null : MapToDto(department);
+        return department == null ? null : _mapper.Map<DepartmentDto>(department);
     }
 
     public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto dto)
@@ -58,7 +62,7 @@ public class DepartmentService : IDepartmentService
             Name = dto.Name.Trim(),
             Code = dto.Code.Trim(),
             ParentDepartmentId = dto.ParentDepartmentId,
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.UtcNow,
             IsActive = true
         };
 
@@ -72,10 +76,10 @@ public class DepartmentService : IDepartmentService
     {
         var department = await _departments.GetByIdAsync(id);
         if (department == null)
-            throw new KeyNotFoundException("Department not found");
+            throw new KeyNotFoundException(Messages.Department.NotFound);
 
         if (dto.ParentDepartmentId == id)
-            throw new InvalidOperationException("Department cannot be its own parent");
+            throw new InvalidOperationException(Messages.General.SelfReferenceNotAllowed);
 
         await EnsureCodeIsUniqueAsync(dto.Code, id);
 
@@ -83,7 +87,7 @@ public class DepartmentService : IDepartmentService
         department.Code = dto.Code.Trim();
         department.ParentDepartmentId = dto.ParentDepartmentId;
         department.IsActive = dto.IsActive;
-        department.UpdatedDate = DateTime.Now;
+        department.UpdatedDate = DateTime.UtcNow;
 
         await _departments.UpdateAsync(department);
         await _unitOfWork.SaveChangesAsync();
@@ -91,13 +95,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task DeleteAsync(int id)
     {
-        var department = await _departments.GetByIdAsync(id);
-        if (department == null)
-            throw new KeyNotFoundException("Department not found");
-
-        department.IsActive = false;
-        department.UpdatedDate = DateTime.Now;
-        await _departments.UpdateAsync(department);
+        await _departments.SoftDeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
 
@@ -106,33 +104,19 @@ public class DepartmentService : IDepartmentService
         code = code.Trim();
 
         if (await _departments.AnyAsync(d => d.Code == code && (!departmentId.HasValue || d.Id != departmentId.Value)))
-            throw new InvalidOperationException("Department code already exists");
+            throw new InvalidOperationException(Messages.Department.CodeAlreadyExists);
     }
 
-    private static List<DepartmentDto> BuildTree(IEnumerable<Department> departments, int? parentId)
+    private List<DepartmentDto> BuildTree(IEnumerable<Department> departments, int? parentId)
     {
         return departments
             .Where(d => d.ParentDepartmentId == parentId)
             .Select(d =>
             {
-                var dto = MapToDto(d);
+                var dto = _mapper.Map<DepartmentDto>(d);
                 dto.SubDepartments = BuildTree(departments, d.Id);
                 return dto;
             })
             .ToList();
-    }
-
-    private static DepartmentDto MapToDto(Department department)
-    {
-        return new DepartmentDto
-        {
-            Id = department.Id,
-            Name = department.Name,
-            Code = department.Code,
-            ParentDepartmentId = department.ParentDepartmentId,
-            ParentDepartmentName = department.ParentDepartment?.Name,
-            SubDepartments = new(),
-            IsActive = department.IsActive
-        };
     }
 }

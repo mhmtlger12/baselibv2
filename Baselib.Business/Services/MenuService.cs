@@ -1,6 +1,8 @@
+using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Data.Interfaces;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -13,17 +15,20 @@ public class MenuService : IMenuService
     private readonly IRepository<UserRole> _userRoles;
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
     public MenuService(
         IRepository<Menu> menus,
         IRepository<UserRole> userRoles,
         IRepository<RolePermission> rolePermissions,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IMapper mapper)
     {
         _menus = menus;
         _userRoles = userRoles;
         _rolePermissions = rolePermissions;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<MenuDto>> GetAllAsync()
@@ -36,7 +41,7 @@ public class MenuService : IMenuService
             .ThenBy(m => m.Name)
             .ToListAsync();
 
-        return menus.Select(MapToDto);
+        return menus.Select(m => _mapper.Map<MenuDto>(m));
     }
 
     public async Task<IEnumerable<MenuDto>> GetMenusByUserIdAsync(int userId)
@@ -70,7 +75,7 @@ public class MenuService : IMenuService
             .Include(m => m.Permission)
             .FirstOrDefaultAsync(m => m.Id == id);
 
-        return menu == null ? null : MapToDto(menu);
+        return menu == null ? null : _mapper.Map<MenuDto>(menu);
     }
 
     public async Task<MenuDto> CreateAsync(CreateMenuDto dto)
@@ -83,7 +88,7 @@ public class MenuService : IMenuService
             ParentId = dto.ParentId,
             Order = dto.Order,
             PermissionId = dto.PermissionId,
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.UtcNow,
             IsActive = true
         };
 
@@ -97,10 +102,10 @@ public class MenuService : IMenuService
     {
         var menu = await _menus.GetByIdAsync(id);
         if (menu == null)
-            throw new KeyNotFoundException("Menu not found");
+            throw new KeyNotFoundException(Messages.Menu.NotFound);
 
         if (dto.ParentId == id)
-            throw new InvalidOperationException("Menu cannot be its own parent");
+            throw new InvalidOperationException(Messages.General.SelfReferenceNotAllowed);
 
         menu.Name = dto.Name.Trim();
         menu.Url = dto.Url?.Trim();
@@ -109,7 +114,7 @@ public class MenuService : IMenuService
         menu.Order = dto.Order;
         menu.PermissionId = dto.PermissionId;
         menu.IsActive = dto.IsActive;
-        menu.UpdatedDate = DateTime.Now;
+        menu.UpdatedDate = DateTime.UtcNow;
 
         await _menus.UpdateAsync(menu);
         await _unitOfWork.SaveChangesAsync();
@@ -117,17 +122,11 @@ public class MenuService : IMenuService
 
     public async Task DeleteAsync(int id)
     {
-        var menu = await _menus.GetByIdAsync(id);
-        if (menu == null)
-            throw new KeyNotFoundException("Menu not found");
-
-        menu.IsActive = false;
-        menu.UpdatedDate = DateTime.Now;
-        await _menus.UpdateAsync(menu);
+        await _menus.SoftDeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private static List<MenuDto> BuildTree(IEnumerable<Menu> menus, int? parentId)
+    private List<MenuDto> BuildTree(List<Menu> menus, int? parentId)
     {
         return menus
             .Where(m => m.ParentId == parentId)
@@ -135,27 +134,10 @@ public class MenuService : IMenuService
             .ThenBy(m => m.Name)
             .Select(m =>
             {
-                var dto = MapToDto(m);
+                var dto = _mapper.Map<MenuDto>(m);
                 dto.SubMenus = BuildTree(menus, m.Id);
                 return dto;
             })
             .ToList();
-    }
-
-    private static MenuDto MapToDto(Menu menu)
-    {
-        return new MenuDto
-        {
-            Id = menu.Id,
-            Name = menu.Name,
-            Url = menu.Url,
-            Icon = menu.Icon,
-            ParentId = menu.ParentId,
-            SubMenus = new(),
-            Order = menu.Order,
-            PermissionId = menu.PermissionId,
-            PermissionCode = menu.Permission?.Code,
-            IsActive = menu.IsActive
-        };
     }
 }

@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
@@ -12,24 +12,24 @@ namespace Baselib.Api.Controllers;
 [Authorize]
 public class ProfileController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IProfileService _profileService;
 
-    public ProfileController(IUserService userService)
+    public ProfileController(IProfileService profileService)
     {
-        _userService = userService;
+        _profileService = profileService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetMyProfile()
     {
-        var user = await _userService.GetMyProfileAsync(User);
+        var user = await _profileService.GetMyProfileAsync(User);
         return Ok(DataResult<UserDto>.SuccessDataResult(user));
     }
 
     [HttpPut("password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
-        await _userService.ChangeMyPasswordAsync(User, dto.CurrentPassword, dto.NewPassword);
-        return Ok(Result.SuccessResult("Şifreniz başarıyla güncellendi."));
+        await _profileService.ChangeMyPasswordAsync(User, dto.CurrentPassword, dto.NewPassword);
+        return Ok(Result.SuccessResult(Messages.User.PasswordChanged));
     }
 }

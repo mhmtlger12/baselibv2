@@ -29,14 +29,7 @@ public class SettingsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateSettingDto dto)
     {
-        try
-        {
-            await _settingService.UpdateAsync(id, dto);
-            return Ok(Result.SuccessResult(Messages.General.Updated));
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound(Result.ErrorResult("Ayar bulunamadı.", 404));
-        }
+        await _settingService.UpdateAsync(id, dto);
+        return Ok(Result.SuccessResult(Messages.General.Updated));
     }
 }

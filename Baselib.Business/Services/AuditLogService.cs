@@ -1,3 +1,4 @@
+using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
@@ -11,11 +12,13 @@ public class AuditLogService : IAuditLogService
 {
     private readonly IRepository<AuditLog> _auditLogs;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public AuditLogService(IRepository<AuditLog> auditLogs, IUnitOfWork unitOfWork)
+    public AuditLogService(IRepository<AuditLog> auditLogs, IUnitOfWork unitOfWork, IMapper mapper)
     {
         _auditLogs = auditLogs;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
@@ -26,17 +29,7 @@ public class AuditLogService : IAuditLogService
             .Take(500) // Sadece son 500 kaydı getir, performansı yormasın.
             .ToListAsync();
 
-        return logs.Select(a => new AuditLogDto
-        {
-            Id = a.Id,
-            UserId = a.UserId,
-            Username = a.User?.Username,
-            Action = a.Action,
-            Controller = a.Controller,
-            Route = a.Route,
-            Details = a.Details,
-            CreatedDate = a.CreatedDate
-        });
+        return _mapper.Map<IEnumerable<AuditLogDto>>(logs);
     }
 
     public async Task LogAsync(int? userId, string action, string controller, string route, string? details)

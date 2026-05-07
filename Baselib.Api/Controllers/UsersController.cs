@@ -61,6 +61,6 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> AssignRoles(int id, [FromBody] List<int> roleIds)
     {
         await _userService.AssignRolesAsync(id, roleIds);
-        return Ok(Result.SuccessResult("Roller başarıyla atandı"));
+        return Ok(Result.SuccessResult(Messages.User.RolesAssigned));
     }
 }

@@ -11,24 +11,26 @@ namespace Baselib.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
+    private readonly IAuthService _authService;
     private readonly IUserService _userService;
 
-    public AuthController(IUserService userService)
+    public AuthController(IAuthService authService, IUserService userService)
     {
+        _authService = authService;
         _userService = userService;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var result = await _userService.LoginAsync(dto);    
+        var result = await _authService.LoginAsync(dto);    
         return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
     {
-        var result = await _userService.RefreshTokenAsync(dto.RefreshToken);
+        var result = await _authService.RefreshTokenAsync(dto.RefreshToken);
         return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
     }
 
@@ -43,7 +45,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        await _userService.LogoutAsync(User);
+        await _authService.LogoutAsync(User);
         return Ok(Result.SuccessResult(Messages.Auth.LoggedOut));
     }
 
@@ -51,7 +53,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> SwitchRole(int roleId)
     {
-        var result = await _userService.SwitchRoleAsync(User, roleId);
+        var result = await _authService.SwitchRoleAsync(User, roleId);
         return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
     }
 }

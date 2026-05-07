@@ -1,6 +1,7 @@
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Data.Interfaces;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -49,11 +50,11 @@ public class RecycleBinService : IRecycleBinService
             "Kullanıcı" => await _users.Query().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id),
             "Rol" => await _roles.Query().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id),
             "Departman" => await _departments.Query().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == id),
-            _ => throw new ArgumentException("Geçersiz tür")
+            _ => throw new ArgumentException(Messages.RecycleBin.InvalidType)
         };
 
         if (entity == null)
-            throw new KeyNotFoundException("Kayıt bulunamadı");
+            throw new KeyNotFoundException(Messages.General.NotFound);
 
         entity.IsActive = true;
         entity.UpdatedDate = DateTime.UtcNow;

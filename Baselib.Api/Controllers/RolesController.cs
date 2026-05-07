@@ -82,12 +82,6 @@ public class RolesController : ControllerBase
     public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds)
     {
         await _roleService.AssignPermissionsAsync(id, permissionIds);
-        return Ok(Result.SuccessResult("İzinler başarıyla atandı"));
+        return Ok(Result.SuccessResult(Messages.Role.PermissionsAssigned));
     }
-}
-
-public class RoleWithPermissionsDto
-{
-    public UpdateRoleDto Role { get; set; } = null!;
-    public List<PermissionGroupDto> PermissionGroups { get; set; } = new();
 }

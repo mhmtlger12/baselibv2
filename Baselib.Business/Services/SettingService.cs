@@ -1,6 +1,8 @@
+using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
+using Baselib.Core.Messages;
 using Baselib.Data.Interfaces;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +13,13 @@ public class SettingService : ISettingService
 {
     private readonly IRepository<AppSetting> _settings;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public SettingService(IRepository<AppSetting> settings, IUnitOfWork unitOfWork)
+    public SettingService(IRepository<AppSetting> settings, IUnitOfWork unitOfWork, IMapper mapper)
     {
         _settings = settings;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<SettingDto>> GetAllAsync()
@@ -24,13 +28,7 @@ public class SettingService : ISettingService
             .OrderBy(s => s.Key)
             .ToListAsync();
 
-        return settings.Select(s => new SettingDto
-        {
-            Id = s.Id,
-            Key = s.Key,
-            Value = s.Value,
-            Description = s.Description
-        });
+        return _mapper.Map<IEnumerable<SettingDto>>(settings);
     }
 
     public async Task<SettingDto?> GetByKeyAsync(string key)
@@ -40,20 +38,14 @@ public class SettingService : ISettingService
 
         if (setting == null) return null;
 
-        return new SettingDto
-        {
-            Id = setting.Id,
-            Key = setting.Key,
-            Value = setting.Value,
-            Description = setting.Description
-        };
+        return _mapper.Map<SettingDto>(setting);
     }
 
     public async Task UpdateAsync(int id, UpdateSettingDto dto)
     {
         var setting = await _settings.GetByIdAsync(id);
         if (setting == null)
-            throw new KeyNotFoundException("Setting not found");
+            throw new KeyNotFoundException(Messages.Settings.NotFound);
 
         setting.Value = dto.Value;
         setting.UpdatedDate = DateTime.UtcNow;

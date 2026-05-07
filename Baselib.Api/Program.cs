@@ -63,9 +63,14 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new PermissionRequirement()));
 });
 
+builder.Services.AddAutoMapper(typeof(Baselib.Business.Mappings.MappingProfile).Assembly);
+
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IPermissionCheckService, PermissionCheckService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
