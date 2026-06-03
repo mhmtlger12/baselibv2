@@ -1,7 +1,6 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Baselib.Business.Interfaces;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Baselib.Api.Attributes;
@@ -31,7 +30,7 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
         var controller = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
         var action = context.RouteData.Values["action"]?.ToString() ?? "Unknown";
         var route = context.HttpContext.Request.Path;
-        
+
         string details = "";
         try
         {
