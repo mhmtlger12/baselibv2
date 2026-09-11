@@ -1,9 +1,10 @@
 using Baselib.Business.DTOs;
 using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
+using static Baselib.Core.Constants.Constants.Jwt;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,16 +33,14 @@ public class AuthService : IAuthService
         _mapper = mapper;
     }
 
-    public async Task<AuthResultDto> LoginAsync(LoginDto dto)
+    public async Task<IDataResult<AuthResultDto>> LoginAsync(LoginDto dto)
     {
-        var user = await _users.Query()
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-            .Include(u => u.Department)
-            .FirstOrDefaultAsync(u => u.Username == dto.Username);
+        var user = await _users.FirstOrDefaultAsync(
+            u => u.Username == dto.Username,
+            include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department));
 
         if (user == null || !PasswordHelper.Verify(dto.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException(Messages.User.InvalidCredentials);
+            return DataResult<AuthResultDto>.Unauthorized(Messages.User.InvalidCredentials);
 
         var activeRole = user.UserRoles.FirstOrDefault()?.Role;
 
@@ -51,21 +50,18 @@ public class AuthService : IAuthService
         await ReplaceRefreshTokenAsync(user.Id, refreshToken);
         await _unitOfWork.SaveChangesAsync();
 
-        return BuildAuthResult(accessToken, refreshToken, user, activeRole?.Id);
+        return DataResult<AuthResultDto>.Ok(BuildAuthResult(accessToken, refreshToken, user, activeRole?.Id));
     }
 
-    public async Task<AuthResultDto> RefreshTokenAsync(string refreshToken)
+    public async Task<IDataResult<AuthResultDto>> RefreshTokenAsync(string refreshToken)
     {
-        var token = await _refreshTokens.Query()
-            .Include(rt => rt.User)
-                .ThenInclude(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-            .Include(rt => rt.User)
-                .ThenInclude(u => u.Department)
-            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && rt.ExpiryDate > DateTime.UtcNow);
+        var token = await _refreshTokens.FirstOrDefaultAsync(
+            rt => rt.Token == refreshToken && rt.ExpiryDate > DateTime.UtcNow,
+            include: q => q.Include(rt => rt.User).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                           .Include(rt => rt.User).ThenInclude(u => u.Department));
 
         if (token == null)
-            throw new UnauthorizedAccessException(Messages.Auth.InvalidRefreshToken);
+            return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
 
         var user = token.User;
         var activeRole = user.UserRoles.FirstOrDefault()?.Role;
@@ -73,41 +69,38 @@ public class AuthService : IAuthService
         var newAccessToken = GenerateToken(user, activeRole?.Id);
         var newRefreshToken = JwtHelper.GenerateRefreshToken();
 
-        token.Token = newRefreshToken;
-        token.ExpiryDate = DateTime.UtcNow.AddDays(7);
-        await _refreshTokens.UpdateAsync(token);
+        token.ExpiryDate = DateTime.UtcNow; // Eski token'ı geçersiz kıl
+        await ReplaceRefreshTokenAsync(user.Id, newRefreshToken);
         await _unitOfWork.SaveChangesAsync();
 
-        return BuildAuthResult(newAccessToken, newRefreshToken, user, activeRole?.Id);
+        return DataResult<AuthResultDto>.Ok(BuildAuthResult(newAccessToken, newRefreshToken, user, activeRole?.Id));
     }
 
-    public async Task LogoutAsync(System.Security.Claims.ClaimsPrincipal principal)
+    public async Task<IResult> LogoutAsync(System.Security.Claims.ClaimsPrincipal principal)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
 
-        var tokens = await _refreshTokens.Query()
-            .Where(rt => rt.UserId == userId)
-            .ToListAsync();
+        var tokens = await _refreshTokens.GetAllAsync(rt => rt.UserId == userId);
 
         _refreshTokens.RemoveRange(tokens);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.Auth.LoggedOut);
     }
 
-    public async Task<AuthResultDto> SwitchRoleAsync(System.Security.Claims.ClaimsPrincipal principal, int newRoleId)
+    public async Task<IDataResult<AuthResultDto>> SwitchRoleAsync(System.Security.Claims.ClaimsPrincipal principal, int newRoleId)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
 
-        var user = await _users.Query()
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-            .Include(u => u.Department)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _users.FirstOrDefaultAsync(
+            u => u.Id == userId,
+            include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department));
 
         if (user == null)
-            throw new KeyNotFoundException(Messages.User.NotFound);
+            return DataResult<AuthResultDto>.NotFound(Messages.User.NotFound);
 
         if (!user.UserRoles.Any(ur => ur.RoleId == newRoleId))
-            throw new UnauthorizedAccessException(Messages.Role.NoSwitchAccess);
+            return DataResult<AuthResultDto>.Unauthorized(Messages.Role.NoSwitchAccess);
 
         var accessToken = GenerateToken(user, newRoleId);
         var refreshToken = JwtHelper.GenerateRefreshToken();
@@ -115,7 +108,7 @@ public class AuthService : IAuthService
         await ReplaceRefreshTokenAsync(user.Id, refreshToken);
         await _unitOfWork.SaveChangesAsync();
 
-        return BuildAuthResult(accessToken, refreshToken, user, newRoleId);
+        return DataResult<AuthResultDto>.Ok(BuildAuthResult(accessToken, refreshToken, user, newRoleId));
     }
 
     // ── Private Helpers ──────────────────────────────────────────
@@ -124,16 +117,15 @@ public class AuthService : IAuthService
     {
         return JwtHelper.GenerateAccessToken(
             user, activeRoleId,
-            _configuration["Jwt:Key"]!,
-            _configuration["Jwt:Issuer"]!,
-            _configuration["Jwt:Audience"]!);
+            _configuration[Key]!,
+            _configuration[Issuer]!,
+            _configuration[Audience]!,
+            AccessTokenExpiryMinutes);
     }
 
     private async Task ReplaceRefreshTokenAsync(int userId, string newToken)
     {
-        var existingTokens = await _refreshTokens.Query()
-            .Where(rt => rt.UserId == userId)
-            .ToListAsync();
+        var existingTokens = await _refreshTokens.GetAllAsync(rt => rt.UserId == userId);
 
         _refreshTokens.RemoveRange(existingTokens);
 
@@ -141,7 +133,7 @@ public class AuthService : IAuthService
         {
             UserId = userId,
             Token = newToken,
-            ExpiryDate = DateTime.UtcNow.AddDays(7)
+            ExpiryDate = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays)
         });
     }
 
@@ -163,7 +155,7 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiryDate = DateTime.UtcNow.AddMinutes(15),
+            ExpiryDate = DateTime.UtcNow.AddMinutes(AccessTokenExpiryMinutes),
             User = userDto
         };
     }

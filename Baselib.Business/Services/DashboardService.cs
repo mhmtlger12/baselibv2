@@ -1,8 +1,8 @@
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Baselib.Business.Services;
 
@@ -25,24 +25,24 @@ public class DashboardService : IDashboardService
         _userRoles = userRoles;
     }
 
-    public async Task<DashboardStatsDto> GetStatsAsync(CancellationToken cancellationToken = default)
+    public async Task<IDataResult<DashboardStatsDto>> GetStatsAsync(CancellationToken cancellationToken = default)
     {
-        var totalUsers = await _users.Query().CountAsync(cancellationToken);
-        var activeUsers = await _users.Query().CountAsync(u => u.IsActive, cancellationToken);
-        var totalRoles = await _roles.Query().CountAsync(cancellationToken);
-        var totalDepartments = await _departments.Query().CountAsync(cancellationToken);
+        var totalUsers = await _users.CountAsync(ignoreQueryFilters: true);
+        var activeUsers = await _users.CountAsync(u => u.IsActive);
+        var totalRoles = await _roles.CountAsync();
+        var totalDepartments = await _departments.CountAsync();
 
-        var roleDist = await _userRoles.Query()
-            .Include(ur => ur.Role)
+        var userRoles = await _userRoles.GetAllAsync(includes: ur => ur.Role);
+        var roleDist = userRoles
             .GroupBy(ur => ur.Role.Name)
             .Select(g => new RoleDistributionDto
             {
                 RoleName = g.Key,
                 UserCount = g.Count()
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        return new DashboardStatsDto
+        var stats = new DashboardStatsDto
         {
             TotalUsers = totalUsers,
             ActiveUsers = activeUsers,
@@ -50,5 +50,7 @@ public class DashboardService : IDashboardService
             TotalDepartments = totalDepartments,
             RoleDistributions = roleDist
         };
+
+        return DataResult<DashboardStatsDto>.Ok(stats);
     }
 }

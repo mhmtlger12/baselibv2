@@ -1,7 +1,5 @@
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,45 +20,45 @@ public class MenusController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var menus = await _menuService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<MenuDto>>.SuccessDataResult(menus));
+        var result = await _menuService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("user/{userId:int}")]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        var menus = await _menuService.GetMenusByUserIdAsync(userId);
-        return Ok(DataResult<IEnumerable<MenuDto>>.SuccessDataResult(menus));
+        var result = await _menuService.GetMenusByUserIdAsync(userId);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        var menu = await _menuService.GetByIdAsync(id);
-        return menu == null
-            ? NotFound(Result.ErrorResult(Messages.Menu.NotFound, 404))
-            : Ok(DataResult<MenuDto>.SuccessDataResult(menu));
+        var result = await _menuService.GetByIdAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CreateMenuDto dto)
     {
-        var menu = await _menuService.CreateAsync(dto);
-        return CreatedAtAction(nameof(Get), new { id = menu.Id },
-            DataResult<MenuDto>.SuccessDataResult(menu, Messages.General.Saved));
+        var result = await _menuService.CreateAsync(dto);
+        if (result.Success && result.Data != null)
+            return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
+
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMenuDto dto)
     {
-        await _menuService.UpdateAsync(id, dto);
-        return Ok(Result.SuccessResult(Messages.General.Updated));
+        var result = await _menuService.UpdateAsync(id, dto);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _menuService.DeleteAsync(id);
-        return Ok(Result.SuccessResult(Messages.General.Deleted));
+        var result = await _menuService.DeleteAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 }

@@ -1,13 +1,14 @@
 using Baselib.Business.DTOs;
+using Baselib.Core.Results;
 
 namespace Baselib.Business.Interfaces;
 
 public interface IDepartmentService
 {
-    Task<IEnumerable<DepartmentDto>> GetAllAsync();
-    Task<IEnumerable<DepartmentDto>> GetTreeAsync();
-    Task<DepartmentDto?> GetByIdAsync(int id);
-    Task<DepartmentDto> CreateAsync(CreateDepartmentDto dto);
-    Task UpdateAsync(int id, UpdateDepartmentDto dto);
-    Task DeleteAsync(int id);
+    Task<IDataResult<IEnumerable<DepartmentDto>>> GetAllAsync();
+    Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync();
+    Task<IDataResult<DepartmentDto>> GetByIdAsync(int id);
+    Task<IDataResult<DepartmentDto>> CreateAsync(CreateDepartmentDto dto);
+    Task<IResult> UpdateAsync(int id, UpdateDepartmentDto dto);
+    Task<IResult> DeleteAsync(int id);
 }

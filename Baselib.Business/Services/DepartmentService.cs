@@ -3,9 +3,8 @@ using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Baselib.Business.Services;
 
@@ -22,45 +21,47 @@ public class DepartmentService : IDepartmentService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<DepartmentDto>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetAllAsync()
     {
-        var departments = await _departments.Query()
-            .Include(d => d.ParentDepartment)
-            .Where(d => d.IsActive)
-            .OrderBy(d => d.Name)
-            .ToListAsync();
+        var departments = await _departments.GetAllAsync(
+            predicate: d => d.IsActive,
+            includes: [d => d.ParentDepartment!]);
 
-        return departments.Select(d => _mapper.Map<DepartmentDto>(d));
+        return DataResult<IEnumerable<DepartmentDto>>.Ok(
+            departments.OrderBy(d => d.Name).Select(d => _mapper.Map<DepartmentDto>(d)));
     }
 
-    public async Task<IEnumerable<DepartmentDto>> GetTreeAsync()
+    public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync()
     {
-        var departments = await _departments.Query()
-            .Where(d => d.IsActive)
-            .OrderBy(d => d.Name)
-            .ToListAsync();
+        var departments = await _departments.GetAllAsync(predicate: d => d.IsActive);
 
-        return BuildTree(departments, null);
+        return DataResult<IEnumerable<DepartmentDto>>.Ok(
+            BuildTree(departments.OrderBy(d => d.Name), null));
     }
 
-    public async Task<DepartmentDto?> GetByIdAsync(int id)
+    public async Task<IDataResult<DepartmentDto>> GetByIdAsync(int id)
     {
-        var department = await _departments.Query()
-            .Include(d => d.ParentDepartment)
-            .Include(d => d.SubDepartments)
-            .FirstOrDefaultAsync(d => d.Id == id);
+        var department = await _departments.GetByIdAsync(
+            id,
+            d => d.ParentDepartment!,
+            d => d.SubDepartments);
 
-        return department == null ? null : _mapper.Map<DepartmentDto>(department);
+        if (department == null)
+            return DataResult<DepartmentDto>.NotFound(Messages.Department.NotFound);
+
+        return DataResult<DepartmentDto>.Ok(_mapper.Map<DepartmentDto>(department));
     }
 
-    public async Task<DepartmentDto> CreateAsync(CreateDepartmentDto dto)
+    public async Task<IDataResult<DepartmentDto>> CreateAsync(CreateDepartmentDto dto)
     {
-        await EnsureCodeIsUniqueAsync(dto.Code);
+        var code = dto.Code.Trim();
+        if (await _departments.AnyAsync(d => d.Code == code))
+            return DataResult<DepartmentDto>.BadRequest(Messages.Department.CodeAlreadyExists);
 
         var department = new Department
         {
             Name = dto.Name.Trim(),
-            Code = dto.Code.Trim(),
+            Code = code,
             ParentDepartmentId = dto.ParentDepartmentId,
             CreatedDate = DateTime.UtcNow,
             IsActive = true
@@ -69,42 +70,47 @@ public class DepartmentService : IDepartmentService
         await _departments.AddAsync(department);
         await _unitOfWork.SaveChangesAsync();
 
-        return (await GetByIdAsync(department.Id))!;
+        var created = await GetByIdAsync(department.Id);
+        return DataResult<DepartmentDto>.Created(created.Data!, Messages.General.Saved);
     }
 
-    public async Task UpdateAsync(int id, UpdateDepartmentDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateDepartmentDto dto)
     {
         var department = await _departments.GetByIdAsync(id);
         if (department == null)
-            throw new KeyNotFoundException(Messages.Department.NotFound);
+            return Result.NotFound(Messages.Department.NotFound);
 
         if (dto.ParentDepartmentId == id)
-            throw new InvalidOperationException(Messages.General.SelfReferenceNotAllowed);
+            return Result.BadRequest(Messages.General.SelfReferenceNotAllowed);
 
-        await EnsureCodeIsUniqueAsync(dto.Code, id);
+        var code = dto.Code.Trim();
+        if (await _departments.AnyAsync(d => d.Code == code && d.Id != id))
+            return Result.BadRequest(Messages.Department.CodeAlreadyExists);
 
         department.Name = dto.Name.Trim();
-        department.Code = dto.Code.Trim();
+        department.Code = code;
         department.ParentDepartmentId = dto.ParentDepartmentId;
         department.IsActive = dto.IsActive;
         department.UpdatedDate = DateTime.UtcNow;
 
-        await _departments.UpdateAsync(department);
+        _departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id)
     {
-        await _departments.SoftDeleteAsync(id);
+        var department = await _departments.GetByIdAsync(id);
+        if (department == null)
+            return Result.NotFound(Messages.Department.NotFound);
+
+        department.IsActive = false;
+        department.UpdatedDate = DateTime.UtcNow;
+        _departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
-    }
 
-    private async Task EnsureCodeIsUniqueAsync(string code, int? departmentId = null)
-    {
-        code = code.Trim();
-
-        if (await _departments.AnyAsync(d => d.Code == code && (!departmentId.HasValue || d.Id != departmentId.Value)))
-            throw new InvalidOperationException(Messages.Department.CodeAlreadyExists);
+        return Result.Ok(Messages.General.Deleted);
     }
 
     private List<DepartmentDto> BuildTree(IEnumerable<Department> departments, int? parentId)

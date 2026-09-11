@@ -18,6 +18,18 @@ public class Result : IResult
 
     public static IResult ErrorResult(string message, int statusCode = 400)
         => new Result(false, message, statusCode);
+
+    public static IResult Ok(string message = "")
+        => SuccessResult(message, 200);
+
+    public static IResult NotFound(string message = "Kayıt bulunamadı")
+        => ErrorResult(message, 404);
+
+    public static IResult Unauthorized(string message = "Yetkisiz erişim")
+        => ErrorResult(message, 401);
+
+    public static IResult BadRequest(string message)
+        => ErrorResult(message, 400);
 }
 
 public class DataResult<T> : IDataResult<T>
@@ -40,4 +52,19 @@ public class DataResult<T> : IDataResult<T>
 
     public static IDataResult<T> ErrorDataResult(string message, int statusCode = 400)
         => new DataResult<T>(false, default!, message, statusCode);
+
+    public static IDataResult<T> Ok(T data, string message = "")
+        => SuccessDataResult(data, message, 200);
+
+    public static IDataResult<T> Created(T data, string message = "")
+        => SuccessDataResult(data, message, 201);
+
+    public static IDataResult<T> NotFound(string message = "Kayıt bulunamadı")
+        => ErrorDataResult(message, 404);
+
+    public static IDataResult<T> Unauthorized(string message = "Yetkisiz erişim")
+        => ErrorDataResult(message, 401);
+
+    public static IDataResult<T> BadRequest(string message)
+        => ErrorDataResult(message, 400);
 }

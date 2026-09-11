@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -22,14 +19,14 @@ public class RecycleBinController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var items = await _recycleBinService.GetAllDeletedItemsAsync();
-        return Ok(DataResult<IEnumerable<RecycleBinItemDto>>.SuccessDataResult(items));
+        var result = await _recycleBinService.GetAllDeletedItemsAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{type}/{id:int}/restore")]
     public async Task<IActionResult> Restore(string type, int id)
     {
-        await _recycleBinService.RestoreAsync(type, id);
-        return Ok(Result.SuccessResult(Messages.RecycleBin.Restored));
+        var result = await _recycleBinService.RestoreAsync(type, id);
+        return StatusCode(result.StatusCode, result);
     }
 }

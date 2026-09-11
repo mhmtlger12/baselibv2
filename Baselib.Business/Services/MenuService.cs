@@ -3,9 +3,8 @@ using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Baselib.Business.Services;
 
@@ -31,54 +30,45 @@ public class MenuService : IMenuService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<MenuDto>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync()
     {
-        var menus = await _menus.Query()
-            .Include(m => m.Permission)
-            .Where(m => m.IsActive)
-            .OrderBy(m => m.ParentId)
-            .ThenBy(m => m.Order)
-            .ThenBy(m => m.Name)
-            .ToListAsync();
+        var menus = await _menus.GetAllAsync(
+            predicate: m => m.IsActive,
+            includes: [m => m.Permission!]);
 
-        return menus.Select(m => _mapper.Map<MenuDto>(m));
+        return DataResult<IEnumerable<MenuDto>>.Ok(
+            menus.OrderBy(m => m.ParentId)
+                .ThenBy(m => m.Order)
+                .ThenBy(m => m.Name)
+                .Select(m => _mapper.Map<MenuDto>(m)));
     }
 
-    public async Task<IEnumerable<MenuDto>> GetMenusByUserIdAsync(int userId)
+    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusByUserIdAsync(int userId)
     {
-        var userRoleIds = await _userRoles.Query()
-            .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.RoleId)
-            .ToListAsync();
+        var userRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
+        var userRoleIds = userRoles.Select(ur => ur.RoleId).ToList();
 
-        var rolePermissionIds = await _rolePermissions.Query()
-            .Where(rp => userRoleIds.Contains(rp.RoleId))
-            .Select(rp => rp.PermissionId)
-            .Distinct()
-            .ToListAsync();
+        var rolePermissions = await _rolePermissions.GetAllAsync(rp => userRoleIds.Contains(rp.RoleId));
+        var rolePermissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct().ToHashSet();
 
-        var menus = await _menus.Query()
-            .Include(m => m.Permission)
-            .Where(m =>
-                m.IsActive &&
-                (m.PermissionId == null || rolePermissionIds.Contains(m.PermissionId.Value)))
-            .OrderBy(m => m.Order)
-            .ThenBy(m => m.Name)
-            .ToListAsync();
+        var menus = await _menus.GetAllAsync(
+            predicate: m => m.IsActive && (m.PermissionId == null || rolePermissionIds.Contains(m.PermissionId.Value)),
+            includes: [m => m.Permission!]);
 
-        return BuildTree(menus, null);
+        return DataResult<IEnumerable<MenuDto>>.Ok(BuildTree(menus.ToList(), null));
     }
 
-    public async Task<MenuDto?> GetByIdAsync(int id)
+    public async Task<IDataResult<MenuDto>> GetByIdAsync(int id)
     {
-        var menu = await _menus.Query()
-            .Include(m => m.Permission)
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var menu = await _menus.GetByIdAsync(id, m => m.Permission!);
 
-        return menu == null ? null : _mapper.Map<MenuDto>(menu);
+        if (menu == null)
+            return DataResult<MenuDto>.NotFound(Messages.Menu.NotFound);
+
+        return DataResult<MenuDto>.Ok(_mapper.Map<MenuDto>(menu));
     }
 
-    public async Task<MenuDto> CreateAsync(CreateMenuDto dto)
+    public async Task<IDataResult<MenuDto>> CreateAsync(CreateMenuDto dto)
     {
         var menu = new Menu
         {
@@ -95,17 +85,18 @@ public class MenuService : IMenuService
         await _menus.AddAsync(menu);
         await _unitOfWork.SaveChangesAsync();
 
-        return (await GetByIdAsync(menu.Id))!;
+        var created = await GetByIdAsync(menu.Id);
+        return DataResult<MenuDto>.Created(created.Data!, Messages.General.Saved);
     }
 
-    public async Task UpdateAsync(int id, UpdateMenuDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateMenuDto dto)
     {
         var menu = await _menus.GetByIdAsync(id);
         if (menu == null)
-            throw new KeyNotFoundException(Messages.Menu.NotFound);
+            return Result.NotFound(Messages.Menu.NotFound);
 
         if (dto.ParentId == id)
-            throw new InvalidOperationException(Messages.General.SelfReferenceNotAllowed);
+            return Result.BadRequest(Messages.General.SelfReferenceNotAllowed);
 
         menu.Name = dto.Name.Trim();
         menu.Url = dto.Url?.Trim();
@@ -116,14 +107,24 @@ public class MenuService : IMenuService
         menu.IsActive = dto.IsActive;
         menu.UpdatedDate = DateTime.UtcNow;
 
-        await _menus.UpdateAsync(menu);
+        _menus.Update(menu);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id)
     {
-        await _menus.SoftDeleteAsync(id);
+        var menu = await _menus.GetByIdAsync(id);
+        if (menu == null)
+            return Result.NotFound(Messages.Menu.NotFound);
+
+        menu.IsActive = false;
+        menu.UpdatedDate = DateTime.UtcNow;
+        _menus.Update(menu);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Deleted);
     }
 
     private List<MenuDto> BuildTree(List<Menu> menus, int? parentId)

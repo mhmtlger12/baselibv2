@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -22,45 +20,45 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var users = await _userService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<UserDto>>.SuccessDataResult(users));
+        var result = await _userService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        var user = await _userService.GetByIdAsync(id);
-        return user == null 
-            ? NotFound(Result.ErrorResult(Messages.User.NotFound, 404))
-            : Ok(DataResult<UserDto>.SuccessDataResult(user));
+        var result = await _userService.GetByIdAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CreateUserDto dto)
     {
-        var user = await _userService.CreateAsync(dto);
-        return CreatedAtAction(nameof(Get), new { id = user.Id }, 
-            DataResult<UserDto>.SuccessDataResult(user, Messages.General.Saved));
+        var result = await _userService.CreateAsync(dto);
+        if (result.Success && result.Data != null)
+            return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
+
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
-        await _userService.UpdateAsync(id, dto);
-        return Ok(Result.SuccessResult(Messages.General.Updated));
+        var result = await _userService.UpdateAsync(id, dto);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _userService.DeleteAsync(id);
-        return Ok(Result.SuccessResult(Messages.General.Deleted));
+        var result = await _userService.DeleteAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}/roles")]
     public async Task<IActionResult> AssignRoles(int id, [FromBody] List<int> roleIds)
     {
-        await _userService.AssignRolesAsync(id, roleIds);
-        return Ok(Result.SuccessResult(Messages.User.RolesAssigned));
+        var result = await _userService.AssignRolesAsync(id, roleIds);
+        return StatusCode(result.StatusCode, result);
     }
 }

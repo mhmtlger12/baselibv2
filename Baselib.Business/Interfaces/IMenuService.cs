@@ -1,13 +1,14 @@
 using Baselib.Business.DTOs;
+using Baselib.Core.Results;
 
 namespace Baselib.Business.Interfaces;
 
 public interface IMenuService
 {
-    Task<IEnumerable<MenuDto>> GetAllAsync();
-    Task<IEnumerable<MenuDto>> GetMenusByUserIdAsync(int userId);
-    Task<MenuDto?> GetByIdAsync(int id);
-    Task<MenuDto> CreateAsync(CreateMenuDto dto);
-    Task UpdateAsync(int id, UpdateMenuDto dto);
-    Task DeleteAsync(int id);
+    Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync();
+    Task<IDataResult<IEnumerable<MenuDto>>> GetMenusByUserIdAsync(int userId);
+    Task<IDataResult<MenuDto>> GetByIdAsync(int id);
+    Task<IDataResult<MenuDto>> CreateAsync(CreateMenuDto dto);
+    Task<IResult> UpdateAsync(int id, UpdateMenuDto dto);
+    Task<IResult> DeleteAsync(int id);
 }

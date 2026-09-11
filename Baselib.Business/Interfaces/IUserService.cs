@@ -1,14 +1,15 @@
 using Baselib.Business.DTOs;
+using Baselib.Core.Results;
 
 namespace Baselib.Business.Interfaces;
 
 public interface IUserService
 {
-    Task<IEnumerable<UserDto>> GetAllAsync();
-    Task<UserDto?> GetByIdAsync(int id, int? activeRoleId = null);
-    Task<UserDto> CreateAsync(CreateUserDto dto);
-    Task UpdateAsync(int id, UpdateUserDto dto);
-    Task DeleteAsync(int id);
-    Task AssignRolesAsync(int userId, List<int> roleIds);
-    Task ChangePasswordAsync(int userId, string currentPassword, string newPassword);
+    Task<IDataResult<IEnumerable<UserDto>>> GetAllAsync();
+    Task<IDataResult<UserDto>> GetByIdAsync(int id, int? activeRoleId = null);
+    Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto);
+    Task<IResult> UpdateAsync(int id, UpdateUserDto dto);
+    Task<IResult> DeleteAsync(int id);
+    Task<IResult> AssignRolesAsync(int userId, List<int> roleIds);
+    Task<IResult> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
 }

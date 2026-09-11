@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -24,29 +22,29 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
         var result = await _authService.LoginAsync(dto);    
-        return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
     {
         var result = await _authService.RefreshTokenAsync(dto.RefreshToken);
-        return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserDto dto)
     {
-        var user = await _userService.CreateAsync(dto);
-        return Ok(DataResult<UserDto>.SuccessDataResult(user, Messages.General.Saved));
+        var result = await _userService.CreateAsync(dto);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("logout")]
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        await _authService.LogoutAsync(User);
-        return Ok(Result.SuccessResult(Messages.Auth.LoggedOut));
+        var result = await _authService.LogoutAsync(User);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("switch-role/{roleId:int}")]
@@ -54,6 +52,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> SwitchRole(int roleId)
     {
         var result = await _authService.SwitchRoleAsync(User, roleId);
-        return Ok(DataResult<AuthResultDto>.SuccessDataResult(result));
+        return StatusCode(result.StatusCode, result);
     }
 }

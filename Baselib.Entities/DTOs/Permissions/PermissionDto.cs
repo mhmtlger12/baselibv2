@@ -1,5 +1,9 @@
 namespace Baselib.Business.DTOs;
 
+using Baselib.Core.Enums;
+
+
+
 public class PermissionDto
 {
     public int Id { get; set; }
@@ -8,6 +12,6 @@ public class PermissionDto
     public string? Description { get; set; }
     public string ControllerName { get; set; } = string.Empty;
     public string ActionName { get; set; } = string.Empty;
-    public int CRUDActionType { get; set; }
+    public CRUDActionType CRUDActionType { get; set; }
     public bool IsActive { get; set; }
 }

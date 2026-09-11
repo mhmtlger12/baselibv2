@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using static Baselib.Core.Constants.Constants.Jwt;
 using Baselib.Entities;
 using Microsoft.IdentityModel.Tokens;
 
@@ -12,7 +13,7 @@ namespace Baselib.Business.Helpers;
 /// </summary>
 public static class JwtHelper
 {
-    public static string GenerateAccessToken(User user, int? activeRoleId, string key, string issuer, string audience, int expiryMinutes = 15)
+    public static string GenerateAccessToken(User user, int? activeRoleId, string key, string issuer, string audience, int expiryMinutes = AccessTokenExpiryMinutes)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

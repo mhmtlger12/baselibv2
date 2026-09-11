@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Interfaces;
 using Baselib.Entities;
 
 namespace Baselib.Data.Repositories;
@@ -16,6 +16,7 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
+    [Obsolete("Use GetAllAsync, GetByIdAsync or FirstOrDefaultAsync with appropriate filters and includes instead.")]
     public virtual IQueryable<T> Query()
     {
         return _dbSet.AsQueryable();
@@ -31,6 +32,42 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.Where(predicate).ToListAsync();
     }
 
+    public virtual async Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? predicate = null,
+        bool ignoreQueryFilters = false,
+        params Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+        return await query.ToListAsync();
+    }
+
+    public virtual async Task<IEnumerable<T>> GetAllAsync(
+        Expression<Func<T, bool>>? predicate,
+        Func<IQueryable<T>, IQueryable<T>>? include = null,
+        bool ignoreQueryFilters = false)
+    {
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+        if (include != null)
+            query = include(query);
+        if (predicate != null)
+        {
+            query = query.Where(predicate);
+        }
+        return await query.ToListAsync();
+    }
+
     public virtual async Task<T?> GetByIdAsync(int id)
     {
         return await _dbSet.FindAsync(id);
@@ -38,7 +75,14 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
     {
+        return await GetByIdAsync(id, ignoreQueryFilters: false, includes);
+    }
+
+    public virtual async Task<T?> GetByIdAsync(int id, bool ignoreQueryFilters, params Expression<Func<T, object>>[] includes)
+    {
         IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
         foreach (var include in includes)
         {
             query = query.Include(include);
@@ -46,9 +90,47 @@ public class Repository<T> : IRepository<T> where T : class
         return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
     }
 
+    public virtual async Task<T?> GetByIdAsync(int id, Func<IQueryable<T>, IQueryable<T>>? include, bool ignoreQueryFilters = false)
+    {
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+        if (include != null)
+            query = include(query);
+        return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+    }
+
     public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
     {
         return await _dbSet.FirstOrDefaultAsync(predicate);
+    }
+
+    public virtual async Task<T?> FirstOrDefaultAsync(
+        Expression<Func<T, bool>> predicate,
+        bool ignoreQueryFilters = false,
+        params Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        return await query.FirstOrDefaultAsync(predicate);
+    }
+
+    public virtual async Task<T?> FirstOrDefaultAsync(
+        Expression<Func<T, bool>> predicate,
+        Func<IQueryable<T>, IQueryable<T>>? include,
+        bool ignoreQueryFilters = false)
+    {
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+        if (include != null)
+            query = include(query);
+        return await query.FirstOrDefaultAsync(predicate);
     }
 
     public virtual async Task<T> AddAsync(T entity)
@@ -62,10 +144,9 @@ public class Repository<T> : IRepository<T> where T : class
         await _dbSet.AddRangeAsync(entities);
     }
 
-    public virtual async Task UpdateAsync(T entity)
+    public virtual void Update(T entity)
     {
         _dbSet.Update(entity);
-        await Task.CompletedTask;
     }
 
     public virtual async Task DeleteAsync(int id)
@@ -92,23 +173,13 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.AnyAsync(predicate);
     }
 
-    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false)
     {
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
         return predicate == null
-            ? await _dbSet.CountAsync()
-            : await _dbSet.CountAsync(predicate);
-    }
-
-    public virtual async Task SoftDeleteAsync(int id)
-    {
-        var entity = await GetByIdAsync(id)
-            ?? throw new KeyNotFoundException("Kayıt bulunamadı");
-
-        if (entity is not BaseEntity baseEntity)
-            throw new InvalidOperationException("Bu entity soft-delete desteklemiyor.");
-
-        baseEntity.IsActive = false;
-        baseEntity.UpdatedDate = DateTime.UtcNow;
-        _dbSet.Update(entity);
+            ? await query.CountAsync()
+            : await query.CountAsync(predicate);
     }
 }

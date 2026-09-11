@@ -1,8 +1,9 @@
 using Baselib.Business.DTOs;
+using Baselib.Core.Results;
 
 namespace Baselib.Business.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardStatsDto> GetStatsAsync(CancellationToken cancellationToken = default);
+    Task<IDataResult<DashboardStatsDto>> GetStatsAsync(CancellationToken cancellationToken = default);
 }

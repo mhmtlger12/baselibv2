@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -21,7 +19,7 @@ public class AuditLogsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var logs = await _auditLogService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<AuditLogDto>>.SuccessDataResult(logs));
+        var result = await _auditLogService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 }

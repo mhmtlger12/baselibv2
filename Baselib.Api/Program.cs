@@ -7,10 +7,9 @@ using Baselib.Api.Attributes;
 using Baselib.Api.Middleware;
 using Baselib.Business.Interfaces;
 using Baselib.Business.Services;
+using Baselib.Core.Constants;
 using Baselib.Core.Interfaces;
-using Baselib.Data;
-using Baselib.Data.Interfaces;
-using Baselib.Data.Repositories;
+using Baselib.Data.Extensions;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,13 +31,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection")!,
-        new MySqlServerVersion(new Version(8, 0, 0))));
-
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddDataServices(builder.Configuration);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -49,9 +42,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+            ValidIssuer = builder.Configuration[Constants.Jwt.Issuer],
+            ValidAudience = builder.Configuration[Constants.Jwt.Audience],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration[Constants.Jwt.Key]!))
         };
     });
 

@@ -4,7 +4,7 @@ using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,38 +29,43 @@ public class UserService : IUserService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<UserDto>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<UserDto>>> GetAllAsync()
     {
-        var users = await _users.Query()
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-            .OrderBy(u => u.FirstName)
-            .ThenBy(u => u.LastName)
-            .ToListAsync();
+        var users = await _users.GetAllAsync(
+            predicate: null,
+            include: q => q.Include(u => u.Department).Include(u => u.UserRoles).ThenInclude(ur => ur.Role));
 
-        return users.Select(u => MapUserToDto(u, null));
+        return DataResult<IEnumerable<UserDto>>.Ok(
+            users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).Select(u => MapUserToDto(u, null)));
     }
 
-    public async Task<UserDto?> GetByIdAsync(int id, int? activeRoleId = null)
+    public async Task<IDataResult<UserDto>> GetByIdAsync(int id, int? activeRoleId = null)
     {
-        var user = await _users.Query()
-            .Include(u => u.Department)
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _users.GetByIdAsync(
+            id,
+            include: q => q.Include(u => u.Department).Include(u => u.UserRoles).ThenInclude(ur => ur.Role));
 
-        return user == null ? null : MapUserToDto(user, activeRoleId);
+        if (user == null)
+            return DataResult<UserDto>.NotFound(Messages.User.NotFound);
+
+        return DataResult<UserDto>.Ok(MapUserToDto(user, activeRoleId));
     }
 
-    public async Task<UserDto> CreateAsync(CreateUserDto dto)
+    public async Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto)
     {
-        await EnsureUniqueUserAsync(dto.Username, dto.Email);
+        var username = dto.Username.Trim();
+        var email = dto.Email.Trim();
+
+        if (await _users.AnyAsync(u => u.Username == username))
+            return DataResult<UserDto>.BadRequest(Messages.User.UsernameAlreadyExists);
+
+        if (await _users.AnyAsync(u => u.Email == email))
+            return DataResult<UserDto>.BadRequest(Messages.User.EmailAlreadyExists);
 
         var user = new User
         {
-            Username = dto.Username.Trim(),
-            Email = dto.Email.Trim(),
+            Username = username,
+            Email = email,
             PasswordHash = PasswordHelper.Hash(dto.Password),
             FirstName = dto.FirstName?.Trim(),
             LastName = dto.LastName?.Trim(),
@@ -76,19 +81,27 @@ public class UserService : IUserService
         await ReplaceUserRolesAsync(user.Id, dto.RoleIds);
         await _unitOfWork.SaveChangesAsync();
 
-        return (await GetByIdAsync(user.Id))!;
+        var createdResult = await GetByIdAsync(user.Id);
+        return DataResult<UserDto>.Created(createdResult.Data!, Messages.General.Saved);
     }
 
-    public async Task UpdateAsync(int id, UpdateUserDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateUserDto dto)
     {
         var user = await _users.GetByIdAsync(id);
         if (user == null)
-            throw new KeyNotFoundException(Messages.User.NotFound);
+            return Result.NotFound(Messages.User.NotFound);
 
-        await EnsureUniqueUserAsync(dto.Username, dto.Email, id);
+        var username = dto.Username.Trim();
+        var email = dto.Email.Trim();
 
-        user.Username = dto.Username.Trim();
-        user.Email = dto.Email.Trim();
+        if (await _users.AnyAsync(u => u.Username == username && u.Id != id))
+            return Result.BadRequest(Messages.User.UsernameAlreadyExists);
+
+        if (await _users.AnyAsync(u => u.Email == email && u.Id != id))
+            return Result.BadRequest(Messages.User.EmailAlreadyExists);
+
+        user.Username = username;
+        user.Email = email;
         user.FirstName = dto.FirstName?.Trim();
         user.LastName = dto.LastName?.Trim();
         user.Phone = dto.Phone?.Trim();
@@ -101,61 +114,61 @@ public class UserService : IUserService
             user.PasswordHash = PasswordHelper.Hash(dto.Password);
         }
 
-        await _users.UpdateAsync(user);
+        _users.Update(user);
         await ReplaceUserRolesAsync(id, dto.RoleIds);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id)
     {
-        await _users.SoftDeleteAsync(id);
+        var user = await _users.GetByIdAsync(id);
+        if (user == null)
+            return Result.NotFound(Messages.User.NotFound);
+
+        user.IsActive = false;
+        user.UpdatedDate = DateTime.UtcNow;
+        _users.Update(user);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Deleted);
     }
 
-    public async Task AssignRolesAsync(int userId, List<int> roleIds)
+    public async Task<IResult> AssignRolesAsync(int userId, List<int> roleIds)
     {
         if (!await _users.AnyAsync(u => u.Id == userId))
-            throw new KeyNotFoundException(Messages.User.NotFound);
+            return Result.NotFound(Messages.User.NotFound);
 
         await ReplaceUserRolesAsync(userId, roleIds);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Saved);
     }
 
-    public async Task ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    public async Task<IResult> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
     {
         var user = await _users.GetByIdAsync(userId);
         if (user == null)
-            throw new KeyNotFoundException(Messages.User.NotFound);
+            return Result.NotFound(Messages.User.NotFound);
 
         if (!PasswordHelper.Verify(currentPassword, user.PasswordHash))
-            throw new UnauthorizedAccessException(Messages.User.WrongPassword);
+            return Result.Unauthorized(Messages.User.WrongPassword);
 
         user.PasswordHash = PasswordHelper.Hash(newPassword);
         user.UpdatedDate = DateTime.UtcNow;
 
-        await _users.UpdateAsync(user);
+        _users.Update(user);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.User.PasswordChanged);
     }
 
     // ── Private Helpers ──────────────────────────────────────────
 
-    private async Task EnsureUniqueUserAsync(string username, string email, int? userId = null)
-    {
-        username = username.Trim();
-        email = email.Trim();
-
-        if (await _users.AnyAsync(u => u.Username == username && (!userId.HasValue || u.Id != userId.Value)))
-            throw new InvalidOperationException(Messages.User.UsernameAlreadyExists);
-
-        if (await _users.AnyAsync(u => u.Email == email && (!userId.HasValue || u.Id != userId.Value)))
-            throw new InvalidOperationException(Messages.User.EmailAlreadyExists);
-    }
-
     private async Task ReplaceUserRolesAsync(int userId, IEnumerable<int> roleIds)
     {
-        var existingRoles = await _userRoles.Query()
-            .Where(ur => ur.UserId == userId)
-            .ToListAsync();
+        var existingRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
 
         _userRoles.RemoveRange(existingRoles);
 

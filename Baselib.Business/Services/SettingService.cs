@@ -3,9 +3,8 @@ using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Baselib.Business.Services;
 
@@ -22,35 +21,34 @@ public class SettingService : ISettingService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<SettingDto>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<SettingDto>>> GetAllAsync()
     {
-        var settings = await _settings.Query()
-            .OrderBy(s => s.Key)
-            .ToListAsync();
-
-        return _mapper.Map<IEnumerable<SettingDto>>(settings);
+        var settings = await _settings.GetAllAsync();
+        return DataResult<IEnumerable<SettingDto>>.Ok(_mapper.Map<IEnumerable<SettingDto>>(settings.OrderBy(s => s.Key)));
     }
 
-    public async Task<SettingDto?> GetByKeyAsync(string key)
+    public async Task<IDataResult<SettingDto>> GetByKeyAsync(string key)
     {
-        var setting = await _settings.Query()
-            .FirstOrDefaultAsync(s => s.Key == key);
+        var setting = await _settings.FirstOrDefaultAsync(s => s.Key == key);
 
-        if (setting == null) return null;
+        if (setting == null)
+            return DataResult<SettingDto>.NotFound(Messages.Settings.NotFound);
 
-        return _mapper.Map<SettingDto>(setting);
+        return DataResult<SettingDto>.Ok(_mapper.Map<SettingDto>(setting));
     }
 
-    public async Task UpdateAsync(int id, UpdateSettingDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateSettingDto dto)
     {
         var setting = await _settings.GetByIdAsync(id);
         if (setting == null)
-            throw new KeyNotFoundException(Messages.Settings.NotFound);
+            return Result.NotFound(Messages.Settings.NotFound);
 
         setting.Value = dto.Value;
         setting.UpdatedDate = DateTime.UtcNow;
 
-        await _settings.UpdateAsync(setting);
+        _settings.Update(setting);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Updated);
     }
 }

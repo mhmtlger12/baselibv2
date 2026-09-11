@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -22,52 +20,52 @@ public class DepartmentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var departments = await _departmentService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<DepartmentDto>>.SuccessDataResult(departments));
+        var result = await _departmentService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("selectOption")]
     public async Task<IActionResult> SelectOption()
     {
-        var departments = await _departmentService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<DepartmentDto>>.SuccessDataResult(departments));
+        var result = await _departmentService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("tree")]
     public async Task<IActionResult> Tree()
     {
-        var departments = await _departmentService.GetTreeAsync();
-        return Ok(DataResult<IEnumerable<DepartmentDto>>.SuccessDataResult(departments));
+        var result = await _departmentService.GetTreeAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        var department = await _departmentService.GetByIdAsync(id);
-        return department == null
-            ? NotFound(Result.ErrorResult(Messages.Department.NotFound, 404))
-            : Ok(DataResult<DepartmentDto>.SuccessDataResult(department));
+        var result = await _departmentService.GetByIdAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CreateDepartmentDto dto)
     {
-        var department = await _departmentService.CreateAsync(dto);
-        return CreatedAtAction(nameof(Get), new { id = department.Id },
-            DataResult<DepartmentDto>.SuccessDataResult(department, Messages.General.Saved));
+        var result = await _departmentService.CreateAsync(dto);
+        if (result.Success && result.Data != null)
+            return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
+
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentDto dto)
     {
-        await _departmentService.UpdateAsync(id, dto);
-        return Ok(Result.SuccessResult(Messages.General.Updated));
+        var result = await _departmentService.UpdateAsync(id, dto);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _departmentService.DeleteAsync(id);
-        return Ok(Result.SuccessResult(Messages.General.Deleted));
+        var result = await _departmentService.DeleteAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 }

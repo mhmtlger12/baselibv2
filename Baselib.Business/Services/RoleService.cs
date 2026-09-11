@@ -1,10 +1,9 @@
 using AutoMapper;
 using Baselib.Business.DTOs;
-using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,55 +12,55 @@ namespace Baselib.Business.Services;
 public class RoleService : IRoleService
 {
     private readonly IRepository<Role> _roles;
-    private readonly IRepository<Permission> _permissions;
     private readonly IRepository<RolePermission> _rolePermissions;
+    private readonly IPermissionService _permissionService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
     public RoleService(
         IRepository<Role> roles,
-        IRepository<Permission> permissions,
         IRepository<RolePermission> rolePermissions,
+        IPermissionService permissionService,
         IUnitOfWork unitOfWork,
         IMapper mapper)
     {
         _roles = roles;
-        _permissions = permissions;
         _rolePermissions = rolePermissions;
+        _permissionService = permissionService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<RoleDto>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<RoleDto>>> GetAllAsync()
     {
-        var roles = await _roles.Query()
-            .Include(r => r.RolePermissions)
-                .ThenInclude(rp => rp.Permission)
-            .Where(r => r.IsActive)
-            .OrderBy(r => r.Name)
-            .ToListAsync();
+        var roles = await _roles.GetAllAsync(
+            predicate: r => r.IsActive,
+            include: q => q.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission));
 
-        return _mapper.Map<IEnumerable<RoleDto>>(roles);
+        return DataResult<IEnumerable<RoleDto>>.Ok(_mapper.Map<IEnumerable<RoleDto>>(roles.OrderBy(r => r.Name)));
     }
 
-    public async Task<RoleDto?> GetByIdAsync(int id)
+    public async Task<IDataResult<RoleDto>> GetByIdAsync(int id)
     {
-        var role = await _roles.Query()
-            .Include(r => r.RolePermissions)
-                .ThenInclude(rp => rp.Permission)
-            .FirstOrDefaultAsync(r => r.Id == id);
+        var role = await _roles.GetByIdAsync(
+            id,
+            include: q => q.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission));
 
-        return role == null ? null : _mapper.Map<RoleDto>(role);
+        if (role == null)
+            return DataResult<RoleDto>.NotFound(Messages.Role.NotFound);
+
+        return DataResult<RoleDto>.Ok(_mapper.Map<RoleDto>(role));
     }
 
-    public async Task<RoleDto> CreateAsync(CreateRoleDto dto)
+    public async Task<IDataResult<RoleDto>> CreateAsync(CreateRoleDto dto)
     {
-        if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim()))
-            throw new InvalidOperationException(Messages.Role.NameAlreadyExists);
+        var roleName = dto.Name.Trim();
+        if (await _roles.AnyAsync(r => r.Name == roleName))
+            return DataResult<RoleDto>.BadRequest(Messages.Role.NameAlreadyExists);
 
         var role = new Role
         {
-            Name = dto.Name.Trim(),
+            Name = roleName,
             Description = dto.Description?.Trim(),
             CreatedDate = DateTime.UtcNow,
             IsActive = true
@@ -73,87 +72,91 @@ public class RoleService : IRoleService
         await ReplaceRolePermissionsAsync(role.Id, dto.PermissionIds);
         await _unitOfWork.SaveChangesAsync();
 
-        return (await GetByIdAsync(role.Id))!;
+        var created = await GetByIdAsync(role.Id);
+        return DataResult<RoleDto>.Created(created.Data!, Messages.General.Saved);
     }
 
-    public async Task UpdateAsync(int id, UpdateRoleDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateRoleDto dto)
     {
         var role = await _roles.GetByIdAsync(id);
         if (role == null)
-            throw new KeyNotFoundException(Messages.Role.NotFound);
+            return Result.NotFound(Messages.Role.NotFound);
 
-        if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim() && r.Id != id))
-            throw new InvalidOperationException(Messages.Role.NameAlreadyExists);
+        var roleName = dto.Name.Trim();
+        if (await _roles.AnyAsync(r => r.Name == roleName && r.Id != id))
+            return Result.BadRequest(Messages.Role.NameAlreadyExists);
 
-        role.Name = dto.Name.Trim();
+        role.Name = roleName;
         role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
         role.UpdatedDate = DateTime.UtcNow;
 
-        await _roles.UpdateAsync(role);
+        _roles.Update(role);
         await ReplaceRolePermissionsAsync(id, dto.PermissionIds);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id)
     {
-        await _roles.SoftDeleteAsync(id);
+        var role = await _roles.GetByIdAsync(id);
+        if (role == null)
+            return Result.NotFound(Messages.Role.NotFound);
+
+        role.IsActive = false;
+        role.UpdatedDate = DateTime.UtcNow;
+        _roles.Update(role);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Deleted);
     }
 
-    public async Task AssignPermissionsAsync(int roleId, List<int> permissionIds)
+    public async Task<IResult> AssignPermissionsAsync(int roleId, List<int> permissionIds)
     {
         if (!await _roles.AnyAsync(r => r.Id == roleId))
-            throw new KeyNotFoundException(Messages.Role.NotFound);
+            return Result.NotFound(Messages.Role.NotFound);
 
         await ReplaceRolePermissionsAsync(roleId, permissionIds);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Saved);
     }
 
-    public async Task<IEnumerable<PermissionGroupDto>> GetPermissionsByRoleIdAsync(int roleId)
+    public async Task<IDataResult<IEnumerable<PermissionGroupDto>>> GetPermissionsByRoleIdAsync(int roleId)
     {
-        var allPermissions = await _permissions.Query()
-            .Where(p => p.IsActive)
-            .OrderBy(p => p.ControllerName)
-            .ThenBy(p => p.CRUDActionType)
-            .ToListAsync();
-
-        var rolePermissionIds = await _rolePermissions.Query()
-            .Where(rp => rp.RoleId == roleId)
-            .Select(rp => rp.PermissionId)
-            .ToListAsync();
-
-        return PermissionGroupHelper.BuildGroups(allPermissions, rolePermissionIds);
+        return await _permissionService.GetGroupedPermissionsAsync(roleId);
     }
 
-    public async Task UpdateWithPermissionsAsync(int id, UpdateRoleDto dto, List<PermissionGroupDto> permissionGroups)
+    public async Task<IResult> UpdateWithPermissionsAsync(int id, UpdateRoleDto dto, List<PermissionGroupDto> permissionGroups)
     {
         var role = await _roles.GetByIdAsync(id);
         if (role == null)
-            throw new KeyNotFoundException(Messages.Role.NotFound);
+            return Result.NotFound(Messages.Role.NotFound);
 
-        if (await _roles.AnyAsync(r => r.Name == dto.Name.Trim() && r.Id != id))
-            throw new InvalidOperationException(Messages.Role.NameAlreadyExists);
+        var roleName = dto.Name.Trim();
+        if (await _roles.AnyAsync(r => r.Name == roleName && r.Id != id))
+            return Result.BadRequest(Messages.Role.NameAlreadyExists);
 
-        role.Name = dto.Name.Trim();
+        role.Name = roleName;
         role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
         role.UpdatedDate = DateTime.UtcNow;
 
-        await _roles.UpdateAsync(role);
+        _roles.Update(role);
 
-        var permissionIds = await ResolvePermissionIdsAsync(permissionGroups);
+        var permissionIds = await _permissionService.ResolvePermissionIdsAsync(permissionGroups);
         await ReplaceRolePermissionsAsync(id, permissionIds);
         await _unitOfWork.SaveChangesAsync();
+
+        return Result.Ok(Messages.General.Updated);
     }
 
     // ── Private Helpers ──────────────────────────────────────────
 
     private async Task ReplaceRolePermissionsAsync(int roleId, IEnumerable<int> permissionIds)
     {
-        var existingPermissions = await _rolePermissions.Query()
-            .Where(rp => rp.RoleId == roleId)
-            .ToListAsync();
+        var existingPermissions = await _rolePermissions.GetAllAsync(rp => rp.RoleId == roleId);
 
         _rolePermissions.RemoveRange(existingPermissions);
 
@@ -168,35 +171,5 @@ public class RoleService : IRoleService
 
         if (newPermissions.Count > 0)
             await _rolePermissions.AddRangeAsync(newPermissions);
-    }
-
-    private async Task<List<int>> ResolvePermissionIdsAsync(List<PermissionGroupDto> permissionGroups)
-    {
-        var selected = permissionGroups
-            .SelectMany(group => group.ControllerCrudList)
-            .Where(crud => crud.Checked && crud.PermissionId > 0)
-            .Select(crud => crud.PermissionId)
-            .Distinct()
-            .ToList();
-
-        if (selected.Any())
-            return selected;
-
-        foreach (var group in permissionGroups.Where(p => p.Checked || p.ControllerCrudList.Any(c => c.Checked)))
-        {
-            var crudTypes = group.ControllerCrudList
-                .Where(c => c.Checked)
-                .Select(c => c.CRUDActionType)
-                .ToList();
-
-            var permissionIds = await _permissions.Query()
-                .Where(p => p.ControllerName == group.ControllerName && crudTypes.Contains(p.CRUDActionType) && p.IsActive)
-                .Select(p => p.Id)
-                .ToListAsync();
-
-            selected.AddRange(permissionIds);
-        }
-
-        return selected.Distinct().ToList();
     }
 }

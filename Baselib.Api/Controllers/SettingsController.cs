@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -22,14 +20,14 @@ public class SettingsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var settings = await _settingService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<SettingDto>>.SuccessDataResult(settings));
+        var result = await _settingService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateSettingDto dto)
     {
-        await _settingService.UpdateAsync(id, dto);
-        return Ok(Result.SuccessResult(Messages.General.Updated));
+        var result = await _settingService.UpdateAsync(id, dto);
+        return StatusCode(result.StatusCode, result);
     }
 }

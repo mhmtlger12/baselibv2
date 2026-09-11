@@ -46,8 +46,8 @@ public static class PermissionGroupHelper
 
     public static string GetActionName(Permission permission)
     {
-        var crudName = CRUDActionTypes.GetName(permission.CRUDActionType);
-        return crudName == permission.CRUDActionType.ToString()
+        var crudName = permission.CRUDActionType.GetName();
+        return crudName == ((int)permission.CRUDActionType).ToString()
             ? permission.ActionName
             : crudName;
     }

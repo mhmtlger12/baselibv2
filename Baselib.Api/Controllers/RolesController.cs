@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
-using Baselib.Core.Messages;
-using Baselib.Core.Results;
 
 namespace Baselib.Api.Controllers;
 
@@ -22,66 +20,66 @@ public class RolesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List()
     {
-        var roles = await _roleService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<RoleDto>>.SuccessDataResult(roles));
+        var result = await _roleService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("selectOption")]
     public async Task<IActionResult> SelectOption()
     {
-        var roles = await _roleService.GetAllAsync();
-        return Ok(DataResult<IEnumerable<RoleDto>>.SuccessDataResult(roles));
+        var result = await _roleService.GetAllAsync();
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        var role = await _roleService.GetByIdAsync(id);
-        return role == null
-            ? NotFound(Result.ErrorResult(Messages.Role.NotFound, 404))
-            : Ok(DataResult<RoleDto>.SuccessDataResult(role));
+        var result = await _roleService.GetByIdAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}/permissions")]
     public async Task<IActionResult> GetPermissions(int id)
     {
-        var permissions = await _roleService.GetPermissionsByRoleIdAsync(id);
-        return Ok(DataResult<IEnumerable<PermissionGroupDto>>.SuccessDataResult(permissions));
+        var result = await _roleService.GetPermissionsByRoleIdAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Add([FromBody] CreateRoleDto dto)
     {
-        var role = await _roleService.CreateAsync(dto);
-        return CreatedAtAction(nameof(Get), new { id = role.Id },
-            DataResult<RoleDto>.SuccessDataResult(role, Messages.General.Saved));
+        var result = await _roleService.CreateAsync(dto);
+        if (result.Success && result.Data != null)
+            return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
+
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
     {
-        await _roleService.UpdateAsync(id, dto);
-        return Ok(Result.SuccessResult(Messages.General.Updated));
+        var result = await _roleService.UpdateAsync(id, dto);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}/with-permissions")]
     public async Task<IActionResult> UpdateWithPermissions(int id, [FromBody] RoleWithPermissionsDto dto)
     {
-        await _roleService.UpdateWithPermissionsAsync(id, dto.Role, dto.PermissionGroups);
-        return Ok(Result.SuccessResult(Messages.General.Updated));
+        var result = await _roleService.UpdateWithPermissionsAsync(id, dto.Role, dto.PermissionGroups);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        await _roleService.DeleteAsync(id);
-        return Ok(Result.SuccessResult(Messages.General.Deleted));
+        var result = await _roleService.DeleteAsync(id);
+        return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}/permissions")]
     public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds)
     {
-        await _roleService.AssignPermissionsAsync(id, permissionIds);
-        return Ok(Result.SuccessResult(Messages.Role.PermissionsAssigned));
+        var result = await _roleService.AssignPermissionsAsync(id, permissionIds);
+        return StatusCode(result.StatusCode, result);
     }
 }

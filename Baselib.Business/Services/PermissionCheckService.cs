@@ -1,7 +1,6 @@
 using Baselib.Business.Interfaces;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Interfaces;
 using Baselib.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace Baselib.Business.Services;
 
@@ -24,10 +23,8 @@ public class PermissionCheckService : IPermissionCheckService
     public async Task<bool> HasAccessAsync(int userId, int? activeRoleId, string controller, string action)
     {
         // Veritabanından kullanıcının GÜNCEL rollerini çekiyoruz (Güvenlik için şart)
-        var currentUserRoleIds = await _userRoles.Query()
-            .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.RoleId)
-            .ToListAsync();
+        var userRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
+        var currentUserRoleIds = userRoles.Select(ur => ur.RoleId).ToList();
 
         if (!currentUserRoleIds.Any())
             return false;
@@ -55,21 +52,18 @@ public class PermissionCheckService : IPermissionCheckService
         if (!effectiveRoleIds.Any())
             return false;
 
-        var permissionIds = await _permissions.Query()
-            .Where(p =>
-                p.ControllerName.ToUpper() == controller.ToUpper() &&
-                p.ActionName.ToUpper() == action.ToUpper() &&
-                p.IsActive)
-            .Select(p => p.Id)
-            .ToListAsync();
+        var permissions = await _permissions.GetAllAsync(p =>
+            p.ControllerName.ToUpper() == controller.ToUpper() &&
+            p.ActionName.ToUpper() == action.ToUpper() &&
+            p.IsActive);
+        var permissionIds = permissions.Select(p => p.Id).ToList();
 
         // Bu controller/action için tanımlı permission yoksa erişime izin ver
         if (!permissionIds.Any())
             return true;
 
-        return await _rolePermissions.Query()
-            .AnyAsync(rp =>
-                effectiveRoleIds.Contains(rp.RoleId) &&
-                permissionIds.Contains(rp.PermissionId));
+        return await _rolePermissions.AnyAsync(rp =>
+            effectiveRoleIds.Contains(rp.RoleId) &&
+            permissionIds.Contains(rp.PermissionId));
     }
 }

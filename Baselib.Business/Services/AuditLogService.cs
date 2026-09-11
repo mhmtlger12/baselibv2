@@ -2,7 +2,7 @@ using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Interfaces;
-using Baselib.Data.Interfaces;
+using Baselib.Core.Results;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,15 +21,13 @@ public class AuditLogService : IAuditLogService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<AuditLogDto>>> GetAllAsync()
     {
-        var logs = await _auditLogs.Query()
-            .Include(a => a.User)
-            .OrderByDescending(a => a.CreatedDate)
-            .Take(500) // Sadece son 500 kaydı getir, performansı yormasın.
-            .ToListAsync();
+        var logs = await _auditLogs.GetAllAsync(
+            predicate: null,
+            include: q => q.Include(a => a.User).OrderByDescending(a => a.CreatedDate).Take(500));
 
-        return _mapper.Map<IEnumerable<AuditLogDto>>(logs);
+        return DataResult<IEnumerable<AuditLogDto>>.Ok(_mapper.Map<IEnumerable<AuditLogDto>>(logs));
     }
 
     public async Task LogAsync(int? userId, string action, string controller, string route, string? details)
