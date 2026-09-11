@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Messages;
 using Baselib.Core.Results;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Baselib.Api.Controllers;
 
