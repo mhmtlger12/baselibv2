@@ -24,7 +24,6 @@ public class DepartmentService : IDepartmentService
     public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetAllAsync()
     {
         var departments = await _departments.GetAllAsync(
-            predicate: d => d.IsActive,
             includes: [d => d.ParentDepartment!]);
 
         return DataResult<IEnumerable<DepartmentDto>>.Ok(
@@ -33,7 +32,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync()
     {
-        var departments = await _departments.GetAllAsync(predicate: d => d.IsActive);
+        var departments = await _departments.GetAllAsync();
 
         return DataResult<IEnumerable<DepartmentDto>>.Ok(
             BuildTree(departments.OrderBy(d => d.Name), null));

@@ -1,5 +1,6 @@
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
+using Baselib.Core.Enums;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
 using Baselib.Core.Results;
@@ -31,34 +32,55 @@ public class RecycleBinService : IRecycleBinService
         var items = new List<RecycleBinItemDto>();
 
         var deletedUsers = await _users.GetAllAsync(predicate: u => !u.IsActive, ignoreQueryFilters: true);
-        items.AddRange(deletedUsers.Select(u => new RecycleBinItemDto { Id = u.Id, Type = "Kullanıcı", Name = u.Username, DeletedDate = u.UpdatedDate }));
+        items.AddRange(deletedUsers.Select(u => new RecycleBinItemDto
+        {
+            Id = u.Id,
+            Type = RecycleBinType.User.ToString(),
+            TypeName = RecycleBinType.User.GetDisplayName(),
+            Name = u.Username,
+            DeletedDate = u.UpdatedDate
+        }));
 
         var deletedRoles = await _roles.GetAllAsync(predicate: r => !r.IsActive, ignoreQueryFilters: true);
-        items.AddRange(deletedRoles.Select(r => new RecycleBinItemDto { Id = r.Id, Type = "Rol", Name = r.Name, DeletedDate = r.UpdatedDate }));
+        items.AddRange(deletedRoles.Select(r => new RecycleBinItemDto
+        {
+            Id = r.Id,
+            Type = RecycleBinType.Role.ToString(),
+            TypeName = RecycleBinType.Role.GetDisplayName(),
+            Name = r.Name,
+            DeletedDate = r.UpdatedDate
+        }));
 
         var deletedDepts = await _departments.GetAllAsync(predicate: d => !d.IsActive, ignoreQueryFilters: true);
-        items.AddRange(deletedDepts.Select(d => new RecycleBinItemDto { Id = d.Id, Type = "Departman", Name = d.Name, DeletedDate = d.UpdatedDate }));
+        items.AddRange(deletedDepts.Select(d => new RecycleBinItemDto
+        {
+            Id = d.Id,
+            Type = RecycleBinType.Department.ToString(),
+            TypeName = RecycleBinType.Department.GetDisplayName(),
+            Name = d.Name,
+            DeletedDate = d.UpdatedDate
+        }));
 
         return DataResult<IEnumerable<RecycleBinItemDto>>.Ok(items.OrderByDescending(i => i.DeletedDate));
     }
 
     public async Task<IResult> RestoreAsync(string type, int id)
     {
-        BaseEntity? entity;
-        switch (type)
+        if (!RecycleBinTypeExtensions.TryParse(type, out var binType))
+            return Result.BadRequest(Messages.RecycleBin.InvalidType);
+
+        return await RestoreAsync(binType, id);
+    }
+
+    public async Task<IResult> RestoreAsync(RecycleBinType type, int id)
+    {
+        BaseEntity? entity = type switch
         {
-            case "Kullanıcı":
-                entity = await _users.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true);
-                break;
-            case "Rol":
-                entity = await _roles.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true);
-                break;
-            case "Departman":
-                entity = await _departments.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true);
-                break;
-            default:
-                return Result.BadRequest(Messages.RecycleBin.InvalidType);
-        }
+            RecycleBinType.User => await _users.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true),
+            RecycleBinType.Role => await _roles.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true),
+            RecycleBinType.Department => await _departments.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true),
+            _ => null
+        };
 
         if (entity == null)
             return Result.NotFound(Messages.General.NotFound);

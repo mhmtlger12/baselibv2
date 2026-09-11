@@ -33,7 +33,6 @@ public class MenuService : IMenuService
     public async Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync()
     {
         var menus = await _menus.GetAllAsync(
-            predicate: m => m.IsActive,
             includes: [m => m.Permission!]);
 
         return DataResult<IEnumerable<MenuDto>>.Ok(
@@ -52,7 +51,7 @@ public class MenuService : IMenuService
         var rolePermissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct().ToHashSet();
 
         var menus = await _menus.GetAllAsync(
-            predicate: m => m.IsActive && (m.PermissionId == null || rolePermissionIds.Contains(m.PermissionId.Value)),
+            predicate: m => m.PermissionId == null || rolePermissionIds.Contains(m.PermissionId.Value),
             includes: [m => m.Permission!]);
 
         return DataResult<IEnumerable<MenuDto>>.Ok(BuildTree(menus.ToList(), null));

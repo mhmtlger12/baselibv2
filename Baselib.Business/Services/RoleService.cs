@@ -34,7 +34,7 @@ public class RoleService : IRoleService
     public async Task<IDataResult<IEnumerable<RoleDto>>> GetAllAsync()
     {
         var roles = await _roles.GetAllAsync(
-            predicate: r => r.IsActive,
+            predicate: null,
             include: q => q.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission));
 
         return DataResult<IEnumerable<RoleDto>>.Ok(_mapper.Map<IEnumerable<RoleDto>>(roles.OrderBy(r => r.Name)));
@@ -66,11 +66,22 @@ public class RoleService : IRoleService
             IsActive = true
         };
 
-        await _roles.AddAsync(role);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            await _roles.AddAsync(role);
+            await _unitOfWork.SaveChangesAsync();
 
-        await ReplaceRolePermissionsAsync(role.Id, dto.PermissionIds);
-        await _unitOfWork.SaveChangesAsync();
+            await ReplaceRolePermissionsAsync(role.Id, dto.PermissionIds);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
 
         var created = await GetByIdAsync(role.Id);
         return DataResult<RoleDto>.Created(created.Data!, Messages.General.Saved);

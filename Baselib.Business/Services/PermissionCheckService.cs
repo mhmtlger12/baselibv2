@@ -54,8 +54,7 @@ public class PermissionCheckService : IPermissionCheckService
 
         var permissions = await _permissions.GetAllAsync(p =>
             p.ControllerName.ToUpper() == controller.ToUpper() &&
-            p.ActionName.ToUpper() == action.ToUpper() &&
-            p.IsActive);
+            p.ActionName.ToUpper() == action.ToUpper());
         var permissionIds = permissions.Select(p => p.Id).ToList();
 
         // Bu controller/action için tanımlı permission yoksa erişime izin ver

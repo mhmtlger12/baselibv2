@@ -75,11 +75,22 @@ public class UserService : IUserService
             IsActive = true
         };
 
-        await _users.AddAsync(user);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            await _users.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
 
-        await ReplaceUserRolesAsync(user.Id, dto.RoleIds);
-        await _unitOfWork.SaveChangesAsync();
+            await ReplaceUserRolesAsync(user.Id, dto.RoleIds);
+            await _unitOfWork.SaveChangesAsync();
+
+            await _unitOfWork.CommitTransactionAsync();
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
 
         var createdResult = await GetByIdAsync(user.Id);
         return DataResult<UserDto>.Created(createdResult.Data!, Messages.General.Saved);

@@ -28,7 +28,7 @@ public class DashboardService : IDashboardService
     public async Task<IDataResult<DashboardStatsDto>> GetStatsAsync(CancellationToken cancellationToken = default)
     {
         var totalUsers = await _users.CountAsync(ignoreQueryFilters: true);
-        var activeUsers = await _users.CountAsync(u => u.IsActive);
+        var activeUsers = await _users.CountAsync();
         var totalRoles = await _roles.CountAsync();
         var totalDepartments = await _departments.CountAsync();
 

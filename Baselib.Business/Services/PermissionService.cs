@@ -30,7 +30,7 @@ public class PermissionService : IPermissionService
 
     public async Task<IDataResult<IEnumerable<PermissionDto>>> GetAllAsync()
     {
-        var permissions = await _permissions.GetAllAsync(p => p.IsActive);
+        var permissions = await _permissions.GetAllAsync();
         var orderedPermissions = permissions
             .OrderBy(p => p.ControllerName)
             .ThenBy(p => p.CRUDActionType);
@@ -113,7 +113,7 @@ public class PermissionService : IPermissionService
 
     public async Task<IDataResult<IEnumerable<PermissionGroupDto>>> GetGroupedPermissionsAsync(int? roleId = null)
     {
-        var allPermissions = await _permissions.GetAllAsync(p => p.IsActive);
+        var allPermissions = await _permissions.GetAllAsync();
         var orderedPermissions = allPermissions
             .OrderBy(p => p.ControllerName)
             .ThenBy(p => p.CRUDActionType);
@@ -170,7 +170,7 @@ public class PermissionService : IPermissionService
                     .ToList();
 
                 var fallbackPermissions = await _permissions.GetAllAsync(
-                    p => p.ControllerName == group.ControllerName && crudTypes.Contains(p.CRUDActionType) && p.IsActive);
+                    p => p.ControllerName == group.ControllerName && crudTypes.Contains(p.CRUDActionType));
 
                 selectedPermissionIds.AddRange(fallbackPermissions.Select(p => p.Id));
             }
@@ -179,7 +179,7 @@ public class PermissionService : IPermissionService
         var distinctSelectedPermissionIds = selectedPermissionIds.Distinct().ToList();
 
         var validPermissions = await _permissions.GetAllAsync(
-            p => distinctSelectedPermissionIds.Contains(p.Id) && p.IsActive);
+            p => distinctSelectedPermissionIds.Contains(p.Id));
         return validPermissions.Select(p => p.Id).ToList();
     }
 

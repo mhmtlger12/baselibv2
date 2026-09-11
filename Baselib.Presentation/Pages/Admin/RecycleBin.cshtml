@@ -28,10 +28,11 @@
                     {
                         foreach (var item in Model.Items)
                         {
-                            var badgeClass = item.Type == "Kullanıcı" ? "bg-primary" :
-                                             item.Type == "Rol" ? "bg-warning text-dark" : "bg-info text-dark";
+                            var badgeClass = (item.Type == "User" || item.Type == "Kullanıcı") ? "bg-primary" :
+                                             (item.Type == "Role" || item.Type == "Rol") ? "bg-warning text-dark" : "bg-info text-dark";
+                            var displayName = !string.IsNullOrWhiteSpace(item.TypeName) ? item.TypeName : item.Type;
                             <tr>
-                                <td><span class="badge @badgeClass">@item.Type</span></td>
+                                <td><span class="badge @badgeClass">@displayName</span></td>
                                 <td><strong>@item.Name</strong></td>
                                 <td>@(item.DeletedDate?.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
                                 <td class="text-end">
