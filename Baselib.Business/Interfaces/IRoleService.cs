@@ -6,11 +6,11 @@ namespace Baselib.Business.Interfaces;
 public interface IRoleService
 {
     Task<IDataResult<IEnumerable<RoleDto>>> GetAllAsync();
+    Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync();
     Task<IDataResult<RoleDto>> GetByIdAsync(int id);
     Task<IDataResult<RoleDto>> CreateAsync(CreateRoleDto dto);
     Task<IResult> UpdateAsync(int id, UpdateRoleDto dto);
     Task<IResult> DeleteAsync(int id);
     Task<IResult> AssignPermissionsAsync(int roleId, List<int> permissionIds);
     Task<IDataResult<IEnumerable<PermissionGroupDto>>> GetPermissionsByRoleIdAsync(int roleId);
-    Task<IResult> UpdateWithPermissionsAsync(int id, UpdateRoleDto dto, List<PermissionGroupDto> permissionGroups);
 }

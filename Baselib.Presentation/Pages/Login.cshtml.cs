@@ -35,13 +35,13 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
         {
-            ErrorMessage = "Kullanıcı adı ve şifre gereklidir";
+            ErrorMessage = "Kullanıcı adı / e-posta ve şifre gereklidir";
             return Page();
         }
 
-        var result = await _authService.LoginAsync(Username, Password);
+        var result = await _authService.LoginAsync(Username.Trim(), Password);
 
         if (result == null)
         {

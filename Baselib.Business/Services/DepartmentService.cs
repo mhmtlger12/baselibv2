@@ -30,6 +30,18 @@ public class DepartmentService : IDepartmentService
             departments.OrderBy(d => d.Name).Select(d => _mapper.Map<DepartmentDto>(d)));
     }
 
+    public async Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync()
+    {
+        var departments = await _departments.GetAllAsync();
+        var options = departments.OrderBy(d => d.Name).Select(d => new SelectOptionDto
+        {
+            Id = d.Id,
+            Name = d.Name
+        });
+
+        return DataResult<IEnumerable<SelectOptionDto>>.Ok(options);
+    }
+
     public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync()
     {
         var departments = await _departments.GetAllAsync();

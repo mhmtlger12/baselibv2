@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Baselib.Business\Baselib.Business.csproj" />
-    <ProjectReference Include="..\Baselib.Data\Baselib.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,7 +12,6 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>annotations</Nullable>
   </PropertyGroup>
 
 </Project>

@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Baselib.Api.Attributes;
 using Baselib.Api.Middleware;
-using Baselib.Business.Interfaces;
-using Baselib.Business.Services;
+using Baselib.Business.Extensions;
 using Baselib.Core.Constants;
 using Baselib.Core.Interfaces;
 using Baselib.Data.Extensions;
@@ -56,20 +55,7 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new PermissionRequirement()));
 });
 
-builder.Services.AddAutoMapper(typeof(Baselib.Business.Mappings.MappingProfile).Assembly);
-
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IProfileService, ProfileService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IPermissionService, PermissionService>();
-builder.Services.AddScoped<IPermissionCheckService, PermissionCheckService>();
-builder.Services.AddScoped<IDepartmentService, DepartmentService>();
-builder.Services.AddScoped<IMenuService, MenuService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<ISettingService, SettingService>();
-builder.Services.AddScoped<IAuditLogService, AuditLogService>();
-builder.Services.AddScoped<IRecycleBinService, RecycleBinService>();
+builder.Services.AddBusinessServices();
 
 var app = builder.Build();
 

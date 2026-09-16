@@ -40,6 +40,18 @@ public class RoleService : IRoleService
         return DataResult<IEnumerable<RoleDto>>.Ok(_mapper.Map<IEnumerable<RoleDto>>(roles.OrderBy(r => r.Name)));
     }
 
+    public async Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync()
+    {
+        var roles = await _roles.GetAllAsync();
+        var options = roles.OrderBy(r => r.Name).Select(r => new SelectOptionDto
+        {
+            Id = r.Id,
+            Name = r.Name
+        });
+
+        return DataResult<IEnumerable<SelectOptionDto>>.Ok(options);
+    }
+
     public async Task<IDataResult<RoleDto>> GetByIdAsync(int id)
     {
         var role = await _roles.GetByIdAsync(
@@ -139,29 +151,7 @@ public class RoleService : IRoleService
         return await _permissionService.GetGroupedPermissionsAsync(roleId);
     }
 
-    public async Task<IResult> UpdateWithPermissionsAsync(int id, UpdateRoleDto dto, List<PermissionGroupDto> permissionGroups)
-    {
-        var role = await _roles.GetByIdAsync(id);
-        if (role == null)
-            return Result.NotFound(Messages.Role.NotFound);
 
-        var roleName = dto.Name.Trim();
-        if (await _roles.AnyAsync(r => r.Name == roleName && r.Id != id))
-            return Result.BadRequest(Messages.Role.NameAlreadyExists);
-
-        role.Name = roleName;
-        role.Description = dto.Description?.Trim();
-        role.IsActive = dto.IsActive;
-        role.UpdatedDate = DateTime.UtcNow;
-
-        _roles.Update(role);
-
-        var permissionIds = await _permissionService.ResolvePermissionIdsAsync(permissionGroups);
-        await ReplaceRolePermissionsAsync(id, permissionIds);
-        await _unitOfWork.SaveChangesAsync();
-
-        return Result.Ok(Messages.General.Updated);
-    }
 
     // ── Private Helpers ──────────────────────────────────────────
 

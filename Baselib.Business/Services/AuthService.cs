@@ -35,8 +35,9 @@ public class AuthService : IAuthService
 
     public async Task<IDataResult<AuthResultDto>> LoginAsync(LoginDto dto)
     {
+        var identifier = dto.Username?.Trim() ?? string.Empty;
         var user = await _users.FirstOrDefaultAsync(
-            u => u.Username == dto.Username,
+            u => u.Username == identifier || u.Email == identifier,
             include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department));
 
         if (user == null || !PasswordHelper.Verify(dto.Password, user.PasswordHash))

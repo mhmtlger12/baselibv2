@@ -27,7 +27,7 @@ public class RolesController : ControllerBase
     [HttpGet("selectOption")]
     public async Task<IActionResult> SelectOption()
     {
-        var result = await _roleService.GetAllAsync();
+        var result = await _roleService.GetSelectOptionsAsync();
         return StatusCode(result.StatusCode, result);
     }
 
@@ -62,12 +62,6 @@ public class RolesController : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpPut("{id:int}/with-permissions")]
-    public async Task<IActionResult> UpdateWithPermissions(int id, [FromBody] RoleWithPermissionsDto dto)
-    {
-        var result = await _roleService.UpdateWithPermissionsAsync(id, dto.Role, dto.PermissionGroups);
-        return StatusCode(result.StatusCode, result);
-    }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)

@@ -2,6 +2,7 @@ using Baselib.Business.Interfaces;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Baselib.Api.Attributes;
 
@@ -34,10 +35,11 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
         string details = "";
         try
         {
-            // Eğer varsa Action argümanlarını JSON olarak kaydet
+            // Eğer varsa Action argümanlarını JSON olarak kaydet ve hassas alanları maskele
             if (context.ActionArguments.Any())
             {
                 details = JsonSerializer.Serialize(context.ActionArguments);
+                details = Regex.Replace(details, @"(""(?i)(?:password|currentpassword|newpassword|token|refreshtoken)""\s*:\s*"")[^""]*("")", "$1***$2");
             }
         }
         catch

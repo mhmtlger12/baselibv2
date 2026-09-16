@@ -61,11 +61,4 @@ public class PermissionsController : ControllerBase
         var result = await _permissionService.DeleteAsync(id);
         return StatusCode(result.StatusCode, result);
     }
-
-    [HttpPost("role/{roleId:int}/permissions")]
-    public async Task<IActionResult> SaveRolePermissions(int roleId, [FromBody] List<PermissionGroupDto> permissionGroups)
-    {
-        var result = await _permissionService.SaveRolePermissionsAsync(roleId, permissionGroups);
-        return StatusCode(result.StatusCode, result);
-    }
 }

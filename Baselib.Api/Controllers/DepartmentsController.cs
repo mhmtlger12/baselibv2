@@ -27,7 +27,7 @@ public class DepartmentsController : ControllerBase
     [HttpGet("selectOption")]
     public async Task<IActionResult> SelectOption()
     {
-        var result = await _departmentService.GetAllAsync();
+        var result = await _departmentService.GetSelectOptionsAsync();
         return StatusCode(result.StatusCode, result);
     }
 

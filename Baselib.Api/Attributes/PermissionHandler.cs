@@ -7,11 +7,11 @@ namespace Baselib.Api.Attributes;
 
 public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IPermissionCheckService _permissionCheckService;
 
-    public PermissionHandler(IServiceProvider serviceProvider)
+    public PermissionHandler(IPermissionCheckService permissionCheckService)
     {
-        _serviceProvider = serviceProvider;
+        _permissionCheckService = permissionCheckService;
     }
 
     protected override async Task HandleRequirementAsync(
@@ -48,10 +48,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         var activeRoleIdClaim = context.User.FindFirst("ActiveRoleId")?.Value;
         int? activeRoleId = int.TryParse(activeRoleIdClaim, out var roleId) ? roleId : null;
 
-        using var scope = _serviceProvider.CreateScope();
-        var permissionCheckService = scope.ServiceProvider.GetRequiredService<IPermissionCheckService>();
-
-        var hasAccess = await permissionCheckService.HasAccessAsync(userId, activeRoleId, controller, action);
+        var hasAccess = await _permissionCheckService.HasAccessAsync(userId, activeRoleId, controller, action);
 
         if (hasAccess)
         {
