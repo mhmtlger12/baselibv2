@@ -27,16 +27,3 @@ public static class CRUDActionTypeExtensions
         _ => actionType.ToString()
     };
 }
-
-public static class CRUDActionTypes
-{
-    public const int View = 1;
-    public const int Add = 2;
-    public const int Update = 3;
-    public const int Preview = 4;
-    public const int Option = 5;
-    public const int Delete = 6;
-
-    public static string GetName(CRUDActionType value) => value.GetName();
-    public static string GetName(int value) => ((CRUDActionType)value).GetName();
-}

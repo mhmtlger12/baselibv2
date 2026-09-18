@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
 using Baselib.Business.Interfaces;
 
@@ -18,22 +18,18 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         AuthorizationHandlerContext context, 
         PermissionRequirement requirement)
     {
-        var httpContext = context.Resource as HttpContext;
-
-        if (httpContext == null)
+        var httpContext = context.Resource switch
         {
-            context.Succeed(requirement);
-            return;
-        }
+            HttpContext currentHttpContext => currentHttpContext,
+            AuthorizationFilterContext authorizationFilterContext => authorizationFilterContext.HttpContext,
+            _ => null
+        };
+        var permission = httpContext?.GetEndpoint()?.Metadata.GetMetadata<RequirePermissionAttribute>();
 
-        var routeData = httpContext.Request.RouteValues;
-        var actionDescriptor = httpContext.GetEndpoint()?.Metadata.GetMetadata<ControllerActionDescriptor>();
-        var controller = routeData["controller"]?.ToString() ?? actionDescriptor?.ControllerName;
-        var action = routeData["action"]?.ToString() ?? actionDescriptor?.ActionName;
-
-        if (string.IsNullOrWhiteSpace(controller) || string.IsNullOrWhiteSpace(action))
+        // Eksik/çözülemeyen metadata bir yapılandırma hatasıdır; asla erişim izni değildir.
+        if (httpContext == null || permission == null || string.IsNullOrWhiteSpace(permission.Code))
         {
-            context.Succeed(requirement);
+            context.Fail();
             return;
         }
 
@@ -48,11 +44,15 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         var activeRoleIdClaim = context.User.FindFirst("ActiveRoleId")?.Value;
         int? activeRoleId = int.TryParse(activeRoleIdClaim, out var roleId) ? roleId : null;
 
-        var hasAccess = await _permissionCheckService.HasAccessAsync(userId, activeRoleId, controller, action);
+        var hasAccess = await _permissionCheckService.HasAccessAsync(userId, activeRoleId, permission.Code);
 
         if (hasAccess)
         {
             context.Succeed(requirement);
+        }
+        else
+        {
+            context.Fail();
         }
     }
 }

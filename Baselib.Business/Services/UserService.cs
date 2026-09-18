@@ -7,6 +7,7 @@ using Baselib.Core.Messages;
 using Baselib.Core.Results;
 using Baselib.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Baselib.Business.Services;
 
@@ -16,24 +17,28 @@ public class UserService : IUserService
     private readonly IRepository<UserRole> _userRoles;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
     public UserService(
         IRepository<User> users,
         IRepository<UserRole> userRoles,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        TimeProvider timeProvider)
     {
         _users = users;
         _userRoles = userRoles;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IDataResult<IEnumerable<UserDto>>> GetAllAsync()
     {
         var users = await _users.GetAllAsync(
             predicate: null,
-            include: q => q.Include(u => u.Department).Include(u => u.UserRoles).ThenInclude(ur => ur.Role));
+            include: q => q.Include(u => u.Department).Include(u => u.UserRoles).ThenInclude(ur => ur.Role),
+            asNoTracking: true);
 
         return DataResult<IEnumerable<UserDto>>.Ok(
             users.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).Select(u => MapUserToDto(u, null)));
@@ -53,25 +58,30 @@ public class UserService : IUserService
 
     public async Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto)
     {
-        var username = dto.Username.Trim();
-        var email = dto.Email.Trim();
+        if (!TryNormalizeIdentity(dto.Username, dto.Email, out var username, out var email, out var normalizedUsername, out var normalizedEmail))
+            return DataResult<UserDto>.BadRequest(Messages.General.Required);
 
-        if (await _users.AnyAsync(u => u.Username == username))
+        if (!PasswordHelper.MeetsPolicy(dto.Password))
+            return DataResult<UserDto>.BadRequest(Messages.User.PasswordPolicyNotMet);
+
+        if (await _users.AnyAsync(u => u.NormalizedUsername == normalizedUsername))
             return DataResult<UserDto>.BadRequest(Messages.User.UsernameAlreadyExists);
 
-        if (await _users.AnyAsync(u => u.Email == email))
+        if (await _users.AnyAsync(u => u.NormalizedEmail == normalizedEmail))
             return DataResult<UserDto>.BadRequest(Messages.User.EmailAlreadyExists);
 
         var user = new User
         {
             Username = username,
+            NormalizedUsername = normalizedUsername,
             Email = email,
+            NormalizedEmail = normalizedEmail,
             PasswordHash = PasswordHelper.Hash(dto.Password),
             FirstName = dto.FirstName?.Trim(),
             LastName = dto.LastName?.Trim(),
             Phone = dto.Phone?.Trim(),
             DepartmentId = dto.DepartmentId,
-            CreatedDate = DateTime.UtcNow,
+            CreatedDate = _timeProvider.GetUtcNow().UtcDateTime,
             IsActive = true
         };
 
@@ -88,12 +98,29 @@ public class UserService : IUserService
         }
         catch
         {
-            await _unitOfWork.RollbackTransactionAsync();
+            await _unitOfWork.RollbackTransactionSafelyAsync();
             throw;
         }
 
         var createdResult = await GetByIdAsync(user.Id);
         return DataResult<UserDto>.Created(createdResult.Data!, Messages.General.Saved);
+    }
+
+    public async Task<IDataResult<UserDto>> RegisterAsync(RegisterUserDto dto)
+    {
+        // Anonim istek hiçbir zaman istemcinin seçtiği rol veya departmanı kullanmaz.
+        // Hesap, yetkili bir yönetici rol atayana kadar hiçbir RBAC rolü taşımaz.
+
+        return await CreateAsync(new CreateUserDto
+        {
+            Username = dto.Username,
+            Email = dto.Email,
+            Password = dto.Password,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Phone = dto.Phone,
+            RoleIds = []
+        });
     }
 
     public async Task<IResult> UpdateAsync(int id, UpdateUserDto dto)
@@ -102,26 +129,31 @@ public class UserService : IUserService
         if (user == null)
             return Result.NotFound(Messages.User.NotFound);
 
-        var username = dto.Username.Trim();
-        var email = dto.Email.Trim();
+        if (!TryNormalizeIdentity(dto.Username, dto.Email, out var username, out var email, out var normalizedUsername, out var normalizedEmail))
+            return Result.BadRequest(Messages.General.Required);
 
-        if (await _users.AnyAsync(u => u.Username == username && u.Id != id))
+        if (await _users.AnyAsync(u => u.NormalizedUsername == normalizedUsername && u.Id != id))
             return Result.BadRequest(Messages.User.UsernameAlreadyExists);
 
-        if (await _users.AnyAsync(u => u.Email == email && u.Id != id))
+        if (await _users.AnyAsync(u => u.NormalizedEmail == normalizedEmail && u.Id != id))
             return Result.BadRequest(Messages.User.EmailAlreadyExists);
 
         user.Username = username;
+        user.NormalizedUsername = normalizedUsername;
         user.Email = email;
+        user.NormalizedEmail = normalizedEmail;
         user.FirstName = dto.FirstName?.Trim();
         user.LastName = dto.LastName?.Trim();
         user.Phone = dto.Phone?.Trim();
         user.DepartmentId = dto.DepartmentId;
         user.IsActive = dto.IsActive;
-        user.UpdatedDate = DateTime.UtcNow;
+        user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         if (!string.IsNullOrWhiteSpace(dto.Password))
         {
+            if (!PasswordHelper.MeetsPolicy(dto.Password))
+                return Result.BadRequest(Messages.User.PasswordPolicyNotMet);
+
             user.PasswordHash = PasswordHelper.Hash(dto.Password);
         }
 
@@ -139,7 +171,7 @@ public class UserService : IUserService
             return Result.NotFound(Messages.User.NotFound);
 
         user.IsActive = false;
-        user.UpdatedDate = DateTime.UtcNow;
+        user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
@@ -166,8 +198,11 @@ public class UserService : IUserService
         if (!PasswordHelper.Verify(currentPassword, user.PasswordHash))
             return Result.Unauthorized(Messages.User.WrongPassword);
 
+        if (!PasswordHelper.MeetsPolicy(newPassword))
+            return Result.BadRequest(Messages.User.PasswordPolicyNotMet);
+
         user.PasswordHash = PasswordHelper.Hash(newPassword);
-        user.UpdatedDate = DateTime.UtcNow;
+        user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _users.Update(user);
         await _unitOfWork.SaveChangesAsync();
@@ -207,5 +242,23 @@ public class UserService : IUserService
         }
 
         return dto;
+    }
+
+    private static bool TryNormalizeIdentity(
+        string? usernameInput,
+        string? emailInput,
+        out string username,
+        out string email,
+        out string normalizedUsername,
+        out string normalizedEmail)
+    {
+        username = usernameInput?.Trim() ?? string.Empty;
+        email = emailInput?.Trim() ?? string.Empty;
+        normalizedUsername = UserIdentityHelper.Normalize(username);
+        normalizedEmail = UserIdentityHelper.Normalize(email);
+
+        return username.Length is >= 3 and <= 100 &&
+               email.Length <= 254 &&
+               new EmailAddressAttribute().IsValid(email);
     }
 }

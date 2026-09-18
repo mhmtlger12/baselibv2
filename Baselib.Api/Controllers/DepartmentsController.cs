@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
+using Baselib.Api.Attributes;
 
 namespace Baselib.Api.Controllers;
 
@@ -18,6 +19,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet]
+    [RequirePermission("Departments_Read")]
     public async Task<IActionResult> List()
     {
         var result = await _departmentService.GetAllAsync();
@@ -25,6 +27,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet("selectOption")]
+    [RequirePermission("Departments_SelectOption")]
     public async Task<IActionResult> SelectOption()
     {
         var result = await _departmentService.GetSelectOptionsAsync();
@@ -32,6 +35,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet("tree")]
+    [RequirePermission("Departments_Read")]
     public async Task<IActionResult> Tree()
     {
         var result = await _departmentService.GetTreeAsync();
@@ -39,6 +43,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [RequirePermission("Departments_Read")]
     public async Task<IActionResult> Get(int id)
     {
         var result = await _departmentService.GetByIdAsync(id);
@@ -46,6 +51,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("Departments_Create")]
     public async Task<IActionResult> Add([FromBody] CreateDepartmentDto dto)
     {
         var result = await _departmentService.CreateAsync(dto);
@@ -56,6 +62,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [RequirePermission("Departments_Update")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentDto dto)
     {
         var result = await _departmentService.UpdateAsync(id, dto);
@@ -63,6 +70,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [RequirePermission("Departments_Delete")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _departmentService.DeleteAsync(id);

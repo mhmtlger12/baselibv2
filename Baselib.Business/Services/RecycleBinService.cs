@@ -14,17 +14,20 @@ public class RecycleBinService : IRecycleBinService
     private readonly IRepository<Role> _roles;
     private readonly IRepository<Department> _departments;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly TimeProvider _timeProvider;
 
     public RecycleBinService(
         IRepository<User> users,
         IRepository<Role> roles,
         IRepository<Department> departments,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        TimeProvider timeProvider)
     {
         _users = users;
         _roles = roles;
         _departments = departments;
         _unitOfWork = unitOfWork;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IDataResult<IEnumerable<RecycleBinItemDto>>> GetAllDeletedItemsAsync()
@@ -86,7 +89,7 @@ public class RecycleBinService : IRecycleBinService
             return Result.NotFound(Messages.General.NotFound);
 
         entity.IsActive = true;
-        entity.UpdatedDate = DateTime.UtcNow;
+        entity.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         await _unitOfWork.SaveChangesAsync();
 

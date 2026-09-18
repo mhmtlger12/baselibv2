@@ -13,7 +13,14 @@ namespace Baselib.Business.Helpers;
 /// </summary>
 public static class JwtHelper
 {
-    public static string GenerateAccessToken(User user, int? activeRoleId, string key, string issuer, string audience, int expiryMinutes = AccessTokenExpiryMinutes)
+    public static string GenerateAccessToken(
+        User user,
+        int? activeRoleId,
+        string key,
+        string issuer,
+        string audience,
+        DateTimeOffset issuedAt,
+        int expiryMinutes = AccessTokenExpiryMinutes)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -47,7 +54,7 @@ public static class JwtHelper
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
+            expires: issuedAt.UtcDateTime.AddMinutes(expiryMinutes),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -56,5 +63,10 @@ public static class JwtHelper
     public static string GenerateRefreshToken()
     {
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+    }
+
+    public static string HashRefreshToken(string refreshToken)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
     }
 }

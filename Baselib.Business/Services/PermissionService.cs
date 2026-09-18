@@ -15,22 +15,25 @@ public class PermissionService : IPermissionService
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
     public PermissionService(
         IRepository<Permission> permissions,
         IRepository<RolePermission> rolePermissions,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        TimeProvider timeProvider)
     {
         _permissions = permissions;
         _rolePermissions = rolePermissions;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IDataResult<IEnumerable<PermissionDto>>> GetAllAsync()
     {
-        var permissions = await _permissions.GetAllAsync();
+        var permissions = await _permissions.GetAllAsync(asNoTracking: true);
         var orderedPermissions = permissions
             .OrderBy(p => p.ControllerName)
             .ThenBy(p => p.CRUDActionType);
@@ -89,7 +92,7 @@ public class PermissionService : IPermissionService
         permission.ActionName = normalized.ActionName;
         permission.CRUDActionType = normalized.CRUDActionType;
         permission.IsActive = dto.IsActive;
-        permission.UpdatedDate = DateTime.UtcNow;
+        permission.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _permissions.Update(permission);
         await _unitOfWork.SaveChangesAsync();
@@ -104,7 +107,7 @@ public class PermissionService : IPermissionService
             return Result.NotFound(Messages.Permission.NotFound);
 
         permission.IsActive = false;
-        permission.UpdatedDate = DateTime.UtcNow;
+        permission.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _permissions.Update(permission);
         await _unitOfWork.SaveChangesAsync();
 
@@ -199,7 +202,7 @@ public class PermissionService : IPermissionService
             ControllerName = controller,
             ActionName = action,
             CRUDActionType = dto.CRUDActionType,
-            CreatedDate = DateTime.UtcNow,
+            CreatedDate = _timeProvider.GetUtcNow().UtcDateTime,
             IsActive = dto.IsActive
         };
     }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.Interfaces;
+using Baselib.Api.Attributes;
 
 namespace Baselib.Api.Controllers;
 
@@ -17,6 +18,7 @@ public class AuditLogsController : ControllerBase
     }
 
     [HttpGet]
+    [RequirePermission("AuditLogs_Read")]
     public async Task<IActionResult> List()
     {
         var result = await _auditLogService.GetAllAsync();

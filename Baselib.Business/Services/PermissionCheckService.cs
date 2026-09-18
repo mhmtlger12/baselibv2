@@ -20,10 +20,14 @@ public class PermissionCheckService : IPermissionCheckService
         _rolePermissions = rolePermissions;
     }
 
-    public async Task<bool> HasAccessAsync(int userId, int? activeRoleId, string controller, string action)
+    public async Task<bool> HasAccessAsync(int userId, int? activeRoleId, string permissionCode)
     {
-        // Veritabanından kullanıcının GÜNCEL rollerini çekiyoruz (Güvenlik için şart)
-        var userRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
+        if (string.IsNullOrWhiteSpace(permissionCode))
+            return false;
+
+        // Devre dışı kullanıcılar ve roller, token süreleri henüz dolmamış olsa bile erişemez.
+        var userRoles = await _userRoles.GetAllAsync(
+            ur => ur.UserId == userId && ur.User.IsActive && ur.Role.IsActive);
         var currentUserRoleIds = userRoles.Select(ur => ur.RoleId).ToList();
 
         if (!currentUserRoleIds.Any())
@@ -52,14 +56,12 @@ public class PermissionCheckService : IPermissionCheckService
         if (!effectiveRoleIds.Any())
             return false;
 
-        var permissions = await _permissions.GetAllAsync(p =>
-            p.ControllerName.ToUpper() == controller.ToUpper() &&
-            p.ActionName.ToUpper() == action.ToUpper());
+        var permissions = await _permissions.GetAllAsync(p => p.Code == permissionCode);
         var permissionIds = permissions.Select(p => p.Id).ToList();
 
-        // Bu controller/action için tanımlı permission yoksa erişime izin ver
+        // Tanımsız veya devre dışı bırakılmış kaynak, varsayılan olarak yasaktır.
         if (!permissionIds.Any())
-            return true;
+            return false;
 
         return await _rolePermissions.AnyAsync(rp =>
             effectiveRoleIds.Contains(rp.RoleId) &&

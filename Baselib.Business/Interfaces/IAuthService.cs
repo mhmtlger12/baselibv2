@@ -6,8 +6,8 @@ namespace Baselib.Business.Interfaces;
 
 public interface IAuthService
 {
-    Task<IDataResult<AuthResultDto>> LoginAsync(LoginDto dto);
-    Task<IDataResult<AuthResultDto>> RefreshTokenAsync(string refreshToken);
+    Task<IDataResult<AuthResultDto>> LoginAsync(LoginDto dto, ClientSessionInfoDto clientSession);
+    Task<IDataResult<AuthResultDto>> RefreshTokenAsync(string refreshToken, ClientSessionInfoDto clientSession);
     Task<IResult> LogoutAsync(ClaimsPrincipal principal);
-    Task<IDataResult<AuthResultDto>> SwitchRoleAsync(ClaimsPrincipal principal, int newRoleId);
+    Task<IDataResult<AuthResultDto>> SwitchRoleAsync(ClaimsPrincipal principal, int newRoleId, ClientSessionInfoDto clientSession);
 }

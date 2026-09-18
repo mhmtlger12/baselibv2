@@ -28,6 +28,10 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.NormalizedUsername).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.NormalizedEmail).HasMaxLength(254).IsRequired();
+            entity.HasIndex(e => e.NormalizedUsername).IsUnique();
+            entity.HasIndex(e => e.NormalizedEmail).IsUnique();
             entity.HasOne(e => e.Department)
                   .WithMany(d => d.Users)
                   .HasForeignKey(e => e.DepartmentId)
@@ -93,6 +97,13 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {
+            entity.Property(rt => rt.TokenHash).HasMaxLength(64).IsRequired();
+            entity.Property(rt => rt.FamilyId).HasMaxLength(32).IsRequired();
+            entity.Property(rt => rt.IpAddress).HasMaxLength(45);
+            entity.Property(rt => rt.UserAgent).HasMaxLength(512);
+            entity.Property(rt => rt.RevokedReason).HasMaxLength(64);
+            entity.HasIndex(rt => rt.TokenHash).IsUnique();
+            entity.HasIndex(rt => new { rt.UserId, rt.FamilyId });
             entity.HasOne(rt => rt.User)
                   .WithMany(u => u.RefreshTokens)
                   .HasForeignKey(rt => rt.UserId)
@@ -154,7 +165,8 @@ public class AppDbContext : DbContext
             new Permission { Id = 24, Name = "Çöp Kutusu Görüntüle", ControllerName = "RecycleBin", ActionName = "List", Code = "RecycleBin_Read", Description = "Silinmiş kayıtları görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 25, Name = "Çöp Kutusu Geri Yükle", ControllerName = "RecycleBin", ActionName = "Restore", Code = "RecycleBin_Restore", Description = "Silinmiş kayıtları geri yükleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 26, Name = "Rol Seçenekleri", ControllerName = "Roles", ActionName = "SelectOption", Code = "Roles_SelectOption", Description = "Rol seçim listelerini görüntüleme", CRUDActionType = CRUDActionType.Option, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 27, Name = "Departman Seçenekleri", ControllerName = "Departments", ActionName = "SelectOption", Code = "Departments_SelectOption", Description = "Departman seçim listelerini görüntüleme", CRUDActionType = CRUDActionType.Option, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Permission { Id = 27, Name = "Departman Seçenekleri", ControllerName = "Departments", ActionName = "SelectOption", Code = "Departments_SelectOption", Description = "Departman seçim listelerini görüntüleme", CRUDActionType = CRUDActionType.Option, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 28, Name = "Dashboard Görüntüle", ControllerName = "Dashboard", ActionName = "GetStats", Code = "Dashboard_Read", Description = "Dashboard istatistiklerini görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<Menu>().HasData(
@@ -171,7 +183,7 @@ public class AppDbContext : DbContext
 
         // Admin user - password: admin
         modelBuilder.Entity<User>().HasData(
-            new User { Id = 1, Username = "admin", Email = "admin@baselib.com", PasswordHash = "$2b$10$br5S4nxaGpEKXOPtd/mdvuKBmNoiWHPoJ8MRF43wYnOB/JbBz2o7u", FirstName = "Admin", LastName = "User", DepartmentId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new User { Id = 1, Username = "admin", NormalizedUsername = "ADMIN", Email = "admin@baselib.com", NormalizedEmail = "ADMIN@BASELIB.COM", PasswordHash = "$2b$10$br5S4nxaGpEKXOPtd/mdvuKBmNoiWHPoJ8MRF43wYnOB/JbBz2o7u", FirstName = "Admin", LastName = "User", DepartmentId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<UserRole>().HasData(
@@ -206,13 +218,13 @@ public class AppDbContext : DbContext
             new RolePermission { RoleId = 1, PermissionId = 24 },
             new RolePermission { RoleId = 1, PermissionId = 25 },
             new RolePermission { RoleId = 1, PermissionId = 26 },
-            new RolePermission { RoleId = 1, PermissionId = 27 }
+            new RolePermission { RoleId = 1, PermissionId = 27 },
+            new RolePermission { RoleId = 1, PermissionId = 28 }
         );
 
         modelBuilder.Entity<AppSetting>().HasData(
             new AppSetting { Id = 1, Key = "SiteName", Value = "Baselib", Description = "Uygulamanın genel adı", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new AppSetting { Id = 3, Key = "MaintenanceMode", Value = "false", Description = "Sistemi bakım moduna alır", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
     }
 }

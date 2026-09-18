@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Baselib.Api.Attributes;
+using Baselib.Api.Extensions;
 using Baselib.Api.Middleware;
 using Baselib.Business.Extensions;
 using Baselib.Core.Constants;
@@ -13,12 +14,15 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 64 * 1024);
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<Baselib.Api.Attributes.AuditLogFilterAttribute>();
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddApiRateLimiting();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PresentationClient", policy =>
@@ -68,6 +72,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors("PresentationClient");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

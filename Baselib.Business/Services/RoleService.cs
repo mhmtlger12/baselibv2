@@ -16,33 +16,37 @@ public class RoleService : IRoleService
     private readonly IPermissionService _permissionService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
     public RoleService(
         IRepository<Role> roles,
         IRepository<RolePermission> rolePermissions,
         IPermissionService permissionService,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        TimeProvider timeProvider)
     {
         _roles = roles;
         _rolePermissions = rolePermissions;
         _permissionService = permissionService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IDataResult<IEnumerable<RoleDto>>> GetAllAsync()
     {
         var roles = await _roles.GetAllAsync(
             predicate: null,
-            include: q => q.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission));
+            include: q => q.Include(r => r.RolePermissions).ThenInclude(rp => rp.Permission),
+            asNoTracking: true);
 
         return DataResult<IEnumerable<RoleDto>>.Ok(_mapper.Map<IEnumerable<RoleDto>>(roles.OrderBy(r => r.Name)));
     }
 
     public async Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync()
     {
-        var roles = await _roles.GetAllAsync();
+        var roles = await _roles.GetAllAsync(asNoTracking: true);
         var options = roles.OrderBy(r => r.Name).Select(r => new SelectOptionDto
         {
             Id = r.Id,
@@ -74,7 +78,7 @@ public class RoleService : IRoleService
         {
             Name = roleName,
             Description = dto.Description?.Trim(),
-            CreatedDate = DateTime.UtcNow,
+            CreatedDate = _timeProvider.GetUtcNow().UtcDateTime,
             IsActive = true
         };
 
@@ -91,7 +95,7 @@ public class RoleService : IRoleService
         }
         catch
         {
-            await _unitOfWork.RollbackTransactionAsync();
+            await _unitOfWork.RollbackTransactionSafelyAsync();
             throw;
         }
 
@@ -112,7 +116,7 @@ public class RoleService : IRoleService
         role.Name = roleName;
         role.Description = dto.Description?.Trim();
         role.IsActive = dto.IsActive;
-        role.UpdatedDate = DateTime.UtcNow;
+        role.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _roles.Update(role);
         await ReplaceRolePermissionsAsync(id, dto.PermissionIds);
@@ -128,7 +132,7 @@ public class RoleService : IRoleService
             return Result.NotFound(Messages.Role.NotFound);
 
         role.IsActive = false;
-        role.UpdatedDate = DateTime.UtcNow;
+        role.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _roles.Update(role);
         await _unitOfWork.SaveChangesAsync();
 

@@ -27,20 +27,21 @@ public class DashboardService : IDashboardService
 
     public async Task<IDataResult<DashboardStatsDto>> GetStatsAsync(CancellationToken cancellationToken = default)
     {
-        var totalUsers = await _users.CountAsync(ignoreQueryFilters: true);
-        var activeUsers = await _users.CountAsync();
-        var totalRoles = await _roles.CountAsync();
-        var totalDepartments = await _departments.CountAsync();
+        var totalUsers = await _users.CountAsync(ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        var activeUsers = await _users.CountAsync(cancellationToken: cancellationToken);
+        var totalRoles = await _roles.CountAsync(cancellationToken: cancellationToken);
+        var totalDepartments = await _departments.CountAsync(cancellationToken: cancellationToken);
 
-        var userRoles = await _userRoles.GetAllAsync(includes: ur => ur.Role);
-        var roleDist = userRoles
-            .GroupBy(ur => ur.Role.Name)
-            .Select(g => new RoleDistributionDto
-            {
-                RoleName = g.Key,
-                UserCount = g.Count()
-            })
-            .ToList();
+        // GroupBy, SQL'e çevrilir; tüm UserRole kayıtları uygulama belleğine alınmaz.
+        var roleDist = await _userRoles.SelectAsync(
+            query => query
+                .GroupBy(userRole => userRole.Role.Name)
+                .Select(group => new RoleDistributionDto
+                {
+                    RoleName = group.Key,
+                    UserCount = group.Count()
+                }),
+            cancellationToken);
 
         var stats = new DashboardStatsDto
         {
@@ -48,7 +49,7 @@ public class DashboardService : IDashboardService
             ActiveUsers = activeUsers,
             TotalRoles = totalRoles,
             TotalDepartments = totalDepartments,
-            RoleDistributions = roleDist
+            RoleDistributions = roleDist.ToList()
         };
 
         return DataResult<DashboardStatsDto>.Ok(stats);

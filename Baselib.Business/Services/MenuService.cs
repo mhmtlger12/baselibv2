@@ -15,24 +15,28 @@ public class MenuService : IMenuService
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
     public MenuService(
         IRepository<Menu> menus,
         IRepository<UserRole> userRoles,
         IRepository<RolePermission> rolePermissions,
         IUnitOfWork unitOfWork,
-        IMapper mapper)
+        IMapper mapper,
+        TimeProvider timeProvider)
     {
         _menus = menus;
         _userRoles = userRoles;
         _rolePermissions = rolePermissions;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync()
     {
         var menus = await _menus.GetAllAsync(
+            asNoTracking: true,
             includes: [m => m.Permission!]);
 
         return DataResult<IEnumerable<MenuDto>>.Ok(
@@ -77,7 +81,7 @@ public class MenuService : IMenuService
             ParentId = dto.ParentId,
             Order = dto.Order,
             PermissionId = dto.PermissionId,
-            CreatedDate = DateTime.UtcNow,
+            CreatedDate = _timeProvider.GetUtcNow().UtcDateTime,
             IsActive = true
         };
 
@@ -104,7 +108,7 @@ public class MenuService : IMenuService
         menu.Order = dto.Order;
         menu.PermissionId = dto.PermissionId;
         menu.IsActive = dto.IsActive;
-        menu.UpdatedDate = DateTime.UtcNow;
+        menu.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _menus.Update(menu);
         await _unitOfWork.SaveChangesAsync();
@@ -119,7 +123,7 @@ public class MenuService : IMenuService
             return Result.NotFound(Messages.Menu.NotFound);
 
         menu.IsActive = false;
-        menu.UpdatedDate = DateTime.UtcNow;
+        menu.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _menus.Update(menu);
         await _unitOfWork.SaveChangesAsync();
 

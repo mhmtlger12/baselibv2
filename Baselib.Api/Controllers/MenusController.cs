@@ -2,6 +2,7 @@ using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Baselib.Api.Attributes;
 
 namespace Baselib.Api.Controllers;
 
@@ -18,6 +19,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpGet]
+    [RequirePermission("Menus_Read")]
     public async Task<IActionResult> List()
     {
         var result = await _menuService.GetAllAsync();
@@ -25,6 +27,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpGet("user/{userId:int}")]
+    [RequirePermission("Menus_Read")]
     public async Task<IActionResult> GetByUser(int userId)
     {
         var result = await _menuService.GetMenusByUserIdAsync(userId);
@@ -32,6 +35,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [RequirePermission("Menus_Read")]
     public async Task<IActionResult> Get(int id)
     {
         var result = await _menuService.GetByIdAsync(id);
@@ -39,6 +43,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("Menus_Create")]
     public async Task<IActionResult> Add([FromBody] CreateMenuDto dto)
     {
         var result = await _menuService.CreateAsync(dto);
@@ -49,6 +54,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [RequirePermission("Menus_Update")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMenuDto dto)
     {
         var result = await _menuService.UpdateAsync(id, dto);
@@ -56,6 +62,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [RequirePermission("Menus_Delete")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _menuService.DeleteAsync(id);

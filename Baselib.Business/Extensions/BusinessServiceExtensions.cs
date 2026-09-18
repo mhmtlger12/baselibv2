@@ -10,6 +10,7 @@ public static class BusinessServiceExtensions
     public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
         services.AddAutoMapper(typeof(MappingProfile).Assembly);
+        services.AddSingleton(TimeProvider.System);
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();

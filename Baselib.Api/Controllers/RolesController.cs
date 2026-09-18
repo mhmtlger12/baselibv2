@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
+using Baselib.Api.Attributes;
 
 namespace Baselib.Api.Controllers;
 
@@ -18,6 +19,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpGet]
+    [RequirePermission("Roles_Read")]
     public async Task<IActionResult> List()
     {
         var result = await _roleService.GetAllAsync();
@@ -25,6 +27,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpGet("selectOption")]
+    [RequirePermission("Roles_SelectOption")]
     public async Task<IActionResult> SelectOption()
     {
         var result = await _roleService.GetSelectOptionsAsync();
@@ -32,6 +35,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [RequirePermission("Roles_Read")]
     public async Task<IActionResult> Get(int id)
     {
         var result = await _roleService.GetByIdAsync(id);
@@ -39,6 +43,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpGet("{id:int}/permissions")]
+    [RequirePermission("Roles_Read")]
     public async Task<IActionResult> GetPermissions(int id)
     {
         var result = await _roleService.GetPermissionsByRoleIdAsync(id);
@@ -46,6 +51,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("Roles_Create")]
     public async Task<IActionResult> Add([FromBody] CreateRoleDto dto)
     {
         var result = await _roleService.CreateAsync(dto);
@@ -56,6 +62,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [RequirePermission("Roles_Update")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
     {
         var result = await _roleService.UpdateAsync(id, dto);
@@ -64,6 +71,7 @@ public class RolesController : ControllerBase
 
 
     [HttpDelete("{id:int}")]
+    [RequirePermission("Roles_Delete")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _roleService.DeleteAsync(id);
@@ -71,6 +79,7 @@ public class RolesController : ControllerBase
     }
 
     [HttpPut("{id:int}/permissions")]
+    [RequirePermission("Roles_Update")]
     public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds)
     {
         var result = await _roleService.AssignPermissionsAsync(id, permissionIds);

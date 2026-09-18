@@ -23,6 +23,7 @@ public static class Messages
         public const string WrongPassword = "Mevcut şifreniz yanlış.";
         public const string PasswordChanged = "Şifreniz başarıyla güncellendi.";
         public const string RolesAssigned = "Roller başarıyla atandı";
+        public const string PasswordPolicyNotMet = "Şifre en az 12 karakter olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.";
     }
 
     public static class Role
@@ -54,7 +55,6 @@ public static class Messages
     public static class Auth
     {
         public const string InvalidRefreshToken = "Geçersiz yenileme token'ı";
-        public const string TokenExpired = "Token süresi dolmuş";
         public const string LoggedOut = "Başarıyla çıkış yapıldı";
     }
 

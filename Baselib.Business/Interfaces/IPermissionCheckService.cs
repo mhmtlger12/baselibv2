@@ -6,5 +6,5 @@ namespace Baselib.Business.Interfaces;
 /// </summary>
 public interface IPermissionCheckService
 {
-    Task<bool> HasAccessAsync(int userId, int? activeRoleId, string controller, string action);
+    Task<bool> HasAccessAsync(int userId, int? activeRoleId, string permissionCode);
 }

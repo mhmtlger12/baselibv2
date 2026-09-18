@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Baselib.Api.Extensions;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 
@@ -19,23 +21,30 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitPolicies.AuthLogin)]
+    [RequestSizeLimit(16 * 1024)]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var result = await _authService.LoginAsync(dto);    
+        var result = await _authService.LoginAsync(dto, GetClientSessionInfo());
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("refresh")]
+    [EnableRateLimiting(RateLimitPolicies.AuthRefresh)]
+    [RequestSizeLimit(16 * 1024)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
     {
-        var result = await _authService.RefreshTokenAsync(dto.RefreshToken);
+        var result = await _authService.RefreshTokenAsync(dto.RefreshToken, GetClientSessionInfo());
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] CreateUserDto dto)
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.AuthRegister)]
+    [RequestSizeLimit(16 * 1024)]
+    public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
     {
-        var result = await _userService.CreateAsync(dto);
+        var result = await _userService.RegisterAsync(dto);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -51,7 +60,16 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> SwitchRole(int roleId)
     {
-        var result = await _authService.SwitchRoleAsync(User, roleId);
+        var result = await _authService.SwitchRoleAsync(User, roleId, GetClientSessionInfo());
         return StatusCode(result.StatusCode, result);
+    }
+
+    private ClientSessionInfoDto GetClientSessionInfo()
+    {
+        return new ClientSessionInfoDto
+        {
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString()
+        };
     }
 }

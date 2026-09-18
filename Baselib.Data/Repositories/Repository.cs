@@ -16,25 +16,29 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    [Obsolete("Use GetAllAsync, GetByIdAsync or FirstOrDefaultAsync with appropriate filters and includes instead.")]
-    public virtual IQueryable<T> Query()
+    public virtual async Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false, CancellationToken cancellationToken = default)
     {
-        return _dbSet.AsQueryable();
+        IQueryable<T> query = _dbSet;
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.ToListAsync();
-    }
+        IQueryable<T> query = _dbSet.Where(predicate);
+        if (asNoTracking)
+            query = query.AsNoTracking();
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
-    {
-        return await _dbSet.Where(predicate).ToListAsync();
+        return await query.ToListAsync(cancellationToken);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? predicate = null,
         bool ignoreQueryFilters = false,
+        bool asNoTracking = false,
+        CancellationToken cancellationToken = default,
         params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet;
@@ -48,13 +52,18 @@ public class Repository<T> : IRepository<T> where T : class
         {
             query = query.Where(predicate);
         }
-        return await query.ToListAsync();
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? predicate,
         Func<IQueryable<T>, IQueryable<T>>? include = null,
-        bool ignoreQueryFilters = false)
+        bool ignoreQueryFilters = false,
+        bool asNoTracking = false,
+        CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet;
         if (ignoreQueryFilters)
@@ -65,7 +74,10 @@ public class Repository<T> : IRepository<T> where T : class
         {
             query = query.Where(predicate);
         }
-        return await query.ToListAsync();
+        if (asNoTracking)
+            query = query.AsNoTracking();
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public virtual async Task<T?> GetByIdAsync(int id)
@@ -173,13 +185,22 @@ public class Repository<T> : IRepository<T> where T : class
         return await _dbSet.AnyAsync(predicate);
     }
 
-    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false)
+    public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet;
         if (ignoreQueryFilters)
             query = query.IgnoreQueryFilters();
         return predicate == null
-            ? await query.CountAsync()
-            : await query.CountAsync(predicate);
+            ? await query.CountAsync(cancellationToken)
+            : await query.CountAsync(predicate, cancellationToken);
+    }
+
+    public virtual async Task<IReadOnlyList<TResult>> SelectAsync<TResult>(
+        Func<IQueryable<T>, IQueryable<TResult>> queryBuilder,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(queryBuilder);
+
+        return await queryBuilder(_dbSet.AsNoTracking()).ToListAsync(cancellationToken);
     }
 }

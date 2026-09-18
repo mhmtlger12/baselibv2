@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
+using Baselib.Api.Attributes;
 
 namespace Baselib.Api.Controllers;
 
@@ -18,6 +19,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet]
+    [RequirePermission("Permissions_Read")]
     public async Task<IActionResult> List()
     {
         var result = await _permissionService.GetAllAsync();
@@ -25,6 +27,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet("grouped")]
+    [RequirePermission("Permissions_Read")]
     public async Task<IActionResult> GroupedList([FromQuery] int? roleId = null)
     {
         var result = await _permissionService.GetGroupedPermissionsAsync(roleId);
@@ -32,6 +35,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [RequirePermission("Permissions_Read")]
     public async Task<IActionResult> Get(int id)
     {
         var result = await _permissionService.GetByIdAsync(id);
@@ -39,6 +43,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpPost]
+    [RequirePermission("Permissions_Create")]
     public async Task<IActionResult> Add([FromBody] CreatePermissionDto dto)
     {
         var result = await _permissionService.CreateAsync(dto);
@@ -49,6 +54,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [RequirePermission("Permissions_Update")]
     public async Task<IActionResult> Update(int id, [FromBody] CreatePermissionDto dto)
     {
         var result = await _permissionService.UpdateAsync(id, dto);
@@ -56,6 +62,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [RequirePermission("Permissions_Delete")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _permissionService.DeleteAsync(id);

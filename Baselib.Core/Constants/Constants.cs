@@ -11,23 +11,10 @@ public static class Constants
         public const int RefreshTokenExpiryDays = 7;
     }
 
-    public static class Pagination
+    public static class Authentication
     {
-        public const int DefaultPageSize = 10;
-        public const int MaxPageSize = 100;
+        public const int DefaultMaxLoginAttempts = 5;
+        public const int LockoutMinutes = 15;
     }
 
-    public static class Cache
-    {
-        public const string UserPrefix = "user_";
-        public const string RolePrefix = "role_";
-        public const string MenuPrefix = "menu_";
-    }
-
-    public static class Roles
-    {
-        public const string Admin = "Admin";
-        public const string User = "User";
-        public const string Manager = "Manager";
-    }
 }

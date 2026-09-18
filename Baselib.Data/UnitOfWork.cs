@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Baselib.Core.Interfaces;
 
 namespace Baselib.Data;
@@ -7,10 +8,12 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
     private IDbContextTransaction? _transaction;
+    private readonly ILogger<UnitOfWork> _logger;
 
-    public UnitOfWork(AppDbContext context)
+    public UnitOfWork(AppDbContext context, ILogger<UnitOfWork> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<int> SaveChangesAsync()
@@ -40,6 +43,19 @@ public class UnitOfWork : IUnitOfWork
             await _transaction.RollbackAsync();
             await _transaction.DisposeAsync();
             _transaction = null;
+        }
+    }
+
+    public async Task RollbackTransactionSafelyAsync()
+    {
+        try
+        {
+            await RollbackTransactionAsync();
+        }
+        catch (Exception exception)
+        {
+            // Çağıranın asıl iş hatasını gölgelememesi gerekir.
+            _logger.LogError(exception, "Transaction rollback failed.");
         }
     }
 

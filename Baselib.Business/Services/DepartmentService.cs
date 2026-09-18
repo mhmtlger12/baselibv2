@@ -13,17 +13,20 @@ public class DepartmentService : IDepartmentService
     private readonly IRepository<Department> _departments;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
-    public DepartmentService(IRepository<Department> departments, IUnitOfWork unitOfWork, IMapper mapper)
+    public DepartmentService(IRepository<Department> departments, IUnitOfWork unitOfWork, IMapper mapper, TimeProvider timeProvider)
     {
         _departments = departments;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetAllAsync()
     {
         var departments = await _departments.GetAllAsync(
+            asNoTracking: true,
             includes: [d => d.ParentDepartment!]);
 
         return DataResult<IEnumerable<DepartmentDto>>.Ok(
@@ -32,7 +35,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync()
     {
-        var departments = await _departments.GetAllAsync();
+        var departments = await _departments.GetAllAsync(asNoTracking: true);
         var options = departments.OrderBy(d => d.Name).Select(d => new SelectOptionDto
         {
             Id = d.Id,
@@ -44,7 +47,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync()
     {
-        var departments = await _departments.GetAllAsync();
+        var departments = await _departments.GetAllAsync(asNoTracking: true);
 
         return DataResult<IEnumerable<DepartmentDto>>.Ok(
             BuildTree(departments.OrderBy(d => d.Name), null));
@@ -74,7 +77,7 @@ public class DepartmentService : IDepartmentService
             Name = dto.Name.Trim(),
             Code = code,
             ParentDepartmentId = dto.ParentDepartmentId,
-            CreatedDate = DateTime.UtcNow,
+            CreatedDate = _timeProvider.GetUtcNow().UtcDateTime,
             IsActive = true
         };
 
@@ -102,7 +105,7 @@ public class DepartmentService : IDepartmentService
         department.Code = code;
         department.ParentDepartmentId = dto.ParentDepartmentId;
         department.IsActive = dto.IsActive;
-        department.UpdatedDate = DateTime.UtcNow;
+        department.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
@@ -117,7 +120,7 @@ public class DepartmentService : IDepartmentService
             return Result.NotFound(Messages.Department.NotFound);
 
         department.IsActive = false;
-        department.UpdatedDate = DateTime.UtcNow;
+        department.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _departments.Update(department);
         await _unitOfWork.SaveChangesAsync();
 
