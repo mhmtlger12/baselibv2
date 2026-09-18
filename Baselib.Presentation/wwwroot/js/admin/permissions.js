@@ -52,6 +52,7 @@ function renderList() {
                 <thead>
                     <tr>
                         <th>Adı</th>
+                        <th>İzin Kodu</th>
                         <th>Controller Name</th>
                         <th>Action Name</th>
                         <th>Açıklama</th>
@@ -61,7 +62,7 @@ function renderList() {
                     </tr>
                 </thead>
                 <tbody>
-                    ${rows.length ? rows.map(renderPermissionRow).join('') : '<tr><td colspan="7" class="text-muted">İzin bulunamadı.</td></tr>'}
+                    ${rows.length ? rows.map(renderPermissionRow).join('') : '<tr><td colspan="8" class="text-muted">İzin bulunamadı.</td></tr>'}
                 </tbody>
             </table>
         </div>
@@ -72,6 +73,7 @@ function renderPermissionRow(permission) {
     return `
         <tr>
             <td>${escapeHtml(permission.name)}</td>
+            <td><code>${escapeHtml(permission.code)}</code></td>
             <td>${escapeHtml(permission.controllerName)}</td>
             <td>${escapeHtml(permission.actionName)}</td>
             <td>${escapeHtml(permission.description || '-')}</td>
@@ -124,6 +126,7 @@ function openModal() {
     document.getElementById('modalTitle').textContent = 'Yeni İzin';
     document.getElementById('permId').value = '';
     document.getElementById('name').value = '';
+    document.getElementById('code').value = '';
     document.getElementById('controllerName').value = '';
     document.getElementById('actionName').value = '';
     document.getElementById('description').value = '';
@@ -139,6 +142,7 @@ function editPerm(id) {
     document.getElementById('modalTitle').textContent = 'İzin Düzenle';
     document.getElementById('permId').value = permission.id;
     document.getElementById('name').value = permission.name || '';
+    document.getElementById('code').value = permission.code || '';
     document.getElementById('controllerName').value = permission.controllerName || '';
     document.getElementById('actionName').value = permission.actionName || '';
     document.getElementById('description').value = permission.description || '';
@@ -154,11 +158,12 @@ function editPerm(id) {
 async function savePerm() {
     const id = document.getElementById('permId').value;
     const selectedCrud = document.querySelector('.crud-type:checked');
+    const code = document.getElementById('code').value.trim();
     const controllerName = document.getElementById('controllerName').value.trim();
     const actionName = document.getElementById('actionName').value.trim();
     const data = {
         name: document.getElementById('name').value.trim(),
-        code: `${controllerName}_${actionName}`,
+        code,
         controllerName,
         actionName,
         crudActionType: selectedCrud ? Number.parseInt(selectedCrud.value, 10) : 0,
@@ -166,8 +171,13 @@ async function savePerm() {
         isActive: document.getElementById('isActive').checked
     };
 
-    if (!data.name || !data.controllerName || !data.actionName || !data.crudActionType) {
-        showToast('İzin adı, controller, action ve CRUD tipi zorunludur', 'error');
+    if (!data.name || !data.code || !data.controllerName || !data.actionName || !data.crudActionType) {
+        showToast('İzin adı, izin kodu, controller, action ve CRUD tipi zorunludur', 'error');
+        return;
+    }
+
+    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(data.code)) {
+        showToast('İzin kodu harfle başlamalı; yalnızca harf, rakam ve alt çizgi içermelidir', 'error');
         return;
     }
 
@@ -210,6 +220,7 @@ function filterPermissions(items) {
 
     return items.filter(permission => [
         permission.name,
+        permission.code,
         permission.controllerName,
         permission.actionName,
         permission.description,

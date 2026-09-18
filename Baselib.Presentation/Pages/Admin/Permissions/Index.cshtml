@@ -34,6 +34,15 @@
                     <input type="text" class="form-control" id="name" required placeholder="Kullanıcı Listele" />
                 </div>
                 <div class="mb-3">
+                    <label class="form-label" for="code">İzin Kodu</label>
+                    <input type="text" class="form-control" id="code" required maxlength="150"
+                           pattern="[A-Za-z][A-Za-z0-9_]*" spellcheck="false" autocomplete="off"
+                           placeholder="Users_Read" aria-describedby="codeHelp" />
+                    <div class="form-text" id="codeHelp">
+                        Endpoint üzerindeki <code>RequirePermission</code> koduyla birebir aynı olmalıdır.
+                    </div>
+                </div>
+                <div class="mb-3">
                     <label class="form-label">Controller Adı</label>
                     <input type="text" class="form-control" id="controllerName" required placeholder="Users" />
                 </div>

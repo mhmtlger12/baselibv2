@@ -190,9 +190,7 @@ public class PermissionService : IPermissionService
     {
         var controller = dto.ControllerName?.Trim() ?? string.Empty;
         var action = dto.ActionName?.Trim() ?? string.Empty;
-        var code = string.IsNullOrWhiteSpace(dto.Code)
-            ? $"{controller}_{action}"
-            : dto.Code.Trim();
+        var code = dto.Code.Trim();
 
         return new Permission
         {

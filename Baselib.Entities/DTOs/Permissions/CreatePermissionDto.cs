@@ -10,7 +10,7 @@ public class CreatePermissionDto
     [Required, StringLength(150)]
     public string Name { get; set; } = string.Empty;
 
-    [StringLength(150)]
+    [Required, StringLength(150), RegularExpression("^[A-Za-z][A-Za-z0-9_]*$")]
     public string Code { get; set; } = string.Empty;
 
     [StringLength(500)]

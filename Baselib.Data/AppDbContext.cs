@@ -182,7 +182,7 @@ public class AppDbContext : DbContext
         );
 
         modelBuilder.Entity<Menu>().HasData(
-            new Menu { Id = 1, Name = "Dashboard", Url = "/Admin", Icon = "bi-speedometer2", Order = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 1, Name = "Dashboard", Url = "/Admin", Icon = "bi-speedometer2", Order = 1, PermissionId = 28, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 2, Name = "Kullanıcılar", Url = "/Admin/Users", Icon = "bi-people", Order = 2, PermissionId = 1, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 3, Name = "Roller", Url = "/Admin/Roles", Icon = "bi-shield-check", Order = 3, PermissionId = 5, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 4, Name = "İzinler", Url = "/Admin/Permissions", Icon = "bi-key", Order = 4, PermissionId = 9, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },

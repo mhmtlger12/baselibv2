@@ -14,7 +14,7 @@
     {
         try
         {
-            userMenus = await ApiService.GetAsync<List<Baselib.Business.DTOs.MenuDto>>($"/api/menus/user/{currentUser.Id}") ?? new();
+            userMenus = await ApiService.GetAsync<List<Baselib.Business.DTOs.MenuDto>>("/api/menus/me") ?? new();
         }
         catch
         {

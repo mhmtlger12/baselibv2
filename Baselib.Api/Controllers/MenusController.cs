@@ -3,12 +3,13 @@ using Baselib.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Baselib.Api.Attributes;
+using System.Security.Claims;
 
 namespace Baselib.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "DynamicPermission")]
+[Authorize]
 public class MenusController : ControllerBase
 {
     private readonly IMenuService _menuService;
@@ -19,6 +20,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "DynamicPermission")]
     [RequirePermission("Menus_Read")]
     public async Task<IActionResult> List()
     {
@@ -26,15 +28,19 @@ public class MenusController : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpGet("user/{userId:int}")]
-    [RequirePermission("Menus_Read")]
-    public async Task<IActionResult> GetByUser(int userId)
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMyMenus()
     {
-        var result = await _menuService.GetMenusByUserIdAsync(userId);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var result = await _menuService.GetMenusForUserAsync(userId);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Policy = "DynamicPermission")]
     [RequirePermission("Menus_Read")]
     public async Task<IActionResult> Get(int id)
     {
@@ -43,6 +49,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "DynamicPermission")]
     [RequirePermission("Menus_Create")]
     public async Task<IActionResult> Add([FromBody] CreateMenuDto dto)
     {
@@ -54,6 +61,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = "DynamicPermission")]
     [RequirePermission("Menus_Update")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateMenuDto dto)
     {
@@ -62,6 +70,7 @@ public class MenusController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "DynamicPermission")]
     [RequirePermission("Menus_Delete")]
     public async Task<IActionResult> Delete(int id)
     {

@@ -331,11 +331,6 @@ namespace Baselib.Data.Migrations
                 values: new object[] { 1, "YT", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), true, "Yönetim", null, null, null });
 
             migrationBuilder.InsertData(
-                table: "Menus",
-                columns: new[] { "Id", "CreatedBy", "CreatedDate", "Icon", "IsActive", "Name", "Order", "ParentId", "PermissionId", "UpdatedBy", "UpdatedDate", "Url" },
-                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "bi-speedometer2", true, "Dashboard", 1, null, null, null, null, "/Admin" });
-
-            migrationBuilder.InsertData(
                 table: "Permissions",
                 columns: new[] { "Id", "ActionName", "CRUDActionType", "Code", "ControllerName", "CreatedBy", "CreatedDate", "Description", "IsActive", "Name", "UpdatedBy", "UpdatedDate" },
                 values: new object[,]
@@ -389,6 +384,7 @@ namespace Baselib.Data.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedDate", "Icon", "IsActive", "Name", "Order", "ParentId", "PermissionId", "UpdatedBy", "UpdatedDate", "Url" },
                 values: new object[,]
                 {
+                    { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "bi-speedometer2", true, "Dashboard", 1, null, 28, null, null, "/Admin" },
                     { 2, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "bi-people", true, "Kullanıcılar", 2, null, 1, null, null, "/Admin/Users" },
                     { 3, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "bi-shield-check", true, "Roller", 3, null, 5, null, null, "/Admin/Roles" },
                     { 4, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "bi-key", true, "İzinler", 4, null, 9, null, null, "/Admin/Permissions" },

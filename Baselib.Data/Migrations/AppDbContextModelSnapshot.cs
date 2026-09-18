@@ -249,6 +249,7 @@ namespace Baselib.Data.Migrations
                             IsActive = true,
                             Name = "Dashboard",
                             Order = 1,
+                            PermissionId = 28,
                             Url = "/Admin"
                         },
                         new

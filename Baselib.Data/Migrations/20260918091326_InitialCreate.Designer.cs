@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Baselib.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260918083910_InitialCreate")]
+    [Migration("20260918091326_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -252,6 +252,7 @@ namespace Baselib.Data.Migrations
                             IsActive = true,
                             Name = "Dashboard",
                             Order = 1,
+                            PermissionId = 28,
                             Url = "/Admin"
                         },
                         new

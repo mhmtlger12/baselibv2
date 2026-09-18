@@ -46,7 +46,7 @@ public class MenuService : IMenuService
                 .Select(m => _mapper.Map<MenuDto>(m)));
     }
 
-    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusByUserIdAsync(int userId)
+    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId)
     {
         var userRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
         var userRoleIds = userRoles.Select(ur => ur.RoleId).ToList();
