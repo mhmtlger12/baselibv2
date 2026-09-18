@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Baselib.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260918132750_AddPrivilegedRoleAssignmentGuards")]
-    partial class AddPrivilegedRoleAssignmentGuards
+    [Migration("20260918140357_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,15 +65,6 @@ namespace Baselib.Data.Migrations
                     b.ToTable("AppSettings");
 
                     b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Uygulamanın genel adı",
-                            IsActive = true,
-                            Key = "SiteName",
-                            Value = "Baselib"
-                        },
                         new
                         {
                             Id = 2,

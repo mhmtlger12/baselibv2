@@ -109,6 +109,8 @@ namespace Baselib.Data.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsPrivileged = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    IsSystemRole = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
                     UpdatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: true),
@@ -319,11 +321,7 @@ namespace Baselib.Data.Migrations
             migrationBuilder.InsertData(
                 table: "AppSettings",
                 columns: new[] { "Id", "CreatedBy", "CreatedDate", "Description", "IsActive", "Key", "UpdatedBy", "UpdatedDate", "Value" },
-                values: new object[,]
-                {
-                    { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Uygulamanın genel adı", true, "SiteName", null, null, "Baselib" },
-                    { 2, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Maksimum hatalı giriş denemesi", true, "MaxLoginAttempts", null, null, "5" }
-                });
+                values: new object[] { 2, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Maksimum hatalı giriş denemesi", true, "MaxLoginAttempts", null, null, "5" });
 
             migrationBuilder.InsertData(
                 table: "Departments",
@@ -362,13 +360,15 @@ namespace Baselib.Data.Migrations
                     { 25, "Restore", 3, "RecycleBin_Restore", "RecycleBin", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Silinmiş kayıtları geri yükleme", true, "Çöp Kutusu Geri Yükle", null, null },
                     { 26, "SelectOption", 5, "Roles_SelectOption", "Roles", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Rol seçim listelerini görüntüleme", true, "Rol Seçenekleri", null, null },
                     { 27, "SelectOption", 5, "Departments_SelectOption", "Departments", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Departman seçim listelerini görüntüleme", true, "Departman Seçenekleri", null, null },
-                    { 28, "GetStats", 1, "Dashboard_Read", "Dashboard", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Dashboard istatistiklerini görüntüleme", true, "Dashboard Görüntüle", null, null }
+                    { 28, "GetStats", 1, "Dashboard_Read", "Dashboard", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Dashboard istatistiklerini görüntüleme", true, "Dashboard Görüntüle", null, null },
+                    { 29, "AssignRoles", 3, "Users_AssignRoles", "Users", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Kullanıcılara normal rol atama", true, "Kullanıcı Rolü Ata", null, null },
+                    { 30, "AssignPrivilegedRoles", 3, "Users_AssignPrivilegedRoles", "Users", null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Kullanıcılara kritik rol atama", true, "Kritik Kullanıcı Rolü Ata", null, null }
                 });
 
             migrationBuilder.InsertData(
                 table: "Roles",
-                columns: new[] { "Id", "CreatedBy", "CreatedDate", "Description", "IsActive", "Name", "UpdatedBy", "UpdatedDate" },
-                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Yönetici", true, "Admin", null, null });
+                columns: new[] { "Id", "CreatedBy", "CreatedDate", "Description", "IsActive", "IsPrivileged", "IsSystemRole", "Name", "UpdatedBy", "UpdatedDate" },
+                values: new object[] { 1, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Yönetici", true, true, true, "Admin", null, null });
 
             migrationBuilder.InsertData(
                 table: "Departments",
@@ -427,7 +427,9 @@ namespace Baselib.Data.Migrations
                     { 25, 1 },
                     { 26, 1 },
                     { 27, 1 },
-                    { 28, 1 }
+                    { 28, 1 },
+                    { 29, 1 },
+                    { 30, 1 }
                 });
 
             migrationBuilder.InsertData(

@@ -29,7 +29,6 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
         }
 
         var controller = context.RouteData.Values["controller"]?.ToString() ?? "Unknown";
-        var action = context.RouteData.Values["action"]?.ToString() ?? "Unknown";
         var route = context.HttpContext.Request.Path;
 
         string details = "";

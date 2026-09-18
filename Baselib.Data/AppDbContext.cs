@@ -239,7 +239,6 @@ public class AppDbContext : DbContext
         );
 
         modelBuilder.Entity<AppSetting>().HasData(
-            new AppSetting { Id = 1, Key = "SiteName", Value = "Baselib", Description = "Uygulamanın genel adı", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
     }

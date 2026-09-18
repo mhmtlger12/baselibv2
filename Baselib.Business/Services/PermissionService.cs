@@ -135,61 +135,6 @@ public class PermissionService : IPermissionService
         return DataResult<IEnumerable<PermissionGroupDto>>.Ok(groups);
     }
 
-    public async Task<IResult> SaveRolePermissionsAsync(int roleId, List<PermissionGroupDto> permissionGroups)
-    {
-        var existingRolePermissions = await _rolePermissions.GetAllAsync(rp => rp.RoleId == roleId);
-        _rolePermissions.RemoveRange(existingRolePermissions);
-
-        var validPermissionIds = await ResolvePermissionIdsAsync(permissionGroups);
-
-        var rolePermissions = validPermissionIds
-            .Select(permissionId => new RolePermission
-            {
-                RoleId = roleId,
-                PermissionId = permissionId
-            })
-            .ToList();
-
-        if (rolePermissions.Count > 0)
-            await _rolePermissions.AddRangeAsync(rolePermissions);
-
-        await _unitOfWork.SaveChangesAsync();
-
-        return Result.Ok(Messages.General.Saved);
-    }
-
-    public async Task<List<int>> ResolvePermissionIdsAsync(List<PermissionGroupDto> permissionGroups)
-    {
-        var selectedPermissionIds = permissionGroups
-            .SelectMany(group => group.ControllerCrudList)
-            .Where(crud => crud.Checked && crud.PermissionId > 0)
-            .Select(crud => crud.PermissionId)
-            .Distinct()
-            .ToList();
-
-        if (!selectedPermissionIds.Any())
-        {
-            foreach (var group in permissionGroups.Where(p => p.Checked || p.ControllerCrudList.Any(c => c.Checked)))
-            {
-                var crudTypes = group.ControllerCrudList
-                    .Where(c => c.Checked)
-                    .Select(c => c.CRUDActionType)
-                    .ToList();
-
-                var fallbackPermissions = await _permissions.GetAllAsync(
-                    p => p.ControllerName == group.ControllerName && crudTypes.Contains(p.CRUDActionType));
-
-                selectedPermissionIds.AddRange(fallbackPermissions.Select(p => p.Id));
-            }
-        }
-
-        var distinctSelectedPermissionIds = selectedPermissionIds.Distinct().ToList();
-
-        var validPermissions = await _permissions.GetAllAsync(
-            p => distinctSelectedPermissionIds.Contains(p.Id));
-        return validPermissions.Select(p => p.Id).ToList();
-    }
-
     private Permission BuildPermission(CreatePermissionDto dto)
     {
         var controller = dto.ControllerName?.Trim() ?? string.Empty;

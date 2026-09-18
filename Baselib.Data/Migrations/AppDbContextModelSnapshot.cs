@@ -64,15 +64,6 @@ namespace Baselib.Data.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Uygulamanın genel adı",
-                            IsActive = true,
-                            Key = "SiteName",
-                            Value = "Baselib"
-                        },
-                        new
-                        {
                             Id = 2,
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Maksimum hatalı giriş denemesi",

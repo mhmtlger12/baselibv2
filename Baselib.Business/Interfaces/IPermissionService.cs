@@ -11,6 +11,4 @@ public interface IPermissionService
     Task<IResult> UpdateAsync(int id, CreatePermissionDto dto);
     Task<IResult> DeleteAsync(int id);
     Task<IDataResult<IEnumerable<PermissionGroupDto>>> GetGroupedPermissionsAsync(int? roleId = null);
-    Task<IResult> SaveRolePermissionsAsync(int roleId, List<PermissionGroupDto> permissionGroups);
-    Task<List<int>> ResolvePermissionIdsAsync(List<PermissionGroupDto> permissionGroups);
 }

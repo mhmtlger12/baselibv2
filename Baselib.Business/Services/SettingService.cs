@@ -29,16 +29,6 @@ public class SettingService : ISettingService
         return DataResult<IEnumerable<SettingDto>>.Ok(_mapper.Map<IEnumerable<SettingDto>>(settings.OrderBy(s => s.Key)));
     }
 
-    public async Task<IDataResult<SettingDto>> GetByKeyAsync(string key)
-    {
-        var setting = await _settings.FirstOrDefaultAsync(s => s.Key == key);
-
-        if (setting == null)
-            return DataResult<SettingDto>.NotFound(Messages.Settings.NotFound);
-
-        return DataResult<SettingDto>.Ok(_mapper.Map<SettingDto>(setting));
-    }
-
     public async Task<IResult> UpdateAsync(int id, UpdateSettingDto dto)
     {
         var setting = await _settings.GetByIdAsync(id);
