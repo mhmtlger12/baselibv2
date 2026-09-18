@@ -5,7 +5,6 @@ namespace Baselib.Core.Interfaces;
 public interface IRepository<T> where T : class
 {
     Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false, CancellationToken cancellationToken = default);
-    Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false, CancellationToken cancellationToken = default);
     Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? predicate = null,
         bool ignoreQueryFilters = false,

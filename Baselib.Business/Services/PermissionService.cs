@@ -186,7 +186,7 @@ public class PermissionService : IPermissionService
         return validPermissions.Select(p => p.Id).ToList();
     }
 
-    private static Permission BuildPermission(CreatePermissionDto dto)
+    private Permission BuildPermission(CreatePermissionDto dto)
     {
         var controller = dto.ControllerName?.Trim() ?? string.Empty;
         var action = dto.ActionName?.Trim() ?? string.Empty;

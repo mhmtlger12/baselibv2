@@ -25,15 +25,6 @@ public class Repository<T> : IRepository<T> where T : class
         return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false, CancellationToken cancellationToken = default)
-    {
-        IQueryable<T> query = _dbSet.Where(predicate);
-        if (asNoTracking)
-            query = query.AsNoTracking();
-
-        return await query.ToListAsync(cancellationToken);
-    }
-
     public virtual async Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? predicate = null,
         bool ignoreQueryFilters = false,

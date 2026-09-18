@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using Baselib.Core.Enums;
 using Baselib.Entities;
-using System.Linq.Expressions;
 
 namespace Baselib.Data;
 
@@ -80,6 +80,9 @@ public class AppDbContext : DbContext
                   .WithMany(r => r.UserRoles)
                   .HasForeignKey(ur => ur.RoleId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Required User/Role ilişkileri, soft-delete filtreleriyle aynı davranmalıdır.
+            entity.HasQueryFilter(ur => ur.User.IsActive && ur.Role.IsActive);
         });
 
         modelBuilder.Entity<RolePermission>(entity =>
@@ -93,6 +96,9 @@ public class AppDbContext : DbContext
                   .WithMany(p => p.RolePermissions)
                   .HasForeignKey(rp => rp.PermissionId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Devre dışı role veya permission'a ait ilişki satırları okunmaz.
+            entity.HasQueryFilter(rp => rp.Role.IsActive && rp.Permission.IsActive);
         });
 
         modelBuilder.Entity<RefreshToken>(entity =>
@@ -108,23 +114,29 @@ public class AppDbContext : DbContext
                   .WithMany(u => u.RefreshTokens)
                   .HasForeignKey(rt => rt.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Devre dışı kullanıcıya ait oturum tokenı normal sorgularda görünmez.
+            entity.HasQueryFilter(rt => rt.User.IsActive);
         });
 
-        modelBuilder.Entity<AppSetting>()
-            .HasKey(e => e.Id);
+        modelBuilder.Entity<AppSetting>(entity =>
+        {
+            entity.HasKey(setting => setting.Id);
+        });
 
-        // Dynamic Global Query Filter for IsActive
+        // BaseEntity'den türeyen her kayıt için pasif verileri otomatik gizle.
+        // Yeni bir BaseEntity eklendiğinde burada ek bir filtre yazılması gerekmez.
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-            {
-                var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var property = Expression.Property(parameter, nameof(BaseEntity.IsActive));
-                var condition = Expression.Equal(property, Expression.Constant(true));
-                var lambda = Expression.Lambda(condition, parameter);
+            if (!typeof(BaseEntity).IsAssignableFrom(entityType.ClrType) || entityType.ClrType.IsAbstract)
+                continue;
 
-                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
-            }
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var isActive = Expression.Property(parameter, nameof(BaseEntity.IsActive));
+            var condition = Expression.Equal(isActive, Expression.Constant(true));
+            var filter = Expression.Lambda(condition, parameter);
+
+            modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
         }
 
         // Seed Data

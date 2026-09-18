@@ -1,3 +1,5 @@
+using Baselib.Core.Constants;
+
 namespace Baselib.Business.Helpers;
 
 /// <summary>
@@ -5,8 +7,8 @@ namespace Baselib.Business.Helpers;
 /// </summary>
 public static class PasswordHelper
 {
-    public const int MinimumPasswordLength = 12;
-    public const int MaximumPasswordLength = 128;
+    public const int MinimumPasswordLength = PasswordPolicyConstants.MinimumLength;
+    public const int MaximumPasswordLength = PasswordPolicyConstants.MaximumLength;
 
     public static string Hash(string password)
     {

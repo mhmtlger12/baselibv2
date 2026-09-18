@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Baselib.Business.Helpers;
+using Baselib.Core.Constants;
 
 namespace Baselib.Business.DTOs;
 
@@ -11,7 +11,7 @@ public class CreateUserDto
     [Required, EmailAddress, StringLength(254)]
     public string Email { get; set; } = string.Empty;
 
-    [Required, StringLength(PasswordHelper.MaximumPasswordLength, MinimumLength = PasswordHelper.MinimumPasswordLength)]
+    [Required, StringLength(PasswordPolicyConstants.MaximumLength, MinimumLength = PasswordPolicyConstants.MinimumLength)]
     public string Password { get; set; } = string.Empty;
 
     [StringLength(100)]

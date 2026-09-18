@@ -734,14 +734,14 @@ namespace Baselib.Data.Migrations
 
             modelBuilder.Entity("Baselib.Entities.RefreshToken", b =>
                 {
-                    b.Property<int?>("ActiveRoleId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActiveRoleId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
@@ -781,8 +781,6 @@ namespace Baselib.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
@@ -1027,11 +1025,11 @@ namespace Baselib.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<DateTime?>("LockoutEndDate")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<string>("LastName")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("LockoutEndDate")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("NormalizedEmail")
                         .IsRequired()

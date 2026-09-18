@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Baselib.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260506090901_AddSelectOptionPermissions")]
-    partial class AddSelectOptionPermissions
+    [Migration("20260918083910_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -82,15 +82,6 @@ namespace Baselib.Data.Migrations
                             IsActive = true,
                             Key = "MaxLoginAttempts",
                             Value = "5"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Sistemi bakım moduna alır",
-                            IsActive = true,
-                            Key = "MaintenanceMode",
-                            Value = "false"
                         });
                 });
 
@@ -729,6 +720,18 @@ namespace Baselib.Data.Migrations
                             Description = "Departman seçim listelerini görüntüleme",
                             IsActive = true,
                             Name = "Departman Seçenekleri"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            ActionName = "GetStats",
+                            CRUDActionType = 1,
+                            Code = "Dashboard_Read",
+                            ControllerName = "Dashboard",
+                            CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Dashboard istatistiklerini görüntüleme",
+                            IsActive = true,
+                            Name = "Dashboard Görüntüle"
                         });
                 });
 
@@ -740,28 +743,52 @@ namespace Baselib.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ActiveRoleId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Token")
+                    b.Property<string>("FamilyId")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("varchar(45)");
+
+                    b.Property<DateTime?>("LastUsedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("RevokedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RevokedReason")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
 
                     b.Property<string>("UserAgent")
-                        .HasColumnType("longtext");
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "FamilyId");
 
                     b.ToTable("RefreshTokens");
                 });
@@ -963,6 +990,11 @@ namespace Baselib.Data.Migrations
                         {
                             RoleId = 1,
                             PermissionId = 27
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 28
                         });
                 });
 
@@ -987,6 +1019,9 @@ namespace Baselib.Data.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("FirstName")
                         .HasColumnType("longtext");
 
@@ -995,6 +1030,19 @@ namespace Baselib.Data.Migrations
 
                     b.Property<string>("LastName")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("LockoutEndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<string>("NormalizedUsername")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1020,6 +1068,12 @@ namespace Baselib.Data.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique();
+
+                    b.HasIndex("NormalizedUsername")
+                        .IsUnique();
+
                     b.HasIndex("Username")
                         .IsUnique();
 
@@ -1032,9 +1086,12 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             DepartmentId = 1,
                             Email = "admin@baselib.com",
+                            FailedLoginCount = 0,
                             FirstName = "Admin",
                             IsActive = true,
                             LastName = "User",
+                            NormalizedEmail = "ADMIN@BASELIB.COM",
+                            NormalizedUsername = "ADMIN",
                             PasswordHash = "$2b$10$br5S4nxaGpEKXOPtd/mdvuKBmNoiWHPoJ8MRF43wYnOB/JbBz2o7u",
                             Username = "admin"
                         });
