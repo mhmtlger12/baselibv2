@@ -1,4 +1,5 @@
 using Baselib.Business.DTOs;
+using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +36,8 @@ public class MenusController : ControllerBase
         if (!int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
-        var result = await _menuService.GetMenusForUserAsync(userId);
+        var activeRoleId = ClaimsPrincipalHelper.GetActiveRoleId(User);
+        var result = await _menuService.GetMenusForUserAsync(userId, activeRoleId);
         return StatusCode(result.StatusCode, result);
     }
 

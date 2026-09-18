@@ -24,7 +24,5 @@ public class UpdateUserDto
     public string? Phone { get; set; }
     public int? DepartmentId { get; set; }
 
-    [MaxLength(100)]
-    public List<int> RoleIds { get; set; } = new();
     public bool IsActive { get; set; }
 }

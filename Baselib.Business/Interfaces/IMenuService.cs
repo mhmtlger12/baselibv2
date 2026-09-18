@@ -6,7 +6,7 @@ namespace Baselib.Business.Interfaces;
 public interface IMenuService
 {
     Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync();
-    Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId);
+    Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId, int? activeRoleId);
     Task<IDataResult<MenuDto>> GetByIdAsync(int id);
     Task<IDataResult<MenuDto>> CreateAsync(CreateMenuDto dto);
     Task<IResult> UpdateAsync(int id, UpdateMenuDto dto);

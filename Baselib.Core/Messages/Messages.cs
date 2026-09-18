@@ -12,6 +12,8 @@ public static class Messages
         public const string Required = "Bu alan zorunludur";
         public const string SessionNotFound = "Oturum bulunamadı.";
         public const string SelfReferenceNotAllowed = "Bir kayıt kendisine üst olamaz";
+        public const string ParentNotFoundOrInactive = "Üst kayıt bulunamadı veya aktif değil.";
+        public const string HierarchyCycleNotAllowed = "Üst kayıt seçimi hiyerarşide döngü oluşturur.";
     }
 
     public static class User
@@ -23,6 +25,10 @@ public static class Messages
         public const string WrongPassword = "Mevcut şifreniz yanlış.";
         public const string PasswordChanged = "Şifreniz başarıyla güncellendi.";
         public const string RolesAssigned = "Roller başarıyla atandı";
+        public const string InvalidRoleSelection = "Geçersiz veya pasif rol seçildi.";
+        public const string RoleAssignmentNotAllowed = "Rol atama yetkiniz yok.";
+        public const string PrivilegedRoleAssignmentNotAllowed = "Kritik rol atama yetkiniz yok.";
+        public const string LastPrivilegedAdminMustRemain = "Sistemde en az bir aktif yönetici kalmalıdır.";
         public const string PasswordPolicyNotMet = "Şifre en az 12 karakter olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir.";
     }
 
@@ -32,6 +38,9 @@ public static class Messages
         public const string NotFound = "Rol bulunamadı";
         public const string NoSwitchAccess = "Bu role geçiş yetkiniz yok.";
         public const string PermissionsAssigned = "İzinler başarıyla atandı";
+        public const string InvalidPermissionSelection = "Geçersiz veya pasif izin seçildi.";
+        public const string SystemRoleCannotBeDeleted = "Sistem rolü silinemez veya devre dışı bırakılamaz.";
+        public const string SystemRoleCriticalPermissionsRequired = "Sistem rolünün kritik rol atama izinleri kaldırılamaz.";
     }
 
     public static class Permission

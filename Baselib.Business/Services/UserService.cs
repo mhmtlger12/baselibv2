@@ -2,6 +2,7 @@ using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Helpers;
 using Baselib.Business.Interfaces;
+using Baselib.Core.Constants;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
 using Baselib.Core.Results;
@@ -15,6 +16,9 @@ public class UserService : IUserService
 {
     private readonly IRepository<User> _users;
     private readonly IRepository<UserRole> _userRoles;
+    private readonly IRepository<Role> _roles;
+    private readonly IRepository<RefreshToken> _refreshTokens;
+    private readonly IPermissionCheckService _permissionCheckService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly TimeProvider _timeProvider;
@@ -22,12 +26,18 @@ public class UserService : IUserService
     public UserService(
         IRepository<User> users,
         IRepository<UserRole> userRoles,
+        IRepository<Role> roles,
+        IRepository<RefreshToken> refreshTokens,
+        IPermissionCheckService permissionCheckService,
         IUnitOfWork unitOfWork,
         IMapper mapper,
         TimeProvider timeProvider)
     {
         _users = users;
         _userRoles = userRoles;
+        _roles = roles;
+        _refreshTokens = refreshTokens;
+        _permissionCheckService = permissionCheckService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _timeProvider = timeProvider;
@@ -56,7 +66,7 @@ public class UserService : IUserService
         return DataResult<UserDto>.Ok(MapUserToDto(user, activeRoleId));
     }
 
-    public async Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto)
+    public async Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto, System.Security.Claims.ClaimsPrincipal? principal = null)
     {
         if (!TryNormalizeIdentity(dto.Username, dto.Email, out var username, out var email, out var normalizedUsername, out var normalizedEmail))
             return DataResult<UserDto>.BadRequest(Messages.General.Required);
@@ -64,10 +74,14 @@ public class UserService : IUserService
         if (!PasswordHelper.MeetsPolicy(dto.Password))
             return DataResult<UserDto>.BadRequest(Messages.User.PasswordPolicyNotMet);
 
-        if (await _users.AnyAsync(u => u.NormalizedUsername == normalizedUsername))
+        var roleValidation = await ValidateRoleAssignmentAsync(principal, dto.RoleIds);
+        if (!roleValidation.Success)
+            return DataResult<UserDto>.ErrorDataResult(roleValidation.Message, roleValidation.StatusCode);
+
+        if (await _users.AnyAsync(u => u.NormalizedUsername == normalizedUsername, ignoreQueryFilters: true))
             return DataResult<UserDto>.BadRequest(Messages.User.UsernameAlreadyExists);
 
-        if (await _users.AnyAsync(u => u.NormalizedEmail == normalizedEmail))
+        if (await _users.AnyAsync(u => u.NormalizedEmail == normalizedEmail, ignoreQueryFilters: true))
             return DataResult<UserDto>.BadRequest(Messages.User.EmailAlreadyExists);
 
         var user = new User
@@ -132,11 +146,18 @@ public class UserService : IUserService
         if (!TryNormalizeIdentity(dto.Username, dto.Email, out var username, out var email, out var normalizedUsername, out var normalizedEmail))
             return Result.BadRequest(Messages.General.Required);
 
-        if (await _users.AnyAsync(u => u.NormalizedUsername == normalizedUsername && u.Id != id))
+        if (await _users.AnyAsync(
+                u => u.NormalizedUsername == normalizedUsername && u.Id != id,
+                ignoreQueryFilters: true))
             return Result.BadRequest(Messages.User.UsernameAlreadyExists);
 
-        if (await _users.AnyAsync(u => u.NormalizedEmail == normalizedEmail && u.Id != id))
+        if (await _users.AnyAsync(
+                u => u.NormalizedEmail == normalizedEmail && u.Id != id,
+                ignoreQueryFilters: true))
             return Result.BadRequest(Messages.User.EmailAlreadyExists);
+
+        if (!dto.IsActive && await WouldRemoveLastPrivilegedAdminAsync(id, null, userWillRemainActive: false))
+            return Result.BadRequest(Messages.User.LastPrivilegedAdminMustRemain);
 
         user.Username = username;
         user.NormalizedUsername = normalizedUsername;
@@ -155,10 +176,10 @@ public class UserService : IUserService
                 return Result.BadRequest(Messages.User.PasswordPolicyNotMet);
 
             user.PasswordHash = PasswordHelper.Hash(dto.Password);
+            await RevokeUserSessionsAsync(user.Id, "PasswordResetByAdministrator");
         }
 
         _users.Update(user);
-        await ReplaceUserRolesAsync(id, dto.RoleIds);
         await _unitOfWork.SaveChangesAsync();
 
         return Result.Ok(Messages.General.Updated);
@@ -170,6 +191,9 @@ public class UserService : IUserService
         if (user == null)
             return Result.NotFound(Messages.User.NotFound);
 
+        if (await WouldRemoveLastPrivilegedAdminAsync(id, null, userWillRemainActive: false))
+            return Result.BadRequest(Messages.User.LastPrivilegedAdminMustRemain);
+
         user.IsActive = false;
         user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _users.Update(user);
@@ -178,10 +202,20 @@ public class UserService : IUserService
         return Result.Ok(Messages.General.Deleted);
     }
 
-    public async Task<IResult> AssignRolesAsync(int userId, List<int> roleIds)
+    public async Task<IResult> AssignRolesAsync(
+        System.Security.Claims.ClaimsPrincipal principal,
+        int userId,
+        List<int> roleIds)
     {
         if (!await _users.AnyAsync(u => u.Id == userId))
             return Result.NotFound(Messages.User.NotFound);
+
+        var roleValidation = await ValidateRoleAssignmentAsync(principal, roleIds);
+        if (!roleValidation.Success)
+            return roleValidation;
+
+        if (await WouldRemoveLastPrivilegedAdminAsync(userId, roleIds, userWillRemainActive: true))
+            return Result.BadRequest(Messages.User.LastPrivilegedAdminMustRemain);
 
         await ReplaceUserRolesAsync(userId, roleIds);
         await _unitOfWork.SaveChangesAsync();
@@ -205,9 +239,89 @@ public class UserService : IUserService
         user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _users.Update(user);
+        await RevokeUserSessionsAsync(user.Id, "PasswordChanged");
         await _unitOfWork.SaveChangesAsync();
 
         return Result.Ok(Messages.User.PasswordChanged);
+    }
+
+    public async Task RevokeUserSessionsAsync(int userId, string reason)
+    {
+        var activeTokens = await _refreshTokens.GetAllAsync(
+            token => token.UserId == userId && !token.RevokedDate.HasValue);
+
+        var revokedAt = _timeProvider.GetUtcNow().UtcDateTime;
+        foreach (var token in activeTokens)
+        {
+            token.RevokedDate = revokedAt;
+            token.RevokedReason = reason;
+        }
+    }
+
+    private async Task<IResult> ValidateRoleAssignmentAsync(
+        System.Security.Claims.ClaimsPrincipal? principal,
+        IEnumerable<int> roleIds)
+    {
+        var requestedRoleIds = roleIds.Distinct().ToArray();
+        if (requestedRoleIds.Length == 0)
+            return Result.Ok();
+
+        var roles = await _roles.GetAllAsync(
+            role => requestedRoleIds.Contains(role.Id),
+            asNoTracking: true);
+        var selectedRoles = roles.ToList();
+
+        if (selectedRoles.Count != requestedRoleIds.Length)
+            return Result.BadRequest(Messages.User.InvalidRoleSelection);
+
+        if (principal == null)
+            return Result.Forbidden(Messages.User.RoleAssignmentNotAllowed);
+
+        var callerUserId = ClaimsPrincipalHelper.GetUserId(principal);
+        var activeRoleId = ClaimsPrincipalHelper.GetActiveRoleId(principal);
+        if (!await _permissionCheckService.HasAccessAsync(
+                callerUserId,
+                activeRoleId,
+                Constants.Permissions.UsersAssignRoles))
+            return Result.Forbidden(Messages.User.RoleAssignmentNotAllowed);
+
+        if (selectedRoles.Any(role => role.IsPrivileged) &&
+            !await _permissionCheckService.HasAccessAsync(
+                callerUserId,
+                activeRoleId,
+                Constants.Permissions.UsersAssignPrivilegedRoles))
+        {
+            return Result.Forbidden(Messages.User.PrivilegedRoleAssignmentNotAllowed);
+        }
+
+        return Result.Ok();
+    }
+
+    private async Task<bool> WouldRemoveLastPrivilegedAdminAsync(
+        int userId,
+        IEnumerable<int>? requestedRoleIds,
+        bool userWillRemainActive)
+    {
+        var currentRoleIds = (await _userRoles.GetAllAsync(userRole => userRole.UserId == userId))
+            .Select(userRole => userRole.RoleId)
+            .ToHashSet();
+        var privilegedRoleIds = (await _roles.GetAllAsync(role => role.IsPrivileged, asNoTracking: true))
+            .Select(role => role.Id)
+            .ToHashSet();
+
+        if (!currentRoleIds.Overlaps(privilegedRoleIds))
+            return false;
+
+        var targetRetainsPrivilegedRole = userWillRemainActive &&
+            requestedRoleIds?.Any(privilegedRoleIds.Contains) == true;
+        if (targetRetainsPrivilegedRole)
+            return false;
+
+        return !await _userRoles.AnyAsync(userRole =>
+            userRole.UserId != userId &&
+            userRole.User.IsActive &&
+            userRole.Role.IsActive &&
+            userRole.Role.IsPrivileged);
     }
 
     // ── Private Helpers ──────────────────────────────────────────

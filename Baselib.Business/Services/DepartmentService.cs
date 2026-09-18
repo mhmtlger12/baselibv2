@@ -69,8 +69,12 @@ public class DepartmentService : IDepartmentService
     public async Task<IDataResult<DepartmentDto>> CreateAsync(CreateDepartmentDto dto)
     {
         var code = dto.Code.Trim();
-        if (await _departments.AnyAsync(d => d.Code == code))
+        if (await _departments.AnyAsync(d => d.Code == code, ignoreQueryFilters: true))
             return DataResult<DepartmentDto>.BadRequest(Messages.Department.CodeAlreadyExists);
+
+        var parentValidation = await ValidateParentAsync(dto.ParentDepartmentId, null);
+        if (!parentValidation.Success)
+            return DataResult<DepartmentDto>.ErrorDataResult(parentValidation.Message, parentValidation.StatusCode);
 
         var department = new Department
         {
@@ -97,8 +101,12 @@ public class DepartmentService : IDepartmentService
         if (dto.ParentDepartmentId == id)
             return Result.BadRequest(Messages.General.SelfReferenceNotAllowed);
 
+        var parentValidation = await ValidateParentAsync(dto.ParentDepartmentId, id);
+        if (!parentValidation.Success)
+            return parentValidation;
+
         var code = dto.Code.Trim();
-        if (await _departments.AnyAsync(d => d.Code == code && d.Id != id))
+        if (await _departments.AnyAsync(d => d.Code == code && d.Id != id, ignoreQueryFilters: true))
             return Result.BadRequest(Messages.Department.CodeAlreadyExists);
 
         department.Name = dto.Name.Trim();
@@ -138,5 +146,28 @@ public class DepartmentService : IDepartmentService
                 return dto;
             })
             .ToList();
+    }
+
+    private async Task<IResult> ValidateParentAsync(int? parentDepartmentId, int? departmentId)
+    {
+        if (!parentDepartmentId.HasValue)
+            return Result.Ok();
+
+        var visitedDepartmentIds = new HashSet<int>();
+        var currentParentId = parentDepartmentId;
+
+        while (currentParentId.HasValue)
+        {
+            if (departmentId == currentParentId || !visitedDepartmentIds.Add(currentParentId.Value))
+                return Result.BadRequest(Messages.General.HierarchyCycleNotAllowed);
+
+            var parent = await _departments.GetByIdAsync(currentParentId.Value);
+            if (parent == null)
+                return Result.BadRequest(Messages.General.ParentNotFoundOrInactive);
+
+            currentParentId = parent.ParentDepartmentId;
+        }
+
+        return Result.Ok();
     }
 }

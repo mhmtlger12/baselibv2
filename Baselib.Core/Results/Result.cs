@@ -28,6 +28,9 @@ public class Result : IResult
     public static IResult Unauthorized(string message = "Yetkisiz erişim")
         => ErrorResult(message, 401);
 
+    public static IResult Forbidden(string message = "Bu işlem için yetkiniz yok")
+        => ErrorResult(message, 403);
+
     public static IResult BadRequest(string message)
         => ErrorResult(message, 400);
 }

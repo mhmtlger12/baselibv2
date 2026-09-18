@@ -17,4 +17,10 @@ public static class Constants
         public const int LockoutMinutes = 15;
     }
 
+    public static class Permissions
+    {
+        public const string UsersAssignRoles = "Users_AssignRoles";
+        public const string UsersAssignPrivilegedRoles = "Users_AssignPrivilegedRoles";
+    }
+
 }

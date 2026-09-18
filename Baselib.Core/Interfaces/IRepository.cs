@@ -39,7 +39,10 @@ public interface IRepository<T> where T : class
     Task DeleteAsync(int id);
     void Remove(T entity);
     void RemoveRange(IEnumerable<T> entities);
-    Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+    Task<bool> AnyAsync(
+        Expression<Func<T, bool>> predicate,
+        bool ignoreQueryFilters = false,
+        CancellationToken cancellationToken = default);
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TResult>> SelectAsync<TResult>(
         Func<IQueryable<T>, IQueryable<TResult>> queryBuilder,

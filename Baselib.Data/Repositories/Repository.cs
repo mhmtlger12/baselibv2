@@ -171,9 +171,16 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet.RemoveRange(entities);
     }
 
-    public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+    public virtual async Task<bool> AnyAsync(
+        Expression<Func<T, bool>> predicate,
+        bool ignoreQueryFilters = false,
+        CancellationToken cancellationToken = default)
     {
-        return await _dbSet.AnyAsync(predicate);
+        IQueryable<T> query = _dbSet;
+        if (ignoreQueryFilters)
+            query = query.IgnoreQueryFilters();
+
+        return await query.AnyAsync(predicate, cancellationToken);
     }
 
     public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false, CancellationToken cancellationToken = default)

@@ -17,6 +17,7 @@ public class AuthService : IAuthService
     private readonly IRepository<User> _users;
     private readonly IRepository<RefreshToken> _refreshTokens;
     private readonly IRepository<AppSetting> _settings;
+    private readonly IUserService _userService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
     private readonly AutoMapper.IMapper _mapper;
@@ -26,6 +27,7 @@ public class AuthService : IAuthService
         IRepository<User> users,
         IRepository<RefreshToken> refreshTokens,
         IRepository<AppSetting> settings,
+        IUserService userService,
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
         AutoMapper.IMapper mapper,
@@ -34,6 +36,7 @@ public class AuthService : IAuthService
         _users = users;
         _refreshTokens = refreshTokens;
         _settings = settings;
+        _userService = userService;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
         _mapper = mapper;
@@ -128,7 +131,7 @@ public class AuthService : IAuthService
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
 
-        await RevokeUserSessionsAsync(userId, _timeProvider.GetUtcNow().UtcDateTime, "Logout");
+        await _userService.RevokeUserSessionsAsync(userId, "Logout");
         await _unitOfWork.SaveChangesAsync();
 
         return Result.Ok(Messages.Auth.LoggedOut);
@@ -217,18 +220,6 @@ public class AuthService : IAuthService
         });
 
         return refreshToken;
-    }
-
-    private async Task RevokeUserSessionsAsync(int userId, DateTime now, string reason)
-    {
-        var activeTokens = await _refreshTokens.GetAllAsync(
-            rt => rt.UserId == userId && !rt.RevokedDate.HasValue);
-
-        foreach (var activeToken in activeTokens)
-        {
-            activeToken.RevokedDate = now;
-            activeToken.RevokedReason = reason;
-        }
     }
 
     private async Task RevokeFamilyAsync(string familyId, DateTime now, string reason)

@@ -141,7 +141,7 @@ public class AppDbContext : DbContext
 
         // Seed Data
         modelBuilder.Entity<Role>().HasData(
-            new Role { Id = 1, Name = "Admin", Description = "Yönetici", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Role { Id = 1, Name = "Admin", Description = "Yönetici", IsPrivileged = true, IsSystemRole = true, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<Department>().HasData(
@@ -178,7 +178,9 @@ public class AppDbContext : DbContext
             new Permission { Id = 25, Name = "Çöp Kutusu Geri Yükle", ControllerName = "RecycleBin", ActionName = "Restore", Code = "RecycleBin_Restore", Description = "Silinmiş kayıtları geri yükleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 26, Name = "Rol Seçenekleri", ControllerName = "Roles", ActionName = "SelectOption", Code = "Roles_SelectOption", Description = "Rol seçim listelerini görüntüleme", CRUDActionType = CRUDActionType.Option, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Permission { Id = 27, Name = "Departman Seçenekleri", ControllerName = "Departments", ActionName = "SelectOption", Code = "Departments_SelectOption", Description = "Departman seçim listelerini görüntüleme", CRUDActionType = CRUDActionType.Option, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Permission { Id = 28, Name = "Dashboard Görüntüle", ControllerName = "Dashboard", ActionName = "GetStats", Code = "Dashboard_Read", Description = "Dashboard istatistiklerini görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Permission { Id = 28, Name = "Dashboard Görüntüle", ControllerName = "Dashboard", ActionName = "GetStats", Code = "Dashboard_Read", Description = "Dashboard istatistiklerini görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 29, Name = "Kullanıcı Rolü Ata", ControllerName = "Users", ActionName = "AssignRoles", Code = "Users_AssignRoles", Description = "Kullanıcılara normal rol atama", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Permission { Id = 30, Name = "Kritik Kullanıcı Rolü Ata", ControllerName = "Users", ActionName = "AssignPrivilegedRoles", Code = "Users_AssignPrivilegedRoles", Description = "Kullanıcılara kritik rol atama", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
 
         modelBuilder.Entity<Menu>().HasData(
@@ -231,7 +233,9 @@ public class AppDbContext : DbContext
             new RolePermission { RoleId = 1, PermissionId = 25 },
             new RolePermission { RoleId = 1, PermissionId = 26 },
             new RolePermission { RoleId = 1, PermissionId = 27 },
-            new RolePermission { RoleId = 1, PermissionId = 28 }
+            new RolePermission { RoleId = 1, PermissionId = 28 },
+            new RolePermission { RoleId = 1, PermissionId = 29 },
+            new RolePermission { RoleId = 1, PermissionId = 30 }
         );
 
         modelBuilder.Entity<AppSetting>().HasData(

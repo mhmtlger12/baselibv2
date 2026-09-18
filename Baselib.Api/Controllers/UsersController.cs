@@ -38,7 +38,7 @@ public class UsersController : ControllerBase
     [RequirePermission("Users_Create")]
     public async Task<IActionResult> Add([FromBody] CreateUserDto dto)
     {
-        var result = await _userService.CreateAsync(dto);
+        var result = await _userService.CreateAsync(dto, User);
         if (result.Success && result.Data != null)
             return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
 
@@ -62,10 +62,10 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id:int}/roles")]
-    [RequirePermission("Users_Update")]
+    [RequirePermission("Users_AssignRoles")]
     public async Task<IActionResult> AssignRoles(int id, [FromBody] List<int> roleIds)
     {
-        var result = await _userService.AssignRolesAsync(id, roleIds);
+        var result = await _userService.AssignRolesAsync(User, id, roleIds);
         return StatusCode(result.StatusCode, result);
     }
 }

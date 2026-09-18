@@ -54,12 +54,13 @@ public class PermissionService : IPermissionService
     {
         var permission = BuildPermission(dto);
 
-        if (await _permissions.AnyAsync(p => p.Code == permission.Code))
+        if (await _permissions.AnyAsync(p => p.Code == permission.Code, ignoreQueryFilters: true))
             return DataResult<PermissionDto>.BadRequest(Messages.Permission.CodeAlreadyExists);
 
         if (await _permissions.AnyAsync(p =>
                 p.ControllerName == permission.ControllerName &&
-                p.ActionName == permission.ActionName))
+                p.ActionName == permission.ActionName,
+                ignoreQueryFilters: true))
             return DataResult<PermissionDto>.BadRequest(Messages.Permission.AlreadyExistsForAction);
 
         await _permissions.AddAsync(permission);
@@ -76,13 +77,16 @@ public class PermissionService : IPermissionService
 
         var normalized = BuildPermission(dto);
 
-        if (await _permissions.AnyAsync(p => p.Code == normalized.Code && p.Id != id))
+        if (await _permissions.AnyAsync(
+                p => p.Code == normalized.Code && p.Id != id,
+                ignoreQueryFilters: true))
             return Result.BadRequest(Messages.Permission.CodeAlreadyExists);
 
         if (await _permissions.AnyAsync(p =>
                 p.Id != id &&
                 p.ControllerName == normalized.ControllerName &&
-                p.ActionName == normalized.ActionName))
+                p.ActionName == normalized.ActionName,
+                ignoreQueryFilters: true))
             return Result.BadRequest(Messages.Permission.AlreadyExistsForAction);
 
         permission.Name = normalized.Name;

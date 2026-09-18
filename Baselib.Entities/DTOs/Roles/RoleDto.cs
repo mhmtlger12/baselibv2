@@ -7,6 +7,8 @@ public class RoleDto
     public string? Description { get; set; }
     public List<PermissionDto> Permissions { get; set; } = new();
     public int PermissionCount => Permissions.Count;
+    public bool IsPrivileged { get; set; }
+    public bool IsSystemRole { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedDate { get; set; }
 }

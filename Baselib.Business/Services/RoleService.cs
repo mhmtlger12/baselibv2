@@ -1,6 +1,7 @@
 using AutoMapper;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
+using Baselib.Core.Constants;
 using Baselib.Core.Interfaces;
 using Baselib.Core.Messages;
 using Baselib.Core.Results;
@@ -13,6 +14,7 @@ public class RoleService : IRoleService
 {
     private readonly IRepository<Role> _roles;
     private readonly IRepository<RolePermission> _rolePermissions;
+    private readonly IRepository<Permission> _permissions;
     private readonly IPermissionService _permissionService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -21,6 +23,7 @@ public class RoleService : IRoleService
     public RoleService(
         IRepository<Role> roles,
         IRepository<RolePermission> rolePermissions,
+        IRepository<Permission> permissions,
         IPermissionService permissionService,
         IUnitOfWork unitOfWork,
         IMapper mapper,
@@ -28,6 +31,7 @@ public class RoleService : IRoleService
     {
         _roles = roles;
         _rolePermissions = rolePermissions;
+        _permissions = permissions;
         _permissionService = permissionService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -71,8 +75,11 @@ public class RoleService : IRoleService
     public async Task<IDataResult<RoleDto>> CreateAsync(CreateRoleDto dto)
     {
         var roleName = dto.Name.Trim();
-        if (await _roles.AnyAsync(r => r.Name == roleName))
+        if (await _roles.AnyAsync(r => r.Name == roleName, ignoreQueryFilters: true))
             return DataResult<RoleDto>.BadRequest(Messages.Role.NameAlreadyExists);
+
+        if (!await AreAllPermissionIdsActiveAsync(dto.PermissionIds))
+            return DataResult<RoleDto>.BadRequest(Messages.Role.InvalidPermissionSelection);
 
         var role = new Role
         {
@@ -110,8 +117,17 @@ public class RoleService : IRoleService
             return Result.NotFound(Messages.Role.NotFound);
 
         var roleName = dto.Name.Trim();
-        if (await _roles.AnyAsync(r => r.Name == roleName && r.Id != id))
+        if (await _roles.AnyAsync(r => r.Name == roleName && r.Id != id, ignoreQueryFilters: true))
             return Result.BadRequest(Messages.Role.NameAlreadyExists);
+
+        if (role.IsSystemRole && !dto.IsActive)
+            return Result.BadRequest(Messages.Role.SystemRoleCannotBeDeleted);
+
+        if (!await AreAllPermissionIdsActiveAsync(dto.PermissionIds))
+            return Result.BadRequest(Messages.Role.InvalidPermissionSelection);
+
+        if (!await HasRequiredSystemRolePermissionsAsync(role, dto.PermissionIds))
+            return Result.BadRequest(Messages.Role.SystemRoleCriticalPermissionsRequired);
 
         role.Name = roleName;
         role.Description = dto.Description?.Trim();
@@ -131,6 +147,9 @@ public class RoleService : IRoleService
         if (role == null)
             return Result.NotFound(Messages.Role.NotFound);
 
+        if (role.IsSystemRole)
+            return Result.BadRequest(Messages.Role.SystemRoleCannotBeDeleted);
+
         role.IsActive = false;
         role.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _roles.Update(role);
@@ -141,8 +160,15 @@ public class RoleService : IRoleService
 
     public async Task<IResult> AssignPermissionsAsync(int roleId, List<int> permissionIds)
     {
-        if (!await _roles.AnyAsync(r => r.Id == roleId))
+        var role = await _roles.GetByIdAsync(roleId);
+        if (role == null)
             return Result.NotFound(Messages.Role.NotFound);
+
+        if (!await AreAllPermissionIdsActiveAsync(permissionIds))
+            return Result.BadRequest(Messages.Role.InvalidPermissionSelection);
+
+        if (!await HasRequiredSystemRolePermissionsAsync(role, permissionIds))
+            return Result.BadRequest(Messages.Role.SystemRoleCriticalPermissionsRequired);
 
         await ReplaceRolePermissionsAsync(roleId, permissionIds);
         await _unitOfWork.SaveChangesAsync();
@@ -158,6 +184,34 @@ public class RoleService : IRoleService
 
 
     // ── Private Helpers ──────────────────────────────────────────
+
+    private async Task<bool> AreAllPermissionIdsActiveAsync(IEnumerable<int> permissionIds)
+    {
+        var requestedPermissionIds = permissionIds.Distinct().ToArray();
+        if (requestedPermissionIds.Length == 0)
+            return true;
+
+        var activePermissionCount = await _permissions.CountAsync(
+            permission => requestedPermissionIds.Contains(permission.Id));
+        return activePermissionCount == requestedPermissionIds.Length;
+    }
+
+    private async Task<bool> HasRequiredSystemRolePermissionsAsync(Role role, IEnumerable<int> permissionIds)
+    {
+        if (!role.IsSystemRole)
+            return true;
+
+        var permissions = await _permissions.GetAllAsync(permission =>
+                permission.Code == Constants.Permissions.UsersAssignRoles ||
+                permission.Code == Constants.Permissions.UsersAssignPrivilegedRoles);
+        var permissionIdsByCode = permissions
+            .ToDictionary(permission => permission.Code, permission => permission.Id);
+
+        return permissionIdsByCode.TryGetValue(Constants.Permissions.UsersAssignRoles, out var assignRolesId) &&
+               permissionIdsByCode.TryGetValue(Constants.Permissions.UsersAssignPrivilegedRoles, out var assignPrivilegedRolesId) &&
+               permissionIds.Contains(assignRolesId) &&
+               permissionIds.Contains(assignPrivilegedRolesId);
+    }
 
     private async Task ReplaceRolePermissionsAsync(int roleId, IEnumerable<int> permissionIds)
     {

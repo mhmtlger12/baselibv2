@@ -46,16 +46,26 @@ public class MenuService : IMenuService
                 .Select(m => _mapper.Map<MenuDto>(m)));
     }
 
-    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId)
+    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId, int? activeRoleId)
     {
-        var userRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
-        var userRoleIds = userRoles.Select(ur => ur.RoleId).ToList();
+        var rolePermissionIds = new HashSet<int>();
 
-        var rolePermissions = await _rolePermissions.GetAllAsync(rp => userRoleIds.Contains(rp.RoleId));
-        var rolePermissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct().ToHashSet();
+        // ActiveRoleId yoksa veya token'daki rol artık kullanıcıya ait/değil aktif değilse,
+        // rol gerektiren menüler gösterilmez. Böylece menu görünürlüğü ile API yetki denetimi aynı kalır.
+        if (activeRoleId.HasValue && await _userRoles.AnyAsync(ur =>
+                ur.UserId == userId &&
+                ur.RoleId == activeRoleId.Value &&
+                ur.User.IsActive &&
+                ur.Role.IsActive))
+        {
+            var rolePermissions = await _rolePermissions.GetAllAsync(
+                rp => rp.RoleId == activeRoleId.Value && rp.Permission.IsActive);
+            rolePermissionIds = rolePermissions.Select(rp => rp.PermissionId).ToHashSet();
+        }
 
         var menus = await _menus.GetAllAsync(
-            predicate: m => m.PermissionId == null || rolePermissionIds.Contains(m.PermissionId.Value),
+            predicate: m => m.PermissionId == null ||
+                            (m.Permission!.IsActive && rolePermissionIds.Contains(m.PermissionId.Value)),
             includes: [m => m.Permission!]);
 
         return DataResult<IEnumerable<MenuDto>>.Ok(BuildTree(menus.ToList(), null));
@@ -73,6 +83,10 @@ public class MenuService : IMenuService
 
     public async Task<IDataResult<MenuDto>> CreateAsync(CreateMenuDto dto)
     {
+        var parentValidation = await ValidateParentAsync(dto.ParentId, null);
+        if (!parentValidation.Success)
+            return DataResult<MenuDto>.ErrorDataResult(parentValidation.Message, parentValidation.StatusCode);
+
         var menu = new Menu
         {
             Name = dto.Name.Trim(),
@@ -100,6 +114,10 @@ public class MenuService : IMenuService
 
         if (dto.ParentId == id)
             return Result.BadRequest(Messages.General.SelfReferenceNotAllowed);
+
+        var parentValidation = await ValidateParentAsync(dto.ParentId, id);
+        if (!parentValidation.Success)
+            return parentValidation;
 
         menu.Name = dto.Name.Trim();
         menu.Url = dto.Url?.Trim();
@@ -143,5 +161,28 @@ public class MenuService : IMenuService
                 return dto;
             })
             .ToList();
+    }
+
+    private async Task<IResult> ValidateParentAsync(int? parentId, int? menuId)
+    {
+        if (!parentId.HasValue)
+            return Result.Ok();
+
+        var visitedMenuIds = new HashSet<int>();
+        var currentParentId = parentId;
+
+        while (currentParentId.HasValue)
+        {
+            if (menuId == currentParentId || !visitedMenuIds.Add(currentParentId.Value))
+                return Result.BadRequest(Messages.General.HierarchyCycleNotAllowed);
+
+            var parent = await _menus.GetByIdAsync(currentParentId.Value);
+            if (parent == null)
+                return Result.BadRequest(Messages.General.ParentNotFoundOrInactive);
+
+            currentParentId = parent.ParentId;
+        }
+
+        return Result.Ok();
     }
 }
