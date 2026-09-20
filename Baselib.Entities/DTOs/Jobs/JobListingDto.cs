@@ -3,7 +3,9 @@ namespace Baselib.Business.DTOs;
 public sealed class JobListingDto
 {
     public int Id { get; set; }
+    public int? InstitutionId { get; set; }
     public string Institution { get; set; } = string.Empty;
+    public string? InstitutionLogoUrl { get; set; }
     public string Summary { get; set; } = string.Empty;
     public string CategoryKey { get; set; } = string.Empty;
     public string CategoryLabel { get; set; } = string.Empty;

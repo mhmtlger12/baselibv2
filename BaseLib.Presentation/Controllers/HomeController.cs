@@ -11,7 +11,7 @@ public sealed class HomeController(ISiteContentService site, IPublicJobApiServic
         site.Content.JobListings.Clear();
         site.Content.JobListings.AddRange(listings.Select(item => new BaseLib.Presentation.Models.Site.JobListing(
             item.Id, item.Institution, item.Summary, item.CategoryKey, item.CategoryLabel,
-            item.PublishedAt, item.StartDate, item.EndDate, item.SourceUrl, item.PdfUrl)));
+            item.PublishedAt, item.StartDate, item.EndDate, item.SourceUrl, item.PdfUrl, item.InstitutionLogoUrl)));
         return View(site.Content);
     }
     [HttpGet("/arama")] public IActionResult Search(string? q) => View(site.Search(q));

@@ -17,14 +17,15 @@
         @foreach(var group in new[] {
         ("Sidebarlar", new[] { ("sidebar-recent","Son Eklenenler"),("sidebar-osym","ÖSYM Duyuruları") }),
         ("Taban Puanları", new[] { ("score-cards","Kategori Kartları"),("departments","Bölümler"),("taban-kpss","KPSS"),("taban-dgs","DGS"),("taban-yks","YKS") }),
-        ("İlanlar", new[] { ("jobs","İlan Listesi"),("job-categories","Kategoriler") }) }) {
-        <details open="@(group.Item2.Any(x => x.Item1 == "jobs" ? current.StartsWith("/Admin/Jobs", StringComparison.OrdinalIgnoreCase) : current.Contains("/Content/" + x.Item1)))">
+        ("İlanlar", new[] { ("jobs","İlan Listesi"),("job-categories","Kategoriler") }),
+        ("Kurumlar", new[] { ("institutions","Kurum Yönetimi") }) }) {
+        <details open="@(group.Item2.Any(x => x.Item1 switch { "jobs" => current.StartsWith("/Admin/Jobs", StringComparison.OrdinalIgnoreCase), "institutions" => current.StartsWith("/Admin/Institutions", StringComparison.OrdinalIgnoreCase), _ => current.Contains("/Content/" + x.Item1) }))">
             <summary class="nav-link">
-                <partial name="_Icon" model='@("menu")' />@group.Item1
+                <partial name="_Icon" model='@(group.Item1 switch { "Sidebarlar" => "layers", "Taban Puanları" => "dashboard", "İlanlar" => "briefcase", "Kurumlar" => "users", _ => "menu" })' />@group.Item1
             </summary>
             <div class="ml-4">
                 @foreach(var child in group.Item2) {
-                    <a href="@(child.Item1 == "jobs" ? "/Admin/Jobs" : "/Admin/Content/" + child.Item1)" class="nav-link" aria-current="@(child.Item1 == "jobs" ? current.StartsWith("/Admin/Jobs", StringComparison.OrdinalIgnoreCase) : current.Contains("/Content/" + child.Item1))">
+                    <a href="@(child.Item1 switch { "jobs" => "/Admin/Jobs", "institutions" => "/Admin/Institutions", _ => "/Admin/Content/" + child.Item1 })" class="nav-link" aria-current="@(child.Item1 switch { "jobs" => current.StartsWith("/Admin/Jobs", StringComparison.OrdinalIgnoreCase), "institutions" => current.StartsWith("/Admin/Institutions", StringComparison.OrdinalIgnoreCase), _ => current.Contains("/Content/" + child.Item1) })">
                 <span aria-hidden="true" class="h-1.5 w-1.5 rounded-full bg-navy-400">
                 </span>@child.Item2</a>
                 }

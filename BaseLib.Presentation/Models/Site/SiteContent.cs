@@ -22,5 +22,5 @@ public sealed record LevelTab(string Key, string Label);
 public sealed record StudyDepartment(int Id, string Name, string Level);
 public sealed record ScoreRow(int Id, string Institution, string City, string Title, int Quota, int Vacant, decimal MinScore, decimal MaxScore, string Qualification);
 public sealed record JobCategory(string Key, string Label, List<JobCategory>? Children);
-public sealed record JobListing(int Id, string Institution, string Summary, string CategoryKey, string CategoryLabel, DateTime PublishedAt, string StartDate, string EndDate, string? SourceUrl = null, string? PdfUrl = null);
+public sealed record JobListing(int Id, string Institution, string Summary, string CategoryKey, string CategoryLabel, DateTime PublishedAt, string StartDate, string EndDate, string? SourceUrl = null, string? PdfUrl = null, string? InstitutionLogoUrl = null);
 public sealed record SiteComment(int Id, string Author, string Time, string Body, int Likes, List<SiteComment> Replies);

@@ -9,7 +9,8 @@ namespace BaseLib.Presentation.Areas.Admin.Controllers;
 [Authorize(Roles = "Admin")]
 [Route("Admin/Jobs")]
 public sealed class JobsController(
-    ICrudApiService<JobListingDto, SaveJobListingDto, SaveJobListingDto> jobs) : AdminController
+    ICrudApiService<JobListingDto, SaveJobListingDto, SaveJobListingDto> jobs,
+    ICrudApiService<InstitutionDto, SaveInstitutionDto, SaveInstitutionDto> institutions) : AdminController
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken ct) => View(await jobs.ListAsync(ct));
@@ -17,15 +18,18 @@ public sealed class JobsController(
     [HttpGet("Edit/{id:int?}")]
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
-        if (id == 0) return View(new JobListingEditModel());
+        if (id == 0) return View(new JobListingEditModel { Institutions = await institutions.ListAsync(ct) });
         var item = await jobs.GetAsync(id, ct);
-        return View(ToModel(item));
+        var model = ToModel(item);
+        model.Institutions = await institutions.ListAsync(ct);
+        return View(model);
     }
 
     [HttpPost("Edit/{id:int?}")]
     public async Task<IActionResult> Edit(int id, JobListingEditModel model, CancellationToken ct)
     {
         model.Id = id;
+        model.Institutions = await institutions.ListAsync(ct);
         if (!ModelState.IsValid) return View(model);
         var saved = await ExecuteAsync(() => id == 0 ? jobs.CreateAsync(model, ct) : jobs.UpdateAsync(id, model, ct));
         return saved ? Saved("İlan kaydedildi.") : View(model);
@@ -48,7 +52,7 @@ public sealed class JobsController(
 
     private static JobListingEditModel ToModel(JobListingDto item) => new()
     {
-        Id = item.Id, Institution = item.Institution, Summary = item.Summary,
+        Id = item.Id, InstitutionId = item.InstitutionId, Institution = item.Institution, Summary = item.Summary,
         CategoryKey = item.CategoryKey, CategoryLabel = item.CategoryLabel,
         PublishedAt = item.PublishedAt, StartDate = item.StartDate, EndDate = item.EndDate,
         SourceUrl = item.SourceUrl, PdfUrl = item.PdfUrl, IsActive = item.IsActive

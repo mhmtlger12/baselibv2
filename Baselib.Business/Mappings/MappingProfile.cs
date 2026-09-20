@@ -48,5 +48,6 @@ public class MappingProfile : Profile
         CreateMap<AppSetting, SettingDto>();
         CreateMap<Slider, SliderDto>();
         CreateMap<JobListing, JobListingDto>();
+        CreateMap<Institution, InstitutionDto>();
     }
 }

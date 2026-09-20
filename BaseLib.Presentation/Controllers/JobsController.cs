@@ -24,5 +24,5 @@ public sealed class JobsController(ISiteContentService site, IPublicJobApiServic
 
     private static JobListing ToModel(Baselib.Business.DTOs.JobListingDto dto) =>
         new(dto.Id, dto.Institution, dto.Summary, dto.CategoryKey, dto.CategoryLabel, dto.PublishedAt,
-            dto.StartDate, dto.EndDate, dto.SourceUrl, dto.PdfUrl);
+            dto.StartDate, dto.EndDate, dto.SourceUrl, dto.PdfUrl, dto.InstitutionLogoUrl);
 }

@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Slider> Sliders => Set<Slider>();
     public DbSet<JobListing> JobListings => Set<JobListing>();
+    public DbSet<Institution> Institutions => Set<Institution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -186,8 +187,22 @@ public class AppDbContext : DbContext
             entity.Property(job => job.SourceUrl).HasMaxLength(2048);
             entity.Property(job => job.PdfUrl).HasMaxLength(2048);
             entity.HasIndex(job => new { job.CategoryKey, job.IsActive, job.IsDeleted });
+            entity.HasOne(job => job.InstitutionEntity)
+                .WithMany(institution => institution.JobListings)
+                .HasForeignKey(job => job.InstitutionId)
+                .OnDelete(DeleteBehavior.SetNull);
             entity.HasQueryFilter(job => !job.IsDeleted && job.IsActive);
             entity.HasData(CreateJobListingSeedData());
+        });
+
+        modelBuilder.Entity<Institution>(entity =>
+        {
+            entity.Property(institution => institution.Name).HasMaxLength(200).IsRequired();
+            entity.Property(institution => institution.LogoUrl).HasMaxLength(2048);
+            entity.Property(institution => institution.WebsiteUrl).HasMaxLength(2048);
+            entity.HasIndex(institution => institution.Name).IsUnique();
+            entity.HasQueryFilter(institution => !institution.IsDeleted && institution.IsActive);
+            entity.HasData(CreateInstitutionSeedData());
         });
 
         modelBuilder.Entity<Permission>().HasData(
@@ -199,6 +214,10 @@ public class AppDbContext : DbContext
             new Permission { Id = 36, Name = "İlan Oluştur", ControllerName = "Jobs", ActionName = "Add", Code = "Jobs_Create", Description = "İlan oluşturma", CRUDActionType = CRUDActionType.Add, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
             new Permission { Id = 37, Name = "İlan Güncelle", ControllerName = "Jobs", ActionName = "Update", Code = "Jobs_Update", Description = "İlan güncelleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
             new Permission { Id = 38, Name = "İlan Sil", ControllerName = "Jobs", ActionName = "Delete", Code = "Jobs_Delete", Description = "İlan silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+            , new Permission { Id = 39, Name = "Kurum Listele", ControllerName = "Institutions", ActionName = "List", Code = "Institutions_Read", Description = "Kurumları listeleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+            , new Permission { Id = 40, Name = "Kurum Oluştur", ControllerName = "Institutions", ActionName = "Add", Code = "Institutions_Create", Description = "Kurum oluşturma", CRUDActionType = CRUDActionType.Add, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+            , new Permission { Id = 41, Name = "Kurum Güncelle", ControllerName = "Institutions", ActionName = "Update", Code = "Institutions_Update", Description = "Kurum güncelleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+            , new Permission { Id = 42, Name = "Kurum Sil", ControllerName = "Institutions", ActionName = "Delete", Code = "Institutions_Delete", Description = "Kurum silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
         );
         modelBuilder.Entity<RolePermission>().HasData(
             new RolePermission { RoleId = 1, PermissionId = 31 },
@@ -209,6 +228,10 @@ public class AppDbContext : DbContext
             , new RolePermission { RoleId = 1, PermissionId = 36 }
             , new RolePermission { RoleId = 1, PermissionId = 37 }
             , new RolePermission { RoleId = 1, PermissionId = 38 }
+            , new RolePermission { RoleId = 1, PermissionId = 39 }
+            , new RolePermission { RoleId = 1, PermissionId = 40 }
+            , new RolePermission { RoleId = 1, PermissionId = 41 }
+            , new RolePermission { RoleId = 1, PermissionId = 42 }
         );
 
         // Seed Data
@@ -265,7 +288,8 @@ public class AppDbContext : DbContext
             new Menu { Id = 7, Name = "Sistem Ayarları", Url = "/Admin/Settings", Icon = "bi-gear", Order = 7, PermissionId = 21, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 8, Name = "Sistem Hareketleri", Url = "/Admin/AuditLogs", Icon = "bi-activity", Order = 8, PermissionId = 23, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 9, Name = "Çöp Kutusu", Url = "/Admin/RecycleBin", Icon = "bi-trash3", Order = 9, PermissionId = 24, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 10, Name = "İlanlar", Url = "/Admin/Jobs", Icon = "bi-megaphone", Order = 10, PermissionId = 35, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+            new Menu { Id = 10, Name = "İlanlar", Url = "/Admin/Jobs", Icon = "bi-megaphone", Order = 10, PermissionId = 35, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Menu { Id = 11, Name = "Kurumlar", Url = "/Admin/Institutions", Icon = "bi-building", Order = 11, PermissionId = 39, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
         );
 
         // Admin user - password: admin
@@ -356,4 +380,16 @@ public class AppDbContext : DbContext
         }
         return listings;
     }
+
+    private static IReadOnlyList<Institution> CreateInstitutionSeedData() =>
+        CreateJobListingSeedData().Select((job, index) => new { job.Institution, Index = index + 1 })
+            .GroupBy(x => x.Institution)
+            .Select(group => new Institution
+            {
+                Id = group.First().Index,
+                Name = group.Key,
+                IsActive = true,
+                CreatedDate = new DateTime(2026, 9, 21)
+            })
+            .ToList();
 }

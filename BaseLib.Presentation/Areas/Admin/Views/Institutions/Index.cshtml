@@ -1,0 +1,9 @@
+@model IReadOnlyList<Baselib.Business.DTOs.InstitutionDto>
+@{ ViewData["Title"] = "Kurumlar"; }
+<div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div><h2 class="text-xl font-bold text-navy-900">Kurumlar</h2><p class="mt-1 text-sm text-muted-foreground">İlanlarda tekrar kullanılacak kurum adlarını ve logolarını yönetin.</p></div>
+    <a asp-action="Edit" asp-route-id="0" class="btn">＋ Yeni Kurum</a>
+</div>
+<div class="panel overflow-hidden"><div class="overflow-x-auto"><table class="admin-table"><thead><tr><th>Logo</th><th>Kurum</th><th>Web sitesi</th><th>Durum</th><th>İşlemler</th></tr></thead><tbody>
+@foreach (var item in Model) { <tr><td>@if (!string.IsNullOrWhiteSpace(item.LogoUrl)) { <img src="@item.LogoUrl" alt="" class="h-10 w-10 rounded-lg object-contain" /> }</td><td>@item.Name</td><td>@item.WebsiteUrl</td><td><span class="badge @(item.IsActive ? "" : "badge-muted")">@(item.IsActive ? "Aktif" : "Pasif")</span></td><td><div class="flex justify-end gap-2"><a asp-action="Edit" asp-route-id="@item.Id" class="icon-button" aria-label="Kurumu düzenle"><partial name="_Icon" model='@("edit")' /></a><a asp-action="Delete" asp-route-id="@item.Id" class="icon-button icon-delete" aria-label="Kurumu sil"><partial name="_Icon" model='@("trash")' /></a></div></td></tr> }
+</tbody></table></div></div>
