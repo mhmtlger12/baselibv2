@@ -38,5 +38,6 @@ public sealed class MockSiteContentService : ISiteContentService
     }
     public SearchPage Search(string? query) => new(query ?? "", Content.ScoreCards.Where(x => Contains(x.Title, query)).ToList(),
         Content.Departments.Where(x => Contains(x.Name, query)).ToList(), Content.JobListings.Where(x => Contains(x.Institution + " " + x.Summary, query)).ToList());
+
     private static bool Contains(string value, string? query) => string.IsNullOrWhiteSpace(query) || Turkish.IndexOf(value, query.Trim(), CompareOptions.IgnoreCase) >= 0;
 }

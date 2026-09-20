@@ -4,7 +4,7 @@
     <nav aria-label="Konum" class="mb-4 text-sm text-muted-foreground">
         <a href="/">Ana Sayfa</a> › <a href="/ilanlar">İlanlar</a> › <span aria-current="page">@Model.Institution</span>
     </nav>
-    <div class="grid gap-6 lg:grid-cols-[1fr_18rem]">
+    <div class="mx-auto max-w-4xl">
         <article class="panel p-6">
             <span class="badge">@Model.CategoryLabel</span>
             <h1 class="mt-4 text-2xl font-bold">@Model.Institution</h1>
@@ -24,10 +24,15 @@
                 </div>
             </dl>
             <p class="mt-6 text-sm text-muted-foreground">Bu ilan örnek verilerle gösterilmektedir.</p>
+            @if (!string.IsNullOrWhiteSpace(Model.PdfUrl))
+            {
+            <a href="@Model.PdfUrl" target="_blank" rel="noopener" class="btn mt-3">İlan PDF'ini Aç</a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.SourceUrl))
+            {
+            <a href="@Model.SourceUrl" target="_blank" rel="noopener" class="btn-soft mt-3 ml-2">Kaynak İlanı Gör</a>
+            }
             <a href="/ilanlar" class="btn-soft mt-6">← Tüm ilanlar</a>
         </article>
-        <aside>
-            <partial name="_Recent" />
-        </aside>
     </div>
 </div>

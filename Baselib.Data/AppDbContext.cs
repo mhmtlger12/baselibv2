@@ -20,6 +20,7 @@ public class AppDbContext : DbContext
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Slider> Sliders => Set<Slider>();
+    public DbSet<JobListing> JobListings => Set<JobListing>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -174,17 +175,40 @@ public class AppDbContext : DbContext
                 });
         });
 
+        modelBuilder.Entity<JobListing>(entity =>
+        {
+            entity.Property(job => job.Institution).HasMaxLength(200).IsRequired();
+            entity.Property(job => job.Summary).HasMaxLength(500).IsRequired();
+            entity.Property(job => job.CategoryKey).HasMaxLength(80).IsRequired();
+            entity.Property(job => job.CategoryLabel).HasMaxLength(150).IsRequired();
+            entity.Property(job => job.StartDate).HasMaxLength(80).IsRequired();
+            entity.Property(job => job.EndDate).HasMaxLength(80).IsRequired();
+            entity.Property(job => job.SourceUrl).HasMaxLength(2048);
+            entity.Property(job => job.PdfUrl).HasMaxLength(2048);
+            entity.HasIndex(job => new { job.CategoryKey, job.IsActive, job.IsDeleted });
+            entity.HasQueryFilter(job => !job.IsDeleted && job.IsActive);
+            entity.HasData(CreateJobListingSeedData());
+        });
+
         modelBuilder.Entity<Permission>().HasData(
             new Permission { Id = 31, Name = "Slider Listele", ControllerName = "Sliders", ActionName = "List", Code = "Sliders_Read", Description = "Slaytları listeleme ve görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
             new Permission { Id = 32, Name = "Slider Oluştur", ControllerName = "Sliders", ActionName = "Add", Code = "Sliders_Create", Description = "Slayt oluşturma", CRUDActionType = CRUDActionType.Add, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
             new Permission { Id = 33, Name = "Slider Güncelle", ControllerName = "Sliders", ActionName = "Update", Code = "Sliders_Update", Description = "Slayt güncelleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
-            new Permission { Id = 34, Name = "Slider Sil", ControllerName = "Sliders", ActionName = "Delete", Code = "Sliders_Delete", Description = "Slayt silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+            new Permission { Id = 34, Name = "Slider Sil", ControllerName = "Sliders", ActionName = "Delete", Code = "Sliders_Delete", Description = "Slayt silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 35, Name = "İlan Listele", ControllerName = "Jobs", ActionName = "List", Code = "Jobs_Read", Description = "İlanları listeleme ve görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 36, Name = "İlan Oluştur", ControllerName = "Jobs", ActionName = "Add", Code = "Jobs_Create", Description = "İlan oluşturma", CRUDActionType = CRUDActionType.Add, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 37, Name = "İlan Güncelle", ControllerName = "Jobs", ActionName = "Update", Code = "Jobs_Update", Description = "İlan güncelleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 38, Name = "İlan Sil", ControllerName = "Jobs", ActionName = "Delete", Code = "Jobs_Delete", Description = "İlan silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
         );
         modelBuilder.Entity<RolePermission>().HasData(
             new RolePermission { RoleId = 1, PermissionId = 31 },
             new RolePermission { RoleId = 1, PermissionId = 32 },
             new RolePermission { RoleId = 1, PermissionId = 33 },
             new RolePermission { RoleId = 1, PermissionId = 34 }
+            , new RolePermission { RoleId = 1, PermissionId = 35 }
+            , new RolePermission { RoleId = 1, PermissionId = 36 }
+            , new RolePermission { RoleId = 1, PermissionId = 37 }
+            , new RolePermission { RoleId = 1, PermissionId = 38 }
         );
 
         // Seed Data
@@ -240,7 +264,8 @@ public class AppDbContext : DbContext
             new Menu { Id = 6, Name = "Menüler", Url = "/Admin/Menus", Icon = "bi-menu-button", Order = 6, PermissionId = 17, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 7, Name = "Sistem Ayarları", Url = "/Admin/Settings", Icon = "bi-gear", Order = 7, PermissionId = 21, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
             new Menu { Id = 8, Name = "Sistem Hareketleri", Url = "/Admin/AuditLogs", Icon = "bi-activity", Order = 8, PermissionId = 23, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
-            new Menu { Id = 9, Name = "Çöp Kutusu", Url = "/Admin/RecycleBin", Icon = "bi-trash3", Order = 9, PermissionId = 24, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new Menu { Id = 9, Name = "Çöp Kutusu", Url = "/Admin/RecycleBin", Icon = "bi-trash3", Order = 9, PermissionId = 24, IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new Menu { Id = 10, Name = "İlanlar", Url = "/Admin/Jobs", Icon = "bi-megaphone", Order = 10, PermissionId = 35, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
         );
 
         // Admin user - password: admin
@@ -289,5 +314,46 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AppSetting>().HasData(
             new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
         );
+    }
+
+    private static IReadOnlyList<JobListing> CreateJobListingSeedData()
+    {
+        var categories = new (string Key, string Label, string[] Institutions, string Summary)[]
+        {
+            ("memur-a", "A Grubu Memur (Kariyer Meslek)", ["Kamu Denetçiliği Kurumu", "Rekabet Kurumu", "Gelir İdaresi Başkanlığı", "Ticaret Bakanlığı", "Devlet Arşivleri Başkanlığı"], "Uzman yardımcısı alacak"),
+            ("memur-b", "B Grubu Memur", ["Adalet Bakanlığı", "Aile ve Sosyal Hizmetler Bakanlığı", "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı", "Karayolları Genel Müdürlüğü", "Tapu ve Kadastro Genel Müdürlüğü"], "Memur alacak"),
+            ("sozlesmeli-kariyer", "Kariyer Sözleşmeli Personel", ["Sermaye Piyasası Kurulu", "Bankacılık Düzenleme ve Denetleme Kurumu", "Türkiye İstatistik Kurumu", "Kamu İhale Kurumu", "Enerji Piyasaları Düzenleme Kurumu"], "Uzman personel alacak"),
+            ("sozlesmeli-4b", "4/B Sözleşmeli Personel", ["Gençlik ve Spor Bakanlığı", "Sağlık Bakanlığı", "Aile ve Sosyal Hizmetler Bakanlığı", "Tarım ve Orman Bakanlığı", "Ulaştırma ve Altyapı Bakanlığı"], "Sözleşmeli personel alacak"),
+            ("sozlesmeli-kit", "KİT Sözleşmeli Personel", ["Türkiye Elektrik İletim A.Ş.", "Eti Maden İşletmeleri", "Türkiye Petrolleri A.O.", "Devlet Demiryolları Taşımacılık A.Ş.", "Boru Hatları ile Petrol Taşıma A.Ş."], "Sözleşmeli personel alacak"),
+            ("sozlesmeli-kurumsal", "Kurumsal Sözleşmeli Personel", ["Sivas Bilim ve Teknoloji Üniversitesi", "Devlet Su İşleri Genel Müdürlüğü", "TÜBİTAK", "Karadeniz Teknik Üniversitesi", "Kültür ve Turizm Bakanlığı"], "Sözleşmeli personel alacak"),
+            ("akademik-uye", "Öğretim Üyesi", ["Ankara Üniversitesi", "Ege Üniversitesi", "Marmara Üniversitesi", "Selçuk Üniversitesi", "Bursa Uludağ Üniversitesi"], "Öğretim üyesi alacak"),
+            ("akademik-gorevli", "Öğretim Görevlisi", ["Karabük Üniversitesi", "Hacettepe Üniversitesi", "Ondokuz Mayıs Üniversitesi", "Çukurova Üniversitesi", "Erciyes Üniversitesi"], "Öğretim görevlisi alacak"),
+            ("akademik-arastirma", "Araştırma Görevlisi", ["Tokat Gaziosmanpaşa Üniversitesi", "Boğaziçi Üniversitesi", "İstanbul Üniversitesi", "Akdeniz Üniversitesi", "Kocaeli Üniversitesi"], "Araştırma görevlisi alacak"),
+            ("isci-kariyer", "Kariyer İşçi", ["Türkiye Taşkömürü Kurumu", "Türkiye Kömür İşletmeleri", "Orman Genel Müdürlüğü", "Devlet Malzeme Ofisi", "Makina ve Kimya Endüstrisi"], "Kariyer işçi alacak"),
+            ("isci-surekli", "Sürekli İşçi", ["Karayolları Genel Müdürlüğü", "Devlet Su İşleri Genel Müdürlüğü", "Türkiye Şeker Fabrikaları", "Toprak Mahsulleri Ofisi", "Belediye İştirakleri Genel Müdürlüğü"], "Sürekli işçi alacak"),
+            ("isci-gecici", "Geçici İşçi", ["Tarım İşletmeleri Genel Müdürlüğü", "Orman Genel Müdürlüğü", "Türkiye İstatistik Kurumu", "Devlet Demiryolları", "Kıyı Emniyeti Genel Müdürlüğü"], "Geçici işçi alacak"),
+            ("isci-engelli", "Engelli İşçi", ["Türkiye Elektrik İletim A.Ş.", "Posta ve Telgraf Teşkilatı", "Devlet Hava Meydanları İşletmesi", "Türkiye Cumhuriyeti Devlet Demiryolları", "İller Bankası"], "Engelli işçi alacak"),
+            ("isci-eski-hukumlu", "Eski Hükümlü İşçi", ["Karayolları Genel Müdürlüğü", "Orman Genel Müdürlüğü", "Belediye Başkanlığı", "Devlet Su İşleri Genel Müdürlüğü", "Türkiye Kömür İşletmeleri"], "Eski hükümlü işçi alacak"),
+            ("askeri", "Askeri Personel", ["Jandarma Genel Komutanlığı", "Milli Savunma Bakanlığı", "Kara Kuvvetleri Komutanlığı", "Deniz Kuvvetleri Komutanlığı", "Hava Kuvvetleri Komutanlığı"], "Personel temin edilecektir"),
+            ("yargi", "Yargı Mensubu (Hakim - Savcı)", ["Adalet Bakanlığı", "Hâkimler ve Savcılar Kurulu", "Yargıtay Başkanlığı", "Danıştay Başkanlığı", "Türkiye Adalet Akademisi"], "Yargı personeli alacak")
+        };
+        var listings = new List<JobListing>();
+        var id = 1;
+        var published = new DateTime(2026, 9, 21);
+        foreach (var category in categories)
+        {
+            for (var index = 0; index < category.Institutions.Length; index++)
+            {
+                listings.Add(new JobListing
+                {
+                    Id = id++, Institution = category.Institutions[index], Summary = category.Summary,
+                    CategoryKey = category.Key, CategoryLabel = category.Label,
+                    PublishedAt = published.AddDays(-(index + 1)), StartDate = "21 Eylül", EndDate = "5 Ekim",
+                    SourceUrl = "https://kamuilan.sbb.gov.tr/", PdfUrl = "https://kamuilan.sbb.gov.tr/",
+                    IsActive = true, CreatedDate = published.AddDays(-(index + 1))
+                });
+            }
+        }
+        return listings;
     }
 }

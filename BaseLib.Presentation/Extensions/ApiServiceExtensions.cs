@@ -7,7 +7,9 @@ public static class ApiServiceExtensions
     {
         services.AddScoped<ISystemApiService, SystemApiService>();
         services.AddScoped<IPublicSliderApiService, PublicSliderApiService>();
+        services.AddScoped<IPublicJobApiService, PublicJobApiService>();
         AddResource<SliderDto, SaveSliderDto, SaveSliderDto>(services, ApiRoutes.Sliders);
+        AddResource<JobListingDto, SaveJobListingDto, SaveJobListingDto>(services, ApiRoutes.Jobs);
         AddResource<UserDto, CreateUserDto, UpdateUserDto>(services, ApiRoutes.Users);
         AddResource<RoleDto, CreateRoleDto, UpdateRoleDto>(services, ApiRoutes.Roles);
         AddResource<PermissionDto, CreatePermissionDto, CreatePermissionDto>(services, ApiRoutes.Permissions);

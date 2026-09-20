@@ -14,6 +14,8 @@ public static class ApiRoutes
     public const string Menus = "api/menus";
     public const string Sliders = "api/sliders";
     public const string PublishedSliders = Sliders + "/published";
+    public const string Jobs = "api/jobs";
+    public const string PublishedJobs = Jobs + "/published";
     public const string MyMenus = "api/menus/me";
     public const string Settings = "api/settings";
     public const string AuditLogs = "api/auditlogs";

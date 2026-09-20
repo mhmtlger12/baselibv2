@@ -1,0 +1,30 @@
+@model IReadOnlyList<Baselib.Business.DTOs.JobListingDto>
+@{ ViewData["Title"] = "İlanlar"; }
+<div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div>
+        <h2 class="text-xl font-bold text-navy-900">İlanlar</h2>
+        <p class="mt-1 text-sm text-muted-foreground">Public sitede gösterilen ilanları ve resmi PDF bağlantılarını yönetin.</p>
+    </div>
+    <a asp-action="Edit" asp-route-id="0" class="btn">＋ Yeni İlan</a>
+</div>
+<div class="panel overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="admin-table">
+            <thead><tr><th>Kurum</th><th>Özet</th><th>Kategori</th><th>Yayın</th><th>PDF</th><th>Durum</th><th>İşlemler</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Institution</td>
+                    <td>@item.Summary</td>
+                    <td><span class="badge badge-admin">@item.CategoryLabel</span></td>
+                    <td>@item.PublishedAt.ToString("d MMM yyyy")</td>
+                    <td>@(string.IsNullOrWhiteSpace(item.PdfUrl) ? "—" : "Var")</td>
+                    <td><span class="badge @(item.IsActive ? "" : "badge-muted")">@(item.IsActive ? "Aktif" : "Pasif")</span></td>
+                    <td><div class="flex justify-end gap-2"><a asp-action="Edit" asp-route-id="@item.Id" class="icon-button" aria-label="İlanı düzenle"><partial name="_Icon" model='@("edit")' /></a><a asp-action="Delete" asp-route-id="@item.Id" class="icon-button icon-delete" aria-label="İlanı sil"><partial name="_Icon" model='@("trash")' /></a></div></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
