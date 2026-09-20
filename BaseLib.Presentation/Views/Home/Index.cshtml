@@ -34,14 +34,14 @@
         </div>
     </section>
 
-    <div class="mx-auto mt-8 max-w-5xl">
+    <div class="mt-8 w-full">
 
         <div class="space-y-10">
 
             <section aria-labelledby="taban-puanlari">
-                <h2 id="taban-puanlari" class="mb-4 flex items-center gap-2.5 text-lg font-bold text-navy-900">
-                <span aria-hidden="true" class="h-5 w-1.5 rounded-full bg-gradient-to-b from-teal-400 to-navy-700">
-                </span>Taban Puanları</h2>
+                <h2 id="taban-puanlari" class="home-section-heading mb-4 flex items-center gap-2.5 text-lg font-bold text-navy-900">
+                <span aria-hidden="true" class="heading-smile">😊</span>
+                Taban Puanları</h2>
 
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     @for(var i = 0; i < Model.ScoreCards.Count; i++) { var card = Model.ScoreCards[i];
@@ -60,9 +60,9 @@
             <section aria-labelledby="ilanlar-baslik">
 
                 <div class="flex items-end justify-between">
-                    <h2 id="ilanlar-baslik" class="mb-4 flex items-center gap-2.5 text-lg font-bold text-navy-900">
-                    <span aria-hidden="true" class="h-5 w-1.5 rounded-full bg-gradient-to-b from-teal-400 to-navy-700">
-                    </span>Güncel İlanlar</h2>
+                    <h2 id="ilanlar-baslik" class="home-section-heading mb-4 flex items-center gap-2.5 text-lg font-bold text-navy-900">
+                    <span aria-hidden="true" class="heading-smile">😊</span>
+                    Güncel İlanlar</h2>
                     <a href="/ilanlar" class="mb-3 text-sm font-semibold text-teal-700">Tüm ilanlar →</a>
                 </div>
 
@@ -71,7 +71,7 @@
                     <a href="/ilanlar/@job.Id" class="group flex flex-col rounded-2xl border border-border bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-teal-300 hover:shadow-lg">
 
                     <div class="flex items-center gap-3">
-                        <span aria-hidden="true" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-teal-600 text-xs font-bold text-white">@SiteStyle.Initials(job.Institution)</span>
+                        <span aria-hidden="true" class="home-job-avatar flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold">@SiteStyle.Initials(job.Institution)</span>
                         <span class="inline-flex rounded-full bg-teal-50 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700 ring-1 ring-inset ring-teal-600/20">@job.CategoryLabel</span>
                     </div>
                     <h3 class="mt-4 line-clamp-2 text-sm font-bold uppercase leading-snug text-navy-900 group-hover:text-teal-700">@job.Institution</h3>
