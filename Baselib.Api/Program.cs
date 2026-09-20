@@ -28,7 +28,13 @@ builder.Services.AddCors(options =>
     options.AddPolicy("PresentationClient", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5011", "https://localhost:7230")
+            .WithOrigins(
+                "http://localhost:5011",
+                "https://localhost:7230",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:8443",
+                "http://127.0.0.1:8443")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

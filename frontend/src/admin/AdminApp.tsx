@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   IconDashboard,
   IconUsers,
@@ -33,7 +33,9 @@ import RecycleBin from './sections/RecycleBin'
 import Profile from './sections/Profile'
 import ContentManager from './content/ContentManager'
 import { contentConfigs } from './content/contentConfig'
-import { currentUser } from './adminData'
+import { api, clearSession, getSession } from '../api/client'
+import type { User } from '../api/contracts'
+import { useApiData } from '../api/useApiData'
 
 /** Menü ağacı: yaprak düğümler bir bölüm açar, üst düğümler açılır/kapanır. */
 type NavNode = {
@@ -97,6 +99,19 @@ const nav: NavNode[] = [
   { key: 'recycle', label: 'Çöp Kutusu', icon: <IconTrash className="h-5 w-5" /> },
 ]
 
+/** API'deki Menu.Url değerinin React panel bölümüne karşılığı. */
+const sectionRoutes: Record<string, string> = {
+  dashboard: '/Admin',
+  users: '/Admin/Users',
+  roles: '/Admin/Roles',
+  permissions: '/Admin/Permissions',
+  departments: '/Admin/Departments',
+  menus: '/Admin/Menus',
+  settings: '/Admin/Settings',
+  audit: '/Admin/AuditLogs',
+  recycle: '/Admin/RecycleBin',
+}
+
 const coreTitles: Record<string, string> = {
   dashboard: 'Dashboard',
   users: 'Kullanıcılar',
@@ -122,18 +137,55 @@ function subtreeContains(node: NavNode, section: string): boolean {
 }
 
 export default function AdminApp({ onExit }: { onExit: () => void }) {
-  const [authed, setAuthed] = useState(false)
+  const [user, setUser] = useState<User | null>(() => getSession()?.user ?? null)
 
-  if (!authed) return <Login onSuccess={() => setAuthed(true)} onExit={onExit} />
+  useEffect(() => {
+    if (!getSession()) return
+    let active = true
+    void api.profile()
+      .then((profile) => active && setUser(profile))
+      .catch(() => {
+        if (active) {
+          clearSession()
+          setUser(null)
+        }
+      })
+    return () => { active = false }
+  }, [])
 
-  return <Shell onExit={onExit} onLogout={() => setAuthed(false)} />
+  if (!user) return <Login onSuccess={setUser} onExit={onExit} />
+
+  return <Shell user={user} onUserChange={setUser} onExit={onExit} onLogout={() => { clearSession(); setUser(null) }} />
 }
 
-function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void }) {
+function Shell({ user, onUserChange, onExit, onLogout }: {
+  user: User
+  onUserChange: (user: User) => void
+  onExit: () => void
+  onLogout: () => void
+}) {
+  const permittedMenus = useApiData(api.myMenus)
   const [section, setSection] = useState<string>('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [activeRole, setActiveRole] = useState(currentUser.roles[0])
+  const activeRole = user.activeRoleName ?? user.roles[0] ?? 'Rol atanmadı'
+  const permittedUrls = new Set((permittedMenus.data ?? []).map((menu) => menu.url))
+  const isSystemAdmin = activeRole === 'Admin'
+  const visibleNav = nav.filter((item) => {
+    // İçerik Yönetimi henüz ayrı/mock site yönetimi modülüdür; API'de ilgili
+    // permission tanımlanıncaya kadar yalnızca aktif Admin rolünde gösterilir.
+    if (item.key === 'content') return isSystemAdmin
+    const route = sectionRoutes[item.key]
+    return Boolean(route && permittedUrls.has(route))
+  })
+  const visibleSectionKeys = visibleNav.map((item) => item.key).join(',')
+
+  useEffect(() => {
+    // Profil, sidebar veritabanı menüsü değildir; oturum açan her kullanıcı
+    // profilini açabilmelidir.
+    if (section === 'profile' || !permittedMenus.data || visibleNav.some((item) => item.key === section)) return
+    setSection(visibleNav[0]?.key ?? 'dashboard')
+  }, [permittedMenus.data, section, visibleSectionKeys])
 
   function renderContent() {
     if (section.startsWith('content/')) {
@@ -160,7 +212,7 @@ function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void 
       case 'recycle':
         return <RecycleBin />
       case 'profile':
-        return <Profile activeRole={activeRole} onSwitchRole={setActiveRole} />
+        return <Profile user={user} onUserChange={onUserChange} />
       default:
         return <Dashboard />
     }
@@ -169,6 +221,14 @@ function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void 
   function select(key: string) {
     setSection(key)
     setSidebarOpen(false)
+  }
+
+  async function logout() {
+    try {
+      await api.logout()
+    } finally {
+      onLogout()
+    }
   }
 
   return (
@@ -192,9 +252,13 @@ function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void 
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-          {nav.map((node) => (
+          {permittedMenus.loading ? (
+            <p className="px-3 py-2 text-xs text-navy-300">Menüler yükleniyor…</p>
+          ) : (
+            visibleNav.map((node) => (
             <NavItem key={node.key} node={node} depth={0} section={section} onSelect={select} />
-          ))}
+            ))
+          )}
         </nav>
 
         <div className="space-y-1 border-t border-white/10 px-3 py-3">
@@ -206,7 +270,7 @@ function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void 
             Siteye Dön
           </button>
           <button
-            onClick={onLogout}
+            onClick={() => void logout()}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-200 transition-colors hover:bg-rose-500/10 hover:text-rose-100"
           >
             <IconLogout className="h-5 w-5" />
@@ -247,11 +311,11 @@ function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void 
               className="flex items-center gap-2 rounded-full border border-navy-100 bg-white py-1.5 pl-1.5 pr-3 transition-colors hover:bg-navy-50"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy-800 text-xs font-bold text-white">
-                {currentUser.firstName[0]}
+                {user.firstName?.[0] ?? user.username[0]?.toUpperCase()}
               </span>
               <span className="hidden leading-tight text-left sm:block">
                 <span className="block text-sm font-semibold text-navy-900">
-                  {currentUser.firstName} {currentUser.lastName}
+                  {user.firstName} {user.lastName}
                 </span>
                 <span className="block text-xs text-muted-foreground">{activeRole}</span>
               </span>
@@ -287,7 +351,10 @@ function Shell({ onExit, onLogout }: { onExit: () => void; onLogout: () => void 
                   </button>
                   <div className="my-1 border-t border-navy-50" />
                   <button
-                    onClick={onLogout}
+                    onClick={() => {
+                      setUserMenuOpen(false)
+                      void logout()
+                    }}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
                   >
                     <IconLogout className="h-4 w-4" />
@@ -366,18 +433,19 @@ function NavItem({
   )
 }
 
-function Login({ onSuccess, onExit }: { onSuccess: () => void; onExit: () => void }) {
+function Login({ onSuccess, onExit }: { onSuccess: (user: User) => void; onExit: () => void }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (username === 'admin' && password === 'admin') {
+    try {
       setError('')
-      onSuccess()
-    } else {
-      setError('Kullanıcı adı veya şifre hatalı.')
+      const result = await api.login(username, password)
+      onSuccess(result.user)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Giriş yapılamadı.')
     }
   }
 
@@ -436,7 +504,6 @@ function Login({ onSuccess, onExit }: { onSuccess: () => void; onExit: () => voi
             Giriş Yap
           </button>
 
-          <p className="text-center text-xs text-navy-400">Demo giriş: admin / admin</p>
         </form>
 
         <button

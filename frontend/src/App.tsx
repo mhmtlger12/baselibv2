@@ -16,7 +16,17 @@ type Route =
 
 export default function App() {
   const [route, setRoute] = useState<Route>({ page: 'home' })
-  const [adminOpen, setAdminOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(() => window.location.hash === '#admin')
+
+  function openAdmin() {
+    window.location.hash = 'admin'
+    setAdminOpen(true)
+  }
+
+  function closeAdmin() {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+    setAdminOpen(false)
+  }
 
   function goHome() {
     setRoute({ page: 'home' })
@@ -28,11 +38,11 @@ export default function App() {
     window.scrollTo({ top: 0 })
   }
 
-  if (adminOpen) return <AdminApp onExit={() => setAdminOpen(false)} />
+  if (adminOpen) return <AdminApp onExit={closeAdmin} />
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-teal-50/40 via-navy-50/30 to-white">
-      <Header onNavigate={goHome} onOpenJobs={goJobs} onOpenPanel={() => setAdminOpen(true)} />
+      <Header onNavigate={goHome} onOpenJobs={goJobs} onOpenPanel={openAdmin} />
 
       <main className="flex-1">
         {route.page === 'home' && (

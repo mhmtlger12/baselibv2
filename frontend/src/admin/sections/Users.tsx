@@ -1,231 +1,28 @@
 import { useMemo, useState } from 'react'
-import {
-  Panel,
-  SectionHead,
-  Button,
-  Badge,
-  IconButton,
-  SearchInput,
-  Modal,
-  Field,
-  TextInput,
-  Select,
-  Check,
-} from '../ui'
+import { api } from '../../api/client'
+import type { Department, Role, User } from '../../api/contracts'
+import { useApiData } from '../../api/useApiData'
+import { Panel, SectionHead, Button, Badge, IconButton, SearchInput, Modal, Field, TextInput, Select, Check } from '../ui'
 import { IconPlus, IconEdit, IconTrash } from '../icons'
-import { adminUsers, adminDepartments, adminRoles, type AdminUser } from '../adminData'
 
-const emptyDraft = {
-  firstName: '',
-  lastName: '',
-  username: '',
-  email: '',
-  phone: '',
-  department: '',
-  roles: [] as string[],
-  active: true,
-}
+type UserDraft = { firstName: string; lastName: string; username: string; email: string; phone: string; password: string; departmentId: number | null; roleIds: number[]; isActive: boolean }
+const emptyDraft: UserDraft = { firstName: '', lastName: '', username: '', email: '', phone: '', password: '', departmentId: null, roleIds: [], isActive: true }
 
 export default function Users() {
-  const [users, setUsers] = useState<AdminUser[]>(adminUsers)
-  const [query, setQuery] = useState('')
-  const [editing, setEditing] = useState<AdminUser | 'new' | null>(null)
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return users
-    return users.filter((u) =>
-      [u.firstName, u.lastName, u.username, u.email, u.department].join(' ').toLowerCase().includes(q),
-    )
-  }, [users, query])
-
-  function remove(id: number) {
-    setUsers((prev) => prev.filter((u) => u.id !== id))
-  }
-
-  function save(draft: typeof emptyDraft, id?: number) {
-    if (id) {
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...draft } : u)))
-    } else {
-      setUsers((prev) => [
-        ...prev,
-        { ...draft, id: Math.max(0, ...prev.map((u) => u.id)) + 1, lastLogin: '—' },
-      ])
-    }
-    setEditing(null)
-  }
-
-  return (
-    <div>
-      <SectionHead
-        title="Kullanıcılar"
-        description="Kullanıcı hesaplarını, departmanlarını ve rol atamalarını yönetin."
-        action={
-          <Button onClick={() => setEditing('new')}>
-            <IconPlus className="h-4 w-4" /> Yeni Kullanıcı
-          </Button>
-        }
-      />
-
-      <Panel className="overflow-hidden">
-        <div className="border-b border-navy-50 px-5 py-4">
-          <SearchInput value={query} onChange={setQuery} placeholder="İsim, kullanıcı adı, e-posta..." />
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-navy-50 text-left text-xs font-semibold uppercase tracking-wide text-navy-400">
-                <th className="px-5 py-3">Ad Soyad</th>
-                <th className="px-5 py-3">Kullanıcı Adı</th>
-                <th className="px-5 py-3">E-posta</th>
-                <th className="px-5 py-3">Departman</th>
-                <th className="px-5 py-3">Roller</th>
-                <th className="px-5 py-3">Durum</th>
-                <th className="px-5 py-3 text-right">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-navy-50">
-              {filtered.map((u) => (
-                <tr key={u.id} className="transition-colors hover:bg-navy-50/50">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-navy-600 to-teal-600 text-xs font-bold text-white">
-                        {u.firstName[0]}
-                        {u.lastName[0]}
-                      </span>
-                      <span className="font-medium text-navy-900">
-                        {u.firstName} {u.lastName}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 text-navy-600">{u.username}</td>
-                  <td className="px-5 py-3.5 text-navy-600">{u.email}</td>
-                  <td className="px-5 py-3.5 text-navy-600">{u.department}</td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex flex-wrap gap-1">
-                      {u.roles.map((r) => (
-                        <Badge key={r} tone="admin">
-                          {r}
-                        </Badge>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <Badge tone={u.active ? 'active' : 'passive'}>{u.active ? 'Aktif' : 'Pasif'}</Badge>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex justify-end gap-2">
-                      <IconButton tone="edit" aria-label="Düzenle" onClick={() => setEditing(u)}>
-                        <IconEdit className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton tone="delete" aria-label="Sil" onClick={() => remove(u.id)}>
-                        <IconTrash className="h-4 w-4" />
-                      </IconButton>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">
-                    Kayıt bulunamadı.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      {editing && (
-        <UserModal
-          user={editing === 'new' ? null : editing}
-          onClose={() => setEditing(null)}
-          onSave={save}
-        />
-      )}
-    </div>
-  )
+  const users = useApiData(api.users); const departments = useApiData(api.departments); const roles = useApiData(api.roles)
+  const [query, setQuery] = useState(''); const [editing, setEditing] = useState<User | 'new' | null>(null)
+  const filtered = useMemo(() => { const search = query.toLocaleLowerCase('tr-TR'); return (users.data ?? []).filter((user) => !search || [user.firstName, user.lastName, user.username, user.email, user.departmentName].join(' ').toLocaleLowerCase('tr-TR').includes(search)) }, [users.data, query])
+  async function remove(id: number) { if (!window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) return; try { await api.deleteUser(id); await users.reload() } catch (cause) { window.alert(cause instanceof Error ? cause.message : 'Silme başarısız.') } }
+  return <div><SectionHead title="Kullanıcılar" description="Kullanıcı hesaplarını, departmanlarını ve rol atamalarını yönetin." action={<Button onClick={() => setEditing('new')}><IconPlus className="h-4 w-4" /> Yeni Kullanıcı</Button>} />
+    <Panel className="overflow-hidden"><div className="border-b border-navy-50 px-5 py-4"><SearchInput value={query} onChange={setQuery} placeholder="İsim, kullanıcı adı, e-posta…" /></div>{users.error ? <p className="p-6 text-rose-600">{users.error}</p> : users.loading ? <p className="p-6 text-muted-foreground">Yükleniyor…</p> : <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-navy-50 text-left text-xs font-semibold uppercase tracking-wide text-navy-400"><th className="px-5 py-3">Ad Soyad</th><th className="px-5 py-3">Kullanıcı Adı</th><th className="px-5 py-3">E-posta</th><th className="px-5 py-3">Departman</th><th className="px-5 py-3">Roller</th><th className="px-5 py-3">Durum</th><th className="px-5 py-3 text-right">İşlemler</th></tr></thead><tbody className="divide-y divide-navy-50">{filtered.map((user) => <tr key={user.id} className="hover:bg-navy-50/50"><td className="px-5 py-3.5 font-medium text-navy-900">{user.firstName} {user.lastName}</td><td className="px-5 py-3.5 text-navy-600">{user.username}</td><td className="px-5 py-3.5 text-navy-600">{user.email}</td><td className="px-5 py-3.5 text-navy-600">{user.departmentName ?? '—'}</td><td className="px-5 py-3.5"><div className="flex flex-wrap gap-1">{user.roles.map((role) => <Badge key={role} tone="admin">{role}</Badge>)}</div></td><td className="px-5 py-3.5"><Badge tone={user.isActive ? 'active' : 'passive'}>{user.isActive ? 'Aktif' : 'Pasif'}</Badge></td><td className="px-5 py-3.5 text-right"><IconButton tone="edit" aria-label="Düzenle" onClick={() => setEditing(user)}><IconEdit className="h-4 w-4" /></IconButton> <IconButton tone="delete" aria-label="Sil" onClick={() => remove(user.id)}><IconTrash className="h-4 w-4" /></IconButton></td></tr>)}{!filtered.length && <tr><td colSpan={7} className="px-5 py-10 text-center text-muted-foreground">Kayıt bulunamadı.</td></tr>}</tbody></table></div>}</Panel>
+    {editing && <UserModal user={editing === 'new' ? null : editing} departments={departments.data ?? []} roles={roles.data ?? []} onClose={() => setEditing(null)} onSaved={users.reload} />}
+  </div>
 }
 
-function UserModal({
-  user,
-  onClose,
-  onSave,
-}: {
-  user: AdminUser | null
-  onClose: () => void
-  onSave: (draft: typeof emptyDraft, id?: number) => void
-}) {
-  const [draft, setDraft] = useState(() => (user ? { ...user } : { ...emptyDraft }))
-  const set = <K extends keyof typeof emptyDraft>(key: K, value: (typeof emptyDraft)[K]) =>
-    setDraft((d) => ({ ...d, [key]: value }))
-
-  function toggleRole(name: string) {
-    set('roles', draft.roles.includes(name) ? draft.roles.filter((r) => r !== name) : [...draft.roles, name])
-  }
-
-  return (
-    <Modal
-      title={user ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı'}
-      onClose={onClose}
-      footer={
-        <>
-          <Button variant="soft" onClick={onClose}>
-            İptal
-          </Button>
-          <Button onClick={() => onSave(draft, user?.id)}>Kaydet</Button>
-        </>
-      }
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Ad">
-          <TextInput value={draft.firstName} onChange={(e) => set('firstName', e.target.value)} />
-        </Field>
-        <Field label="Soyad">
-          <TextInput value={draft.lastName} onChange={(e) => set('lastName', e.target.value)} />
-        </Field>
-        <Field label="Kullanıcı Adı">
-          <TextInput value={draft.username} onChange={(e) => set('username', e.target.value)} />
-        </Field>
-        <Field label="E-posta">
-          <TextInput type="email" value={draft.email} onChange={(e) => set('email', e.target.value)} />
-        </Field>
-        <Field label="Telefon">
-          <TextInput value={draft.phone} onChange={(e) => set('phone', e.target.value)} />
-        </Field>
-        <Field label="Departman">
-          <Select value={draft.department} onChange={(e) => set('department', e.target.value)}>
-            <option value="">Seçiniz</option>
-            {adminDepartments.map((d) => (
-              <option key={d.id} value={d.name}>
-                {d.name}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <div className="sm:col-span-2">
-          <Field label="Şifre" hint="Düzenlemede boş bırakılırsa mevcut şifre korunur.">
-            <TextInput type="password" placeholder="••••••••" />
-          </Field>
-        </div>
-        <div className="sm:col-span-2">
-          <span className="mb-1.5 block text-sm font-medium text-navy-700">Roller</span>
-          <div className="flex flex-wrap gap-4">
-            {adminRoles.map((r) => (
-              <Check
-                key={r.id}
-                checked={draft.roles.includes(r.name)}
-                onChange={() => toggleRole(r.name)}
-                label={r.name}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="sm:col-span-2">
-          <Check checked={draft.active} onChange={(v) => set('active', v)} label="Hesap aktif" />
-        </div>
-      </div>
-    </Modal>
-  )
+function UserModal({ user, departments, roles, onClose, onSaved }: { user: User | null; departments: Department[]; roles: Role[]; onClose: () => void; onSaved: () => Promise<void> }) {
+  const [draft, setDraft] = useState<UserDraft>(() => user ? { firstName: user.firstName ?? '', lastName: user.lastName ?? '', username: user.username, email: user.email, phone: user.phone ?? '', password: '', departmentId: user.departmentId, roleIds: user.roleIds, isActive: user.isActive } : emptyDraft); const [saving, setSaving] = useState(false)
+  const set = (patch: Partial<UserDraft>) => setDraft((current) => ({ ...current, ...patch }))
+  function toggleRole(roleId: number, checked: boolean) { set({ roleIds: checked ? [...draft.roleIds, roleId] : draft.roleIds.filter((id) => id !== roleId) }) }
+  async function save() { if (!draft.username.trim() || !draft.email.trim() || (!user && !draft.password)) return window.alert('Kullanıcı adı, e-posta ve yeni kullanıcı için şifre zorunludur.'); setSaving(true); try { if (user) { await api.updateUser(user.id, { username: draft.username, email: draft.email, password: draft.password || undefined, firstName: draft.firstName || undefined, lastName: draft.lastName || undefined, phone: draft.phone || undefined, departmentId: draft.departmentId, isActive: draft.isActive }); await api.assignUserRoles(user.id, draft.roleIds) } else { await api.createUser({ username: draft.username, email: draft.email, password: draft.password, firstName: draft.firstName || undefined, lastName: draft.lastName || undefined, phone: draft.phone || undefined, departmentId: draft.departmentId, roleIds: draft.roleIds }) }; await onSaved(); onClose() } catch (cause) { window.alert(cause instanceof Error ? cause.message : 'Kayıt başarısız.') } finally { setSaving(false) } }
+  return <Modal title={user ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı'} onClose={onClose} footer={<><Button variant="soft" onClick={onClose}>İptal</Button><Button disabled={saving} onClick={save}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</Button></>}><div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Field label="Ad"><TextInput value={draft.firstName} onChange={(event) => set({ firstName: event.target.value })} maxLength={100} /></Field><Field label="Soyad"><TextInput value={draft.lastName} onChange={(event) => set({ lastName: event.target.value })} maxLength={100} /></Field><Field label="Kullanıcı Adı" hint="3–100 karakter olmalıdır."><TextInput value={draft.username} onChange={(event) => set({ username: event.target.value })} minLength={3} maxLength={100} required /></Field><Field label="E-posta"><TextInput type="email" value={draft.email} onChange={(event) => set({ email: event.target.value })} maxLength={254} required /></Field><Field label="Telefon"><TextInput value={draft.phone} onChange={(event) => set({ phone: event.target.value })} maxLength={32} /></Field><Field label="Departman"><Select value={draft.departmentId ?? ''} onChange={(event) => set({ departmentId: event.target.value ? Number(event.target.value) : null })}><option value="">Seçiniz</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.name}</option>)}</Select></Field><div className="sm:col-span-2"><Field label="Şifre" hint={user ? 'Boş bırakırsanız mevcut şifre korunur. Girerseniz en az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir.' : 'En az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir.'}><TextInput type="password" value={draft.password} onChange={(event) => set({ password: event.target.value })} autoComplete="new-password" minLength={user ? undefined : 12} maxLength={128} required={!user} /></Field></div><div className="sm:col-span-2"><span className="mb-1.5 block text-sm font-medium text-navy-700">Roller</span><div className="flex flex-wrap gap-4">{roles.map((role) => <Check key={role.id} checked={draft.roleIds.includes(role.id)} onChange={(checked) => toggleRole(role.id, checked)} label={role.name} />)}</div></div>{user && <div className="sm:col-span-2"><Check checked={draft.isActive} onChange={(isActive) => set({ isActive })} label="Hesap aktif" /></div>}</div></Modal>
 }
