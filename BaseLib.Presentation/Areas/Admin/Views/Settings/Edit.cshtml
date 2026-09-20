@@ -1,0 +1,26 @@
+@model SettingEditModel
+@{ ViewData["Title"] = Model.Key + " ayarını düzenle"; }
+<dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
+    <partial name="_DialogHeader" />
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+
+        <div class="px-6 py-5">
+            <div asp-validation-summary="All" role="alert">
+            </div>
+
+            <div>
+                <label asp-for="Value" class="field-label">Yeni Değer</label>
+                <textarea asp-for="Value" aria-describedby="Value-hint Value-error" rows="3" class="input" required maxlength="4000">
+                </textarea>
+                <p id="Value-hint" class="mt-1 text-xs text-muted-foreground">@Model.Description Eğer değer açık/kapalı tipindeyse <code class="rounded bg-rose-50 px-1.5 py-0.5 font-mono font-semibold text-rose-700 ring-1 ring-inset ring-rose-200">true</code> veya <code class="rounded bg-rose-50 px-1.5 py-0.5 font-mono font-semibold text-rose-700 ring-1 ring-inset ring-rose-200">false</code> yazın.</p>
+                <span asp-validation-for="Value" id="Value-error"></span>
+            </div>
+
+
+        </div>
+        <partial name="_DialogFooter" />
+
+    </form>
+</dialog>

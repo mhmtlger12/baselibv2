@@ -1,0 +1,28 @@
+@model IReadOnlyList<Slide>
+<section data-slider aria-label="Öne çıkan haberler" aria-roledescription="slayt gösterisi" class="relative h-64 overflow-hidden rounded-lg border border-border bg-navy-100 sm:h-72">
+    @for(var i = 0; i < Model.Count; i++) { var slide = Model[i];
+
+    <article data-slide hidden="@(i != 0)" aria-label="@(i + 1) / @Model.Count" class="absolute inset-0">
+        <img src="@slide.Image" alt="@slide.Title" width="1200" height="500" fetchpriority="@(i == 0 ? "high" : "auto")" loading="@(i == 0 ? "eager" : "lazy")" class="absolute inset-0 h-full w-full object-cover" />
+
+        <div class="absolute inset-0 bg-gradient-to-t from-navy-900/85 via-navy-900/40 to-transparent">
+        </div>
+
+        <div class="absolute inset-x-0 bottom-0 p-6 text-white">
+            <h2 class="max-w-lg text-xl font-bold sm:text-2xl">@slide.Title</h2>
+            <p class="mt-2 max-w-lg text-sm text-navy-100">@slide.Description</p>
+        </div>
+
+    </article>
+    }
+    <button type="button" data-slider-pause aria-pressed="false" class="absolute right-3 top-3 rounded-md bg-navy-900/70 px-2 py-1 text-xs text-white">Durdur</button>
+
+    <div class="absolute bottom-2 right-4 flex gap-1">
+        @for(var i = 0; i < Model.Count; i++) {
+        <button type="button" data-slide-index="@i" aria-label="@(i + 1). slayta git" aria-current="@(i == 0 ? "true" : "false")" class="flex h-6 w-6 items-center justify-center">
+        <span class="h-2 w-2 rounded-full bg-white">
+        </span>
+        </button>
+        }
+    </div>
+</section>

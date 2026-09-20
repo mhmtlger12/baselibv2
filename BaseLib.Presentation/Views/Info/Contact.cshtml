@@ -1,0 +1,30 @@
+@model ContactInput
+@{ ViewData["Title"] = "İletişim"; }
+<div class="mx-auto max-w-2xl px-4 py-10">
+    <h1 class="text-2xl font-bold">İletişim</h1>
+    @if(TempData["Success"] is string message) {
+    <p role="status" class="mt-4 rounded-xl bg-teal-50 p-4 text-teal-700">@message</p>
+    }
+    <form asp-action="Contact" method="post" class="panel mt-6 space-y-4 p-6">
+        <div asp-validation-summary="All">
+        </div>
+        <div>
+            <label asp-for="Name" class="field-label">Ad Soyad</label>
+            <input asp-for="Name" class="input" required maxlength="100" />
+        </div>
+        <div>
+            <label asp-for="Email" class="field-label">E-posta</label>
+            <input asp-for="Email" class="input" type="email" required maxlength="254" />
+        </div>
+        <div>
+            <label asp-for="Subject" class="field-label">Konu</label>
+            <input asp-for="Subject" class="input" required maxlength="200" />
+        </div>
+        <div>
+            <label asp-for="Message" class="field-label">Mesajınız</label>
+            <textarea asp-for="Message" class="input" rows="5" required maxlength="4000">
+            </textarea>
+        </div>
+        <button class="btn">Gönder</button>
+    </form>
+</div>

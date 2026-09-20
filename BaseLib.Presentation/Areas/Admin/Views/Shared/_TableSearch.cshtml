@@ -1,0 +1,11 @@
+<div class="border-b border-navy-50 px-5 py-4">
+    <label class="flex max-w-sm items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/50 px-3 py-2.5">
+    <span class="text-navy-400">
+    <partial name="_Icon" model='@("search")' />
+    </span>
+    <span class="sr-only">Kayıtlarda ara</span>
+    <input data-table-search type="search" placeholder="@(ViewData["SearchPlaceholder"] ?? "Ara…")" class="w-full bg-transparent text-sm text-navy-800 outline-none" />
+    </label>
+    <span data-filter-status role="status" class="sr-only">
+    </span>
+</div>

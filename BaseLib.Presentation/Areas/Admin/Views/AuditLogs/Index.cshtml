@@ -1,0 +1,57 @@
+@model List<AuditLogDto>
+@{ ViewData["Title"] = "Sistem Hareketleri"; ViewData["SearchPlaceholder"] = "Kullanıcı, işlem, controller…"; }
+<div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <h2 class="text-xl font-bold tracking-tight text-navy-900">Sistem Hareketleri</h2>
+        <p class="mt-1 max-w-2xl text-sm text-muted-foreground">Kullanıcı ve sistem işlemlerinin denetim kayıtları.</p>
+    </div>
+</div>
+<div asp-validation-summary="All">
+</div>
+<div class="panel overflow-hidden" data-filter-table>
+    <partial name="_TableSearch" />
+    <div class="overflow-x-auto">
+        <table class="admin-table">
+            <caption class="sr-only">Sistem Hareketleri
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Kullanıcı
+                    </th>
+                    <th scope="col">İşlem
+                    </th>
+                    <th scope="col">Controller
+                    </th>
+                    <th scope="col">Rota
+                    </th>
+                    <th scope="col">Detay
+                    </th>
+                    <th scope="col">Tarih
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var item in Model) {
+                <tr data-row>
+                    <td>@(item.Username ?? "Sistem")
+                    </td>
+                    <td>@item.Action
+                    </td>
+                    <td>@item.Controller
+                    </td>
+                    <td class="font-mono text-xs">@item.Route
+                    </td>
+                    <td class="max-w-sm truncate" title="@item.Details">@(item.Details ?? "—")
+                    </td>
+                    <td class="whitespace-nowrap font-mono text-xs">@item.CreatedDate.ToString("g")
+                    </td>
+                </tr>
+                }
+                <tr data-empty hidden="@(Model.Count > 0)">
+                    <td colspan="6" class="text-center">Kayıt bulunamadı.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

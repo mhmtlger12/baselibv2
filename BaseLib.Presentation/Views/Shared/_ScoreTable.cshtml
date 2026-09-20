@@ -1,0 +1,54 @@
+@model IReadOnlyList<ScoreRow>
+<table class="hidden w-full table-fixed border-collapse text-sm md:table">
+    <caption class="sr-only">Kurumlara göre taban puanları ve kontenjanlar
+    </caption>
+    <thead>
+        <tr class="border-b border-border bg-navy-50 text-left text-navy-800">
+            <th scope="col" class="w-[34%] px-4 py-3 font-semibold">Kurum / Ünvan
+            </th>
+            @foreach(var title in new[] {"Kont.","Boş","En Küçük","En Büyük","Nitelik"}) {
+            <th scope="col" class="px-3 py-3 font-semibold">@title
+            </th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var row in Model) {
+        <tr class="border-b border-border align-top hover:bg-navy-50/60">
+            <td class="px-4 py-3">
+                <span class="block font-medium text-navy-900">@row.Institution / @row.City</span>
+                <span class="block text-xs text-muted-foreground">@row.Title</span>
+            </td>
+            <td class="px-3 py-3 text-right tabular-nums">@row.Quota
+            </td>
+            <td class="px-3 py-3 text-right tabular-nums">@row.Vacant
+            </td>
+            <td class="px-3 py-3 text-right tabular-nums">@SiteStyle.Score(row.MinScore)
+            </td>
+            <td class="px-3 py-3 text-right tabular-nums">@SiteStyle.Score(row.MaxScore)
+            </td>
+            <td class="px-3 py-3 text-xs text-muted-foreground">@row.Qualification
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+<ul class="space-y-3 md:hidden">
+    @foreach(var row in Model) {
+    <li class="rounded-lg border border-border p-4">
+        <p class="font-medium text-navy-900">@row.Institution / @row.City</p>
+        <p class="text-xs text-muted-foreground">@row.Title</p>
+        <dl class="mt-3 grid grid-cols-2 gap-2 text-sm">
+            @foreach(var cell in new[] {("Kont.",row.Quota.ToString()),("Boş",row.Vacant.ToString()),("En Küçük",SiteStyle.Score(row.MinScore)),("En Büyük",SiteStyle.Score(row.MaxScore))}) {
+            <div class="flex justify-between gap-2 border-b border-border/70 pb-1">
+                <dt class="text-muted-foreground">@cell.Item1
+                </dt>
+                <dd class="font-medium tabular-nums">@cell.Item2
+                </dd>
+            </div>
+            }
+        </dl>
+        <p class="mt-2 text-xs text-muted-foreground">Nitelik: @row.Qualification</p>
+    </li>
+    }
+</ul>

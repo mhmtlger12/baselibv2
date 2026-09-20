@@ -1,0 +1,14 @@
+{
+  "name": "baselib-presentation",
+  "private": true,
+  "scripts": {
+    "css:build": "postcss ./wwwroot/css/source.css -o ./wwwroot/css/site.css --env production --no-map",
+    "css:watch": "postcss ./wwwroot/css/source.css -o ./wwwroot/css/site.css --watch --no-map"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "postcss": "^8.5.28",
+    "postcss-cli": "^12.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

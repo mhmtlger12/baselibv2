@@ -1,0 +1,55 @@
+@model RoleEditModel
+@{ ViewData["Title"] = Model.Id == 0 ? "Yeni Rol" : "Rol Düzenle"; }
+<dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-4xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
+    <partial name="_DialogHeader" />
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+
+        <div class="px-6 py-5">
+            <div asp-validation-summary="All" role="alert">
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label asp-for="Name" class="field-label">Rol Adı</label>
+                    <input asp-for="Name" aria-describedby="Name-hint Name-error" type="text" class="input" required maxlength="100" />
+                    <p id="Name-hint" class="mt-1 text-xs text-muted-foreground">En fazla 100 karakter.</p>
+                    <span asp-validation-for="Name" id="Name-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Description" class="field-label">Açıklama</label>
+                    <textarea asp-for="Description" aria-describedby="Description-hint Description-error" rows="3" class="input" maxlength="500">
+                    </textarea>
+                    <p id="Description-hint" class="mt-1 text-xs text-muted-foreground">Rolün kullanım amacını belirtin.</p>
+                    <span asp-validation-for="Description" id="Description-error"></span>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-navy-700">
+                <input asp-for="IsActive" class="h-5 w-5 accent-teal-600" />Aktif</label>
+            </div>
+            <fieldset class="mt-5">
+                <legend class="field-label">İzinler
+                </legend>
+                <p class="mb-3 text-xs text-muted-foreground">Bir controller başlığını işaretlemek, o controller altındaki tüm izinleri seçer.</p>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    @foreach(var group in Model.AvailablePermissions.GroupBy(x => x.ControllerName)) {
+                    <div class="overflow-hidden rounded-xl border border-navy-100" data-permission-group>
+                        <label class="flex items-center gap-2 bg-navy-800 px-4 py-2.5 font-semibold text-white">
+                        <input type="checkbox" data-select-group class="h-5 w-5 accent-teal-600" />@group.Key</label>
+                        <div class="flex flex-wrap gap-x-5 gap-y-2 px-4 py-3">
+                            @foreach(var permission in group) {
+                            <label class="flex items-center gap-2 text-sm text-navy-700">
+                            <input name="PermissionIds" type="checkbox" value="@permission.Id" checked="@Model.PermissionIds.Contains(permission.Id)" class="h-5 w-5 accent-teal-600" />@permission.Name</label>
+                            }
+
+                        </div>
+                    </div>
+                    }
+                </div>
+            </fieldset>
+
+        </div>
+        <partial name="_DialogFooter" />
+
+    </form>
+</dialog>

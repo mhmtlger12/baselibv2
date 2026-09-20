@@ -1,0 +1,45 @@
+@model SearchPage
+@{ ViewData["Title"] = "Arama: " + Model.Query; }
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <h1 class="text-2xl font-bold">Arama sonuçları</h1>
+    <form method="get" class="my-6 flex gap-2" role="search">
+        <label for="query" class="sr-only">Arama</label>
+        <input id="query" name="q" value="@Model.Query" class="input" type="search" />
+        <button class="btn">Ara</button>
+    </form>
+    <div class="grid gap-6 md:grid-cols-3">
+        <section class="panel p-5">
+            <h2 class="font-bold">Puan kategorileri</h2>
+            <ul class="mt-3 space-y-3">
+                @foreach(var card in Model.Cards) {
+                <li>
+                    <a href="/taban-puanlari/@card.Key" class="text-teal-700">@card.Title</a>
+                </li>
+                }
+            </ul>
+        </section>
+        <section class="panel p-5">
+            <h2 class="font-bold">Bölümler</h2>
+            <ul class="mt-3 space-y-3">
+                @foreach(var dept in Model.Departments) {
+                <li>
+                    <a href="/taban-puanlari/kpss-lisans/bolum/@dept.Id" class="text-teal-700">@dept.Name</a>
+                </li>
+                }
+            </ul>
+        </section>
+        <section class="panel p-5">
+            <h2 class="font-bold">İlanlar</h2>
+            <ul class="mt-3 space-y-3">
+                @foreach(var job in Model.Jobs) {
+                <li>
+                    <a href="/ilanlar/@job.Id" class="text-teal-700">@job.Institution</a>
+                </li>
+                }
+            </ul>
+        </section>
+    </div>
+    @if(Model.Cards.Count + Model.Departments.Count + Model.Jobs.Count == 0) {
+    <p class="mt-6">Aramanızla eşleşen kayıt bulunamadı.</p>
+    }
+</div>

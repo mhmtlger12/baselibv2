@@ -1,0 +1,9 @@
+@model int
+<div class="flex justify-end gap-2">
+    <a asp-action="Edit" asp-route-id="@Model" class="icon-button" aria-label="Kaydı düzenle">
+    <partial name="_Icon" model='@("edit")' />
+    </a>
+    <a asp-action="Delete" asp-route-id="@Model" class="icon-button icon-delete" aria-label="Kaydı sil">
+    <partial name="_Icon" model='@("trash")' />
+    </a>
+</div>

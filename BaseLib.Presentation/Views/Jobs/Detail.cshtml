@@ -1,0 +1,33 @@
+@model JobListing
+@{ ViewData["Title"] = Model.Institution + " – " + Model.Summary; ViewData["Description"] = Model.Summary + ". Başvuru: " + Model.StartDate + " - " + Model.EndDate; }
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <nav aria-label="Konum" class="mb-4 text-sm text-muted-foreground">
+        <a href="/">Ana Sayfa</a> › <a href="/ilanlar">İlanlar</a> › <span aria-current="page">@Model.Institution</span>
+    </nav>
+    <div class="grid gap-6 lg:grid-cols-[1fr_18rem]">
+        <article class="panel p-6">
+            <span class="badge">@Model.CategoryLabel</span>
+            <h1 class="mt-4 text-2xl font-bold">@Model.Institution</h1>
+            <p class="mt-4 text-lg text-navy-600">@Model.Summary</p>
+            <dl class="mt-6 space-y-3 text-sm">
+                <div>
+                    <dt class="text-muted-foreground">Başvuru tarihleri
+                    </dt>
+                    <dd class="font-semibold text-amber-600">@Model.StartDate - @Model.EndDate
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-muted-foreground">Yayın tarihi
+                    </dt>
+                    <dd>@Model.PublishedAt.ToString("d MMMM yyyy")
+                    </dd>
+                </div>
+            </dl>
+            <p class="mt-6 text-sm text-muted-foreground">Bu ilan örnek verilerle gösterilmektedir.</p>
+            <a href="/ilanlar" class="btn-soft mt-6">← Tüm ilanlar</a>
+        </article>
+        <aside>
+            <partial name="_Recent" />
+        </aside>
+    </div>
+</div>

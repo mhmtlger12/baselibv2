@@ -1,0 +1,70 @@
+@model List<UserDto>
+@{ ViewData["Title"] = "Kullanıcılar"; ViewData["SearchPlaceholder"] = "İsim, kullanıcı adı, e-posta…"; }
+<div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <h2 class="text-xl font-bold tracking-tight text-navy-900">Kullanıcılar</h2>
+        <p class="mt-1 max-w-2xl text-sm text-muted-foreground">Kullanıcı hesaplarını, departmanlarını ve rol atamalarını yönetin.</p>
+    </div>
+    <a asp-action="Edit" class="btn">
+    <partial name="_Icon" model='@("plus")' />Yeni Kullanıcı</a>
+</div>
+<div asp-validation-summary="All">
+</div>
+<div class="panel overflow-hidden" data-filter-table>
+    <partial name="_TableSearch" />
+    <div class="overflow-x-auto">
+        <table class="admin-table">
+            <caption class="sr-only">Kullanıcılar
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Ad Soyad
+                    </th>
+                    <th scope="col">Kullanıcı Adı
+                    </th>
+                    <th scope="col">E-posta
+                    </th>
+                    <th scope="col">Departman
+                    </th>
+                    <th scope="col">Roller
+                    </th>
+                    <th scope="col">Durum
+                    </th>
+                    <th scope="col">İşlemler
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var item in Model) {
+                <tr data-row>
+                    <td class="font-medium text-navy-900">@item.FullName
+                    </td>
+                    <td>@item.Username
+                    </td>
+                    <td>@item.Email
+                    </td>
+                    <td>@(item.DepartmentName ?? "—")
+                    </td>
+                    <td>
+                        <div class="flex flex-wrap gap-1">
+                            @foreach(var role in item.Roles) {
+                            <span class="badge badge-admin">@role</span>
+                            }
+                        </div>
+                    </td>
+                    <td>
+                        <partial name="_Status" model="item.IsActive" />
+                    </td>
+                    <td>
+                        <partial name="_RowActions" model="item.Id" />
+                    </td>
+                </tr>
+                }
+                <tr data-empty hidden="@(Model.Count > 0)">
+                    <td colspan="7" class="text-center">Kayıt bulunamadı.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

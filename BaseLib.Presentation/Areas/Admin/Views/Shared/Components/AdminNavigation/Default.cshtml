@@ -1,0 +1,20 @@
+@model NavigationModel
+@{
+var current = Context.Request.Path.Value ?? "";
+var routes = new[] { ("/Admin", "Dashboard", "dashboard"), ("/Admin/Users", "Kullanıcılar", "users"), ("/Admin/Roles", "Roller", "roles"), ("/Admin/Permissions", "İzinler", "key"), ("/Admin/Departments", "Departmanlar", "tree"), ("/Admin/Menus", "Menüler", "menu"), ("/Admin/Settings", "Sistem Ayarları", "gear"), ("/Admin/AuditLogs", "Sistem Hareketleri", "activity"), ("/Admin/RecycleBin", "Çöp Kutusu", "trash") };
+}
+@if(Model.Error is not null) {
+<p role="alert" class="px-3 py-2 text-xs text-rose-200">@Model.Error</p>
+}
+@foreach(var item in routes) {
+if(Model.AllowedUrls.Contains(item.Item1)) {
+var active = item.Item1 == "/Admin" ? current.TrimEnd('/').Equals("/Admin", StringComparison.OrdinalIgnoreCase) || current.Contains("Dashboard", StringComparison.OrdinalIgnoreCase) : current.StartsWith(item.Item1, StringComparison.OrdinalIgnoreCase);
+<a href="@item.Item1" class="nav-link" aria-current="@(active ? "page" : null)">
+<span class="@(active ? "text-teal-300" : "text-navy-300")">
+<partial name="_Icon" model="item.Item3" />
+</span>@item.Item2</a>
+}
+if(item.Item1 == "/Admin" && User.IsInRole("Admin")) {
+<partial name="_ContentNavigation" />
+}
+}

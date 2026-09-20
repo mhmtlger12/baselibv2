@@ -1,0 +1,70 @@
+@model ContentPage
+@{ ViewData["Title"] = Model.Definition.Title; }
+<div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div>
+        <h2 class="text-xl font-bold text-navy-900">@Model.Definition.Title</h2>
+        <p class="mt-1 text-sm text-muted-foreground">@Model.Definition.Description</p>
+    </div>
+    <a asp-action="Edit" asp-route-slug="@Model.Slug" asp-route-id="0" class="btn">
+    <span aria-hidden="true">＋</span>@Model.Definition.AddLabel</a>
+</div>
+<div class="panel overflow-hidden" data-filter-table>
+    <partial name="_TableSearch" />
+    <div class="overflow-x-auto">
+        <table class="admin-table">
+            <caption class="sr-only">@Model.Definition.Title
+            </caption>
+            <thead>
+                <tr>
+                    @foreach(var column in Model.Definition.Columns) {
+                    <th scope="col">@column.Label
+                    </th>
+                    }
+                    <th scope="col">İşlemler
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var row in Model.Rows) {
+                var id = row["id"]!.GetValue<int>();
+
+                <tr data-row>
+                    @foreach(var column in Model.Definition.Columns) { var value = row[column.Key]?.ToString() ?? "—";
+
+                    <td>
+                        @if(column.Key == "image" && Uri.TryCreate(value, UriKind.Absolute, out var imageUri) && imageUri.Scheme is "https" or "http") {
+                        <img src="@value" alt="" loading="lazy" width="64" height="44" class="h-11 w-16 rounded-lg object-cover" />
+                        }
+                        else if(column.Key == "active") {
+                        <span class="badge @(value.Equals("true", StringComparison.OrdinalIgnoreCase) ? "" : "badge-muted")">@(value.Equals("true", StringComparison.OrdinalIgnoreCase) ? "Aktif" : "Pasif")</span>
+                        }
+                        else if(column.Key == "range") {
+                        <span>@row["startDate"] - @row["endDate"]</span>
+                        }
+                        else if(column.Key is "status" or "level" or "categoryLabel") {
+                        <span class="badge badge-admin">@value</span>
+                        }
+                        else { @value }
+
+                    </td>
+                    }
+                    <td>
+                        <div class="flex justify-end gap-2">
+                            <a asp-action="Edit" asp-route-slug="@Model.Slug" asp-route-id="@id" class="icon-button" aria-label="Kaydı düzenle">
+                            <partial name="_Icon" model='@("edit")' />
+                            </a>
+                            <a asp-action="Delete" asp-route-slug="@Model.Slug" asp-route-id="@id" class="icon-button icon-delete" aria-label="Kaydı sil">
+                            <partial name="_Icon" model='@("trash")' />
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                }
+                <tr data-empty hidden="@(Model.Rows.Count > 0)">
+                    <td colspan="@(Model.Definition.Columns.Count + 1)" class="text-center">Kayıt bulunamadı.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

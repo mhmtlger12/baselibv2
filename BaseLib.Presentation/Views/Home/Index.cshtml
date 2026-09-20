@@ -1,0 +1,118 @@
+@model SiteContent
+@{ ViewData["Title"] = "Taban Puanları ve Güncel İlanlar"; }
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <h1 class="sr-only">KPSS, YKS, ALES ve DGS Taban Puanları ve Güncel İlanlar</h1>
+
+    <div class="grid gap-6 lg:grid-cols-3">
+
+        <div class="lg:col-span-2">
+            <partial name="_Slider" model="Model.Slides" />
+        </div>
+        <partial name="_Ad" model='@("h-28 lg:h-72")' />
+
+    </div>
+
+    <section aria-label="Kalan zaman sayaçları" class="mt-6">
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            @for(var i = 0; i < Model.Countdowns.Count; i++)
+            {
+            var item = Model.Countdowns[i];
+            var remaining = Math.Max(0, (int)Math.Ceiling((item.Target - DateTime.Now).TotalDays));
+
+            <div class="group relative flex flex-col justify-between overflow-hidden rounded-xl border p-4 text-navy-900 transition-all hover:-translate-y-0.5 hover:shadow-md @SiteStyle.Pastels[i % 5]">
+                <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-400 to-navy-600">
+                </span>
+                <p class="text-sm font-semibold text-navy-800">@item.Label</p>
+                <p class="mt-3 flex items-baseline gap-1">
+                <span data-countdown="@(item.Target.ToString("yyyy-MM-ddTHH:mm:ss"))+03:00" class="text-3xl font-bold tabular-nums tracking-tight">@remaining</span>
+                <span class="text-sm text-navy-700">gün kaldı</span>
+                </p>
+
+            </div>
+            }
+
+        </div>
+    </section>
+
+    <div class="mt-8 grid gap-6 lg:grid-cols-[1fr_20rem]">
+
+        <div class="space-y-10">
+
+            <section aria-labelledby="taban-puanlari">
+                <h2 id="taban-puanlari" class="mb-4 flex items-center gap-2.5 text-lg font-bold text-navy-900">
+                <span aria-hidden="true" class="h-5 w-1.5 rounded-full bg-gradient-to-b from-teal-400 to-navy-700">
+                </span>Taban Puanları</h2>
+
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    @for(var i = 0; i < Model.ScoreCards.Count; i++) { var card = Model.ScoreCards[i];
+                    <a asp-controller="Scores" asp-action="Index" asp-route-category="@card.Key" class="group relative flex min-h-32 flex-col justify-end overflow-hidden rounded-2xl border p-5 text-left transition-all hover:-translate-y-1 hover:shadow-lg @SiteStyle.Pastels[i % 5]">
+                    <span aria-hidden="true" class="absolute right-4 top-3 text-5xl font-bold leading-none text-navy-900/[0.06]">0@(i + 1)</span>
+                    <span class="relative text-xs font-semibold uppercase tracking-wide text-teal-700">@card.Category</span>
+                    <span class="relative mt-1 text-base font-bold text-navy-900">@card.Title</span>
+                    <span class="relative mt-3 inline-flex items-center gap-1 text-sm font-semibold text-teal-700">İncele →</span>
+                    </a>
+                    }
+
+                </div>
+
+            </section>
+
+            <section aria-labelledby="ilanlar-baslik">
+
+                <div class="flex items-end justify-between">
+                    <h2 id="ilanlar-baslik" class="mb-4 flex items-center gap-2.5 text-lg font-bold text-navy-900">
+                    <span aria-hidden="true" class="h-5 w-1.5 rounded-full bg-gradient-to-b from-teal-400 to-navy-700">
+                    </span>Güncel İlanlar</h2>
+                    <a href="/ilanlar" class="mb-3 text-sm font-semibold text-teal-700">Tüm ilanlar →</a>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach(var job in Model.JobListings.Take(6)) {
+                    <a href="/ilanlar/@job.Id" class="group flex flex-col rounded-2xl border border-border bg-white p-5 text-left shadow-sm transition-all hover:-translate-y-1 hover:border-teal-300 hover:shadow-lg">
+
+                    <div class="flex items-center gap-3">
+                        <span aria-hidden="true" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-teal-600 text-xs font-bold text-white">@SiteStyle.Initials(job.Institution)</span>
+                        <span class="inline-flex rounded-full bg-teal-50 px-2.5 py-0.5 text-[11px] font-semibold text-teal-700 ring-1 ring-inset ring-teal-600/20">@job.CategoryLabel</span>
+                    </div>
+                    <h3 class="mt-4 line-clamp-2 text-sm font-bold uppercase leading-snug text-navy-900 group-hover:text-teal-700">@job.Institution</h3>
+                    <p class="mt-2 flex-1 text-sm text-navy-600">@job.Summary</p>
+
+                    <div class="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs">
+                        <span class="font-semibold italic text-amber-600">@job.StartDate - @job.EndDate</span>
+                        <span class="font-semibold text-teal-700 opacity-0 group-hover:opacity-100">İncele →</span>
+                    </div>
+                    </a>
+                    }
+
+                </div>
+
+            </section>
+
+        </div>
+
+        <aside class="space-y-6">
+            <partial name="_Recent" />
+
+            <section class="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+                <h2 class="flex items-center gap-2 border-b border-border bg-navy-50/60 px-4 py-3 text-sm font-semibold text-navy-800">
+                <span aria-hidden="true" class="h-4 w-1 rounded-full bg-teal-500">
+                </span>ÖSYM Duyuruları</h2>
+                <ul class="space-y-3 p-4">
+                    @foreach(var item in Model.Announcements) {
+                    <li class="flex gap-2">
+                        <span aria-hidden="true" class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500">
+                        </span>
+                        <div>
+                            <a href="https://www.osym.gov.tr/" class="text-sm font-medium text-navy-700 hover:text-navy-900">@item.Title</a>
+                            <p class="mt-0.5 text-xs text-muted-foreground">@item.Date</p>
+                        </div>
+                    </li>
+                    }
+
+                </ul>
+            </section>
+
+        </aside>
+
+    </div>
+</div>

@@ -1,0 +1,27 @@
+@model SiteComment
+<li data-comment class="relative mt-4">
+    <article class="rounded-xl border border-border bg-white p-4 shadow-sm">
+        <header class="flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-navy-100 text-xs font-bold text-navy-700">@Model.Author[0]</span>
+            <div>
+                <span class="block text-sm font-semibold text-navy-800">@Model.Author</span>
+                <span class="text-xs text-muted-foreground">@Model.Time</span>
+            </div>
+        </header>
+        <div class="comment-body mt-3 text-sm leading-6 text-navy-900">@Model.Body
+        </div>
+        <div class="mt-3 flex items-center gap-4 text-xs">
+            <button type="button" data-like data-likes="@Model.Likes" aria-pressed="false" class="text-muted-foreground">♥ Beğen <span>@Model.Likes</span>
+            </button>
+            <button type="button" data-toggle="reply-@Model.Id" aria-controls="reply-@Model.Id" aria-expanded="false" class="text-muted-foreground">↳ Yanıtla</button>
+        </div>
+        <div id="reply-@Model.Id" hidden>
+            <partial name="_CommentForm" model='@("reply-form-" + Model.Id)' />
+        </div>
+    </article>
+    <ul data-replies class="ml-4 border-l-2 border-teal-200 pl-4 sm:ml-7 sm:pl-6">
+        @foreach(var reply in Model.Replies) {
+        <partial name="_Comment" model="reply" />
+        }
+    </ul>
+</li>

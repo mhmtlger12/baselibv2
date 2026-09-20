@@ -1,0 +1,17 @@
+@inject ISiteContentService Site
+<section class="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+    <h2 class="flex items-center gap-2 border-b border-border bg-navy-50/60 px-4 py-3 text-sm font-semibold text-navy-800">
+    <span aria-hidden="true" class="h-4 w-1 rounded-full bg-teal-500">
+    </span>Son Eklenenler</h2>
+
+    <ul class="space-y-3 p-4">
+        @foreach(var item in Site.Content.RecentItems) {
+        <li>
+            <a href="/taban-puanlari/kpss-lisans" class="group block border-l-2 border-transparent pl-3 hover:border-teal-500">
+            <p class="text-sm font-medium text-navy-700 group-hover:text-teal-700">@item.Title</p>
+            <p class="mt-0.5 text-xs text-muted-foreground">@item.Date</p>
+            </a>
+        </li>
+        }
+    </ul>
+</section>

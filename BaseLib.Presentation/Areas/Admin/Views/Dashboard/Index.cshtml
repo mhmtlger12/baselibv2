@@ -1,0 +1,69 @@
+@model DashboardModel
+@{ ViewData["Title"] = "Dashboard"; }
+<div class="mb-5">
+    <h2 class="text-xl font-bold tracking-tight text-navy-900">Sistem Gösterge Paneli</h2>
+    <p class="mt-1 text-sm text-muted-foreground">Kullanıcı, rol ve organizasyon istatistiklerinin güncel özeti.</p>
+</div>
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    @foreach(var card in new[] {("Toplam Kullanıcı", Model.Stats.TotalUsers, Model.Stats.ActiveUsers + " aktif", "users", "from-navy-500 to-navy-700"),("Tanımlı Rol", Model.Stats.TotalRoles, "RBAC yetkilendirme", "roles", "from-teal-500 to-teal-700"),("Departman", Model.Stats.TotalDepartments, "Organizasyon ağacı", "tree", "from-sky-500 to-navy-500")}) {
+    <section class="panel overflow-hidden p-5">
+        <div class="flex items-start justify-between">
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm @card.Item5">
+            <partial name="_Icon" model="card.Item4" />
+            </span>
+            <span class="text-3xl font-bold tracking-tight text-navy-900">@card.Item2</span>
+        </div>
+        <h3 class="mt-4 text-sm font-semibold text-navy-800">@card.Item1</h3>
+        <p class="text-xs text-muted-foreground">@card.Item3</p>
+    </section>
+    }
+</div>
+<div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+
+    <section class="panel p-6">
+        <h3 class="text-sm font-bold text-navy-900">Rol Dağılımı</h3>
+        <p class="text-xs text-muted-foreground">Kullanıcıların rollere göre dağılımı</p>
+        <div class="mt-5 flex items-center gap-6">
+            <canvas data-role-chart width="130" height="130" role="img" aria-label="Rol dağılımı; değerler yanındaki listede gösterilir" class="h-[130px] w-[130px] shrink-0">
+            </canvas>
+            <ul class="min-w-0 flex-1 space-y-2.5">
+                @foreach(var item in Model.Stats.RoleDistributions) {
+                <li data-role-value="@item.UserCount" class="flex gap-2 text-sm">
+                    <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-teal-500">
+                    </span>
+                    <span class="truncate text-navy-700">@item.RoleName</span>
+                    <span class="ml-auto font-semibold text-navy-900">@item.UserCount</span>
+                </li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <section class="panel p-6 xl:col-span-2">
+        <div class="flex items-center gap-2">
+            <span class="text-teal-500">
+            <partial name="_Icon" model='@("activity")' />
+            </span>
+            <div>
+                <h3 class="text-sm font-bold text-navy-900">Son Sistem Hareketleri</h3>
+                <p class="text-xs text-muted-foreground">Denetim kaydından alınan son işlemler</p>
+            </div>
+        </div>
+        @if(Model.LogsError is not null) {
+        <p role="alert" class="mt-5 text-sm text-rose-600">@Model.LogsError</p>
+        }
+        else {
+        <ul class="mt-4 divide-y divide-navy-50">
+            @foreach(var log in Model.Logs) {
+            <li class="flex items-center gap-3 py-2.5">
+                <span aria-hidden="true" class="h-2 w-2 shrink-0 rounded-full bg-teal-500">
+                </span>
+                <span class="text-sm text-navy-800">@(log.Details ?? $"{log.Controller} / {log.Action}")</span>
+                <time class="ml-auto whitespace-nowrap font-mono text-xs text-navy-400" datetime="@log.CreatedDate.ToString("O")">@log.CreatedDate.ToString("g")</time>
+            </li>
+            }
+        </ul>
+        }
+
+    </section>
+</div>

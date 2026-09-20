@@ -1,0 +1,43 @@
+@model LoginDto
+@{ Layout = null; ViewData["Title"] = "Yönetim Paneli Girişi"; }
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<partial name="~/Views/Shared/_Head.cshtml" />
+</head>
+<body>
+<main class="relative flex min-h-screen items-center justify-center overflow-hidden bg-navy-900 px-4">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+        <div class="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-teal-500/20 blur-3xl">
+        </div>
+        <div class="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-navy-500/30 blur-3xl">
+        </div>
+    </div>
+    <div class="relative w-full max-w-sm">
+        <div class="mb-8 flex flex-col items-center text-center">
+            <span aria-hidden="true" class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 text-xl font-bold text-white shadow-lg">p.</span>
+            <h1 class="mt-4 text-2xl font-bold text-white">puannokta</h1>
+            <p class="text-sm text-navy-300">Yönetim Paneli Girişi</p>
+        </div>
+        <form asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" class="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+
+            <div asp-validation-summary="All" role="alert">
+            </div>
+
+            <div>
+                <label asp-for="Username" class="mb-1.5 block text-sm font-medium text-navy-100">Kullanıcı Adı</label>
+                <input asp-for="Username" autocomplete="username" required maxlength="100" placeholder="admin" class="w-full rounded-xl border border-white/10 bg-navy-800/60 px-3.5 py-2.5 text-sm text-white placeholder:text-navy-400 focus:border-teal-400" />
+            </div>
+
+            <div>
+                <label asp-for="Password" class="mb-1.5 block text-sm font-medium text-navy-100">Şifre</label>
+                <input asp-for="Password" type="password" autocomplete="current-password" required maxlength="128" placeholder="••••••••" class="w-full rounded-xl border border-white/10 bg-navy-800/60 px-3.5 py-2.5 text-sm text-white placeholder:text-navy-400 focus:border-teal-400" />
+            </div>
+            <button class="btn w-full" type="submit">
+            <partial name="_Icon" model='@("lock")' />Giriş Yap</button>
+        </form>
+        <a href="/" class="mt-6 block text-center text-sm text-navy-300 hover:text-white">← Siteye dön</a>
+    </div>
+</main>
+</body>
+</html>

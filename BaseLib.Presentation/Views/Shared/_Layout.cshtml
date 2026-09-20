@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<partial name="_Head" />
+</head>
+<body class="flex min-h-screen flex-col bg-gradient-to-b from-teal-50/40 via-navy-50/30 to-white">
+<a href="#main-content" class="skip-link">İçeriğe geç</a>
+<partial name="_Header" />
+
+<main id="main-content" class="flex-1" tabindex="-1">@RenderBody()
+</main>
+<partial name="_Footer" />
+<script src="~/js/site.js" asp-append-version="true" defer>
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

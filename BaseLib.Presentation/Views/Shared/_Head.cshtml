@@ -1,0 +1,21 @@
+@inject IConfiguration Configuration
+@{
+var title = ViewData["Title"]?.ToString() ?? "Taban Puanları ve Güncel İlanlar";
+var description = ViewData["Description"]?.ToString() ?? "KPSS, YKS, ALES ve DGS taban puanlarını inceleyin; bölüm, kurum ve şehre göre karşılaştırın. Güncel kamu personel alım ilanlarını takip edin.";
+var canonical = Configuration["Site:BaseUrl"]!.TrimEnd('/') + Context.Request.Path;
+var noindex = Context.Request.Path.StartsWithSegments("/Admin") || Context.Request.Path.StartsWithSegments("/hata") || Context.Request.Path.StartsWithSegments("/arama") || Context.Request.QueryString.HasValue;
+}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>@title | puannokta</title>
+<meta name="description" content="@description" />
+<meta name="robots" content="@(noindex ? "noindex,follow" : "index,follow")" />
+<link rel="canonical" href="@canonical" />
+<meta property="og:title" content="@title | puannokta" />
+<meta property="og:description" content="@description" />
+<meta property="og:url" content="@canonical" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="tr_TR" />
+<meta name="theme-color" content="#101d3a" />
+<link rel="icon" href="~/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />

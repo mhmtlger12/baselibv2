@@ -1,0 +1,68 @@
+@model MenuEditModel
+@{ ViewData["Title"] = Model.Id == 0 ? "Yeni Menü" : "Menü Düzenle"; }
+<dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
+    <partial name="_DialogHeader" />
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+
+        <div class="px-6 py-5">
+            <div asp-validation-summary="All" role="alert">
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label asp-for="Name" class="field-label">Menü Adı</label>
+                    <input asp-for="Name" placeholder="Kullanıcılar" aria-describedby="Name-hint Name-error" type="text" class="input" required maxlength="150" />
+                    <p id="Name-hint" class="mt-1 text-xs text-muted-foreground">Yönetim panelinde gösterilecek menü başlığı.</p>
+                    <span asp-validation-for="Name" id="Name-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Url" class="field-label">URL</label>
+                    <input asp-for="Url" aria-describedby="Url-hint Url-error" type="text" class="input font-mono" maxlength="2048" placeholder="/Admin/Users" />
+                    <p id="Url-hint" class="mt-1 text-xs text-muted-foreground">İçerik veya yönlendirme yolu. Boş bırakılabilir.</p>
+                    <span asp-validation-for="Url" id="Url-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Icon" class="field-label">İkon (Bootstrap Icons)</label>
+                    <input asp-for="Icon" placeholder="bi-person" aria-describedby="Icon-hint Icon-error" type="text" class="input font-mono" maxlength="100" />
+                    <p id="Icon-hint" class="mt-1 text-xs text-muted-foreground">Örnek: bi-person</p>
+                    <span asp-validation-for="Icon" id="Icon-error"></span>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label asp-for="ParentId" class="field-label">Üst Menü</label>
+                        <select asp-for="ParentId" aria-describedby="ParentId-hint ParentId-error" class="input">
+                        <option value="">Üst menü yok (Root)</option>
+                        @foreach(var item in Model.Menus) {
+                        <option value="@item.Id">@item.Name</option>
+                        }</select>
+                        <p id="ParentId-hint" class="mt-1 text-xs text-muted-foreground">Bu menüyü başka bir menünün altında göstermek için seçin.</p>
+                        <span asp-validation-for="ParentId" id="ParentId-error"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Order" class="field-label">Sıra</label>
+                        <input asp-for="Order" aria-describedby="Order-hint Order-error" type="number" class="input" min="0" max="10000" required />
+                        <p id="Order-hint" class="mt-1 text-xs text-muted-foreground">0–10000 arası küçük değer önce görünür.</p>
+                        <span asp-validation-for="Order" id="Order-error"></span>
+                    </div>
+                </div>
+                <div>
+                    <label asp-for="PermissionId" class="field-label">Bağlı İzin</label>
+                    <select asp-for="PermissionId" aria-describedby="PermissionId-hint PermissionId-error" class="input">
+                    <option value="">İzin gerektirmez</option>
+                    @foreach(var item in Model.Permissions) {
+                    <option value="@item.Id">@item.Code — @item.Name</option>
+                    }</select>
+                    <p id="PermissionId-hint" class="mt-1 text-xs text-muted-foreground">İzin seçilirse menü yalnızca bu izne erişebilen kullanıcılara görünür.</p>
+                    <span asp-validation-for="PermissionId" id="PermissionId-error"></span>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-navy-700">
+                <input asp-for="IsActive" class="h-5 w-5 accent-teal-600" />Aktif</label>
+            </div>
+
+        </div>
+        <partial name="_DialogFooter" />
+
+    </form>
+</dialog>

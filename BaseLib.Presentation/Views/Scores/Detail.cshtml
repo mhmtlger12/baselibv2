@@ -1,0 +1,82 @@
+@model ScoreDetailPage
+@inject ISiteContentService Site
+@{ ViewData["Title"] = Model.Department.Name + " " + Model.Card.Title + " Taban Puanları"; ViewData["Description"] = Model.Department.Name + " için kurum, şehir, kontenjan ve en düşük / en yüksek puan karşılaştırması."; }
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+
+    <nav aria-label="Konum" class="mb-4 text-sm text-muted-foreground">
+        <a href="/">Ana Sayfa</a>
+        <span aria-hidden="true"> › </span>
+        <a asp-action="Index" asp-route-category="@Model.Card.Key">@Model.Card.Title</a>
+        <span aria-hidden="true"> › </span>
+        <span aria-current="page" class="text-navy-800">@Model.Department.Name</span>
+    </nav>
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_18rem] lg:items-start">
+        <div class="space-y-5">
+
+            <section class="rounded-lg border border-border bg-white p-5">
+
+                <form method="get">
+
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <h1 class="text-lg font-bold text-navy-900">@Model.Department.Name Taban Puanları</h1>
+                        <div class="flex items-center gap-2">
+                            <label for="period" class="text-sm text-muted-foreground">Dönem:</label>
+                            <select id="period" name="period" class="rounded-md border border-border px-3 py-1.5 text-sm">
+                            @foreach(var period in Site.Content.DetailPeriods) {
+                            <option selected="@(Model.Period == period)">@period</option>
+                            }</select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-col gap-2 sm:flex-row">
+                        <label for="inst-search" class="sr-only">Kurum ara</label>
+                        <input id="inst-search" name="institution" value="@Model.Institution" placeholder="Kurum ara..." class="min-w-0 flex-1 rounded-md border border-border px-3 py-2 text-sm" />
+                        <label for="city-search" class="sr-only">Şehir ara</label>
+                        <input id="city-search" name="city" value="@Model.City" placeholder="Şehir ara..." class="min-w-0 flex-1 rounded-md border border-border px-3 py-2 text-sm" />
+                        <div class="flex gap-2">
+                            <button class="rounded-md bg-navy-700 px-4 py-2 text-sm font-medium text-white">Ara</button>
+                            <a asp-action="Detail" asp-route-category="@Model.Card.Key" asp-route-id="@Model.Department.Id" class="rounded-md border border-border px-4 py-2 text-sm font-medium text-navy-700">Temizle</a>
+                        </div>
+                    </div>
+
+                </form>
+
+            </section>
+            @if(Model.TotalCount > 0) {
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                @foreach(var item in new[] {("Toplam Kadro",Model.TotalQuota.ToString()),("En Düşük Puan",SiteStyle.Score(Model.MinScore)),("En Yüksek Puan",SiteStyle.Score(Model.MaxScore))}) {
+                <div class="rounded-lg border border-border bg-white p-4">
+                    <p class="text-sm text-muted-foreground">@item.Item1</p>
+                    <p class="mt-1 text-2xl font-bold tabular-nums text-navy-900">@item.Item2</p>
+                </div>
+                }
+            </div>
+            }
+
+            <div class="rounded-lg border border-border bg-white p-2 sm:p-4">
+                <partial name="_ScoreTable" model="Model.Rows" />
+                @if(Model.TotalCount == 0) {
+                <p class="px-4 py-10 text-center text-sm text-muted-foreground">Aramanızla eşleşen kayıt bulunamadı.</p>
+                }
+                else {
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 px-2 pb-2">
+                    <p class="text-xs text-muted-foreground">@Model.TotalCount kayıttan @((Model.Page - 1) * 5 + 1)–@Math.Min(Model.Page * 5, Model.TotalCount) arası gösteriliyor</p>
+                    <nav aria-label="Sayfalama" class="flex items-center gap-1">
+                        @for(var page = 1; page <= Model.PageCount; page++) {
+                        <a asp-route-page="@(page)" asp-route-period="@Model.Period" asp-route-institution="@Model.Institution" asp-route-city="@Model.City" aria-label="Sayfa @(page)" aria-current="@(page == Model.Page ? "page" : null)" class="flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium @(page == Model.Page ? "bg-navy-700 text-white" : "border border-border text-navy-700")">@(page)</a>
+                        }
+                    </nav>
+                </div>
+                }
+
+            </div>
+            <partial name="_Comments" model="Site.Content.Comments" />
+
+        </div>
+        <aside class="space-y-6 lg:sticky lg:top-24">
+            <partial name="_Ad" model='@("h-40")' />
+            <partial name="_Recent" />
+        </aside>
+    </div>
+</div>

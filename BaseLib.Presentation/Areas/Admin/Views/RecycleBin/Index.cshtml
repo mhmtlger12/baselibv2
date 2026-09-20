@@ -1,0 +1,57 @@
+@model List<RecycleBinItemDto>
+@{ ViewData["Title"] = "Çöp Kutusu"; }
+<div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+    <div>
+        <h2 class="text-xl font-bold tracking-tight text-navy-900">Çöp Kutusu</h2>
+        <p class="mt-1 max-w-2xl text-sm text-muted-foreground">Silinen kayıtları görüntüleyin ve geri yükleyin.</p>
+    </div>
+</div>
+<div asp-validation-summary="All">
+</div>
+<div class="panel overflow-hidden" data-filter-table>
+    <partial name="_TableSearch" />
+    <div class="overflow-x-auto">
+        <table class="admin-table">
+            <caption class="sr-only">Çöp Kutusu
+            </caption>
+            <thead>
+                <tr>
+                    <th scope="col">Tür
+                    </th>
+                    <th scope="col">Kayıt
+                    </th>
+                    <th scope="col">Silinme Tarihi
+                    </th>
+                    <th scope="col">İşlem
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var item in Model) {
+                <tr data-row>
+                    <td>
+                        <span class="badge badge-admin">@item.TypeName</span>
+                    </td>
+                    <td class="font-medium">@item.Name
+                    </td>
+                    <td>@(item.DeletedDate?.ToString("g") ?? "—")
+                    </td>
+                    <td>
+                        <form asp-action="Restore" method="post" data-confirm="Bu kaydı geri yüklemek istediğinize emin misiniz?">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="type" value="@item.Type" />
+                            <button class="icon-button" aria-label="Kaydı geri yükle">
+                            <partial name="_Icon" model='@("restore")' />
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                }
+                <tr data-empty hidden="@(Model.Count > 0)">
+                    <td colspan="4" class="text-center">Kayıt bulunamadı.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

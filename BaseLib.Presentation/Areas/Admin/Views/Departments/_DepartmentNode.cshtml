@@ -1,0 +1,27 @@
+@model DepartmentTree
+<li>
+    <div class="flex flex-wrap items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-navy-50">
+        @if(Model.Children.Count > 0) {
+        <button type="button" data-toggle="department-@Model.Item.Id" aria-controls="department-@Model.Item.Id" aria-expanded="true" aria-label="@Model.Item.Name alt departmanları" class="icon-button">
+        <partial name="_Icon" model='@("chevron")' />
+        </button>
+        }
+        else {
+        <span aria-hidden="true" class="w-8">
+        </span>
+        }
+        <span class="flex h-8 min-w-8 items-center justify-center rounded-lg bg-navy-100 px-1 text-xs font-bold text-navy-700">@Model.Item.Code</span>
+        <span class="font-semibold text-navy-900">@Model.Item.Name</span>
+        <partial name="_Status" model="Model.Item.IsActive" />
+        <div class="ml-auto">
+            <partial name="_RowActions" model="Model.Item.Id" />
+        </div>
+    </div>
+    @if(Model.Children.Count > 0) {
+    <ul id="department-@Model.Item.Id" class="ml-6">
+        @foreach(var child in Model.Children) {
+        <partial name="_DepartmentNode" model="child" />
+        }
+    </ul>
+    }
+</li>

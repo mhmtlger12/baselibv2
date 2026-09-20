@@ -1,0 +1,8 @@
+<ul class="flex flex-wrap items-center gap-1 text-sm font-medium">
+    @foreach (var item in new[] { ("/", "Ana Sayfa"), ("/ilanlar", "İlanlar"), ("/taban-puanlari/kpss-lisans", "KPSS"), ("/taban-puanlari/yks", "YKS"), ("/bilgi/ales", "ALES"), ("/taban-puanlari/dgs", "DGS"), ("/iletisim", "İletişim") })
+    {
+    <li>
+        <a href="@item.Item1" class="block rounded-md px-3 py-2 text-navy-700 hover:bg-teal-50 hover:text-teal-700" aria-current="@(Context.Request.Path == item.Item1 ? "page" : null)">@item.Item2</a>
+    </li>
+    }
+</ul>

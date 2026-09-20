@@ -1,0 +1,57 @@
+@model DepartmentPage
+@inject ISiteContentService Site
+@{ ViewData["Title"] = Model.Card.Title + " Taban Puanları"; ViewData["Description"] = Model.Card.Title + " bölümlerini öğrenim düzeyine göre inceleyin, bölüm bazında taban puanlarını karşılaştırın."; }
+<div class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+
+    <nav aria-label="Konum" class="mb-4 text-sm text-muted-foreground">
+        <a href="/">Ana Sayfa</a>
+        <span aria-hidden="true"> › </span>
+        <span aria-current="page" class="text-navy-800">@Model.Card.Title</span>
+    </nav>
+
+    <div class="grid gap-6 lg:grid-cols-[1fr_18rem]">
+
+        <section class="rounded-lg border border-border bg-white">
+
+            <div class="border-b border-border p-5">
+                <h1 class="text-lg font-bold text-navy-900">@Model.Card.Title Taban Puanları</h1>
+
+                <nav aria-label="Öğrenim düzeyi" class="mt-4 flex flex-wrap gap-2">
+                    @foreach(var tab in Site.Content.LevelTabs) {
+                    <a asp-route-level="@tab.Key" asp-route-q="@Model.Query" class="rounded-full px-4 py-1.5 text-sm font-medium @(Model.Level == tab.Key ? "bg-navy-700 text-white" : "border border-border text-navy-700 hover:bg-navy-50")" aria-current="@(Model.Level == tab.Key ? "page" : null)">@tab.Label</a>
+                    }
+                </nav>
+
+                <form method="get" class="mt-4 flex gap-2" role="search">
+                    <input type="hidden" name="level" value="@Model.Level" />
+                    <label for="dept-search" class="sr-only">Bölüm ara</label>
+                    <input id="dept-search" name="q" type="search" value="@Model.Query" placeholder="Bölüm ara... (örn: hukuk, hemşirelik)" class="w-full rounded-md border border-border px-4 py-2.5 text-sm" />
+                    <button class="btn-soft">Ara</button>
+                </form>
+
+            </div>
+
+            <ul class="divide-y divide-border">
+                @foreach(var dept in Model.Departments) {
+                <li>
+                    <a asp-action="Detail" asp-route-category="@Model.Card.Key" asp-route-id="@dept.Id" class="flex w-full items-center justify-between px-5 py-3.5 text-left hover:bg-navy-50">
+                    <span class="text-sm font-medium text-navy-900">@dept.Name Taban Puanları</span>
+                    <span aria-hidden="true" class="text-navy-400">›</span>
+                    </a>
+                </li>
+                }
+                @if(Model.Departments.Count == 0) {
+                <li class="px-5 py-8 text-center text-sm text-muted-foreground">Aramanızla eşleşen bölüm bulunamadı.
+                </li>
+                }
+            </ul>
+
+        </section>
+
+        <aside class="space-y-6">
+            <partial name="_Recent" />
+            <partial name="_Ad" model='@("h-40")' />
+        </aside>
+
+    </div>
+</div>

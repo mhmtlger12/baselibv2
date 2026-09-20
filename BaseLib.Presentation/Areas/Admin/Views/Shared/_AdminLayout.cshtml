@@ -1,0 +1,85 @@
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<partial name="~/Views/Shared/_Head.cshtml" />
+</head>
+<body class="min-h-screen bg-navy-50/50 lg:pl-72">
+<a href="#main-content" class="skip-link">İçeriğe geç</a>
+
+<aside id="admin-sidebar" aria-label="Yönetim menüsü" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-navy-900 text-navy-100 transition-transform lg:translate-x-0">
+    <a href="/Admin" class="flex items-center gap-3 px-6 py-5">
+    <span aria-hidden="true" class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 text-base font-bold text-white shadow-lg">p.</span>
+    <span class="leading-tight">
+    <span class="block text-base font-bold text-white">puannokta</span>
+    <span class="block text-[11px] uppercase tracking-widest text-teal-300/80">Yönetim Paneli</span>
+    </span>
+    </a>
+
+    <nav aria-label="Panel bölümleri" class="flex-1 space-y-1 overflow-y-auto px-3 py-2">@await Component.InvokeAsync("AdminNavigation")
+    </nav>
+
+    <div class="space-y-1 border-t border-white/10 px-3 py-3">
+        <a href="/" class="nav-link">
+        <partial name="_Icon" model='@("external")' />Siteye Dön</a>
+        <form asp-area="Admin" asp-controller="Account" asp-action="Logout" method="post">
+            <button type="submit" class="nav-link text-rose-200">
+            <partial name="_Icon" model='@("logout")' />Çıkış</button>
+        </form>
+    </div>
+
+</aside>
+<button type="button" id="sidebar-overlay" hidden aria-label="Menüyü kapat" class="fixed inset-0 z-30 bg-navy-900/50 backdrop-blur-sm lg:hidden">
+</button>
+
+<header class="sticky top-0 z-20 border-b border-navy-100 bg-white/80 backdrop-blur">
+    <div class="flex items-center gap-4 px-4 py-4 sm:px-8">
+        <button type="button" data-sidebar-toggle aria-controls="admin-sidebar" aria-expanded="false" aria-label="Yönetim menüsünü aç" class="rounded-lg border border-navy-100 p-2 text-navy-600 lg:hidden">
+        <partial name="_Icon" model='@("menu")' />
+        </button>
+
+        <div>
+            <p class="text-[11px] font-semibold uppercase tracking-widest text-teal-600">Yönetim Paneli</p>
+            <h1 class="text-xl font-bold tracking-tight text-navy-900">@ViewData["Title"]</h1>
+        </div>
+
+        <details class="relative ml-auto">
+            <summary class="flex list-none items-center gap-2 rounded-full border border-navy-100 bg-white py-1.5 pl-1.5 pr-3">
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-navy-800 text-xs font-bold text-white">@(User.Identity?.Name?.FirstOrDefault())</span>
+                <span class="hidden text-left leading-tight sm:block">
+                <span class="block text-sm font-semibold text-navy-900">@User.FindFirstValue("display_name")</span>
+                <span class="block text-xs text-muted-foreground">@User.FindFirstValue(ClaimTypes.Role)</span>
+                </span>
+                <partial name="_Icon" model='@("chevron")' />
+            </summary>
+
+            <div class="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-navy-100 bg-white py-1.5 shadow-xl">
+                <a href="/Admin/Profile" class="flex gap-2.5 px-4 py-2.5 text-sm font-medium text-navy-700 hover:bg-navy-50">
+                <partial name="_Icon" model='@("users")' />Profilim</a>
+                <a href="/" class="flex gap-2.5 px-4 py-2.5 text-sm font-medium text-navy-700 hover:bg-navy-50">
+                <partial name="_Icon" model='@("external")' />Siteye Dön</a>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button class="flex w-full gap-2.5 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50">
+                    <partial name="_Icon" model='@("logout")' />Çıkış</button>
+                </form>
+            </div>
+
+        </details>
+
+    </div>
+</header>
+
+<main id="main-content" tabindex="-1" class="px-4 py-6 sm:px-8 sm:py-8">
+    <div class="mx-auto max-w-7xl">
+        @if(TempData["Success"] is string message) {
+        <p role="status" class="mb-5 rounded-xl border border-teal-200 bg-teal-50 p-4 text-sm text-teal-700">@message</p>
+        }
+        @RenderBody()
+
+    </div>
+</main>
+<script src="~/js/admin.js" asp-append-version="true" defer>
+</script>
+@await RenderSectionAsync("Scripts", false)
+</body>
+</html>

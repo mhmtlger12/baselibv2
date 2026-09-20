@@ -4,4 +4,5 @@
   <Project Path="Baselib.Core/Baselib.Core.csproj" />
   <Project Path="Baselib.Data/Baselib.Data.csproj" />
   <Project Path="Baselib.Entities/Baselib.Entities.csproj" />
+  <Project Path="BaseLib.Presentation/BaseLib.Presentation.csproj" />
 </Solution>

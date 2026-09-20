@@ -1,0 +1,82 @@
+@model ContentEditModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? Model.Definition.AddLabel : "Kaydı Düzenle";
+    ViewData["CancelUrl"] = Url.Action("Index", new { slug = Model.Slug });
+    var imageField = Model.Definition.Fields.FirstOrDefault(field => field.Type == "image");
+    var imageUrl = imageField is null ? null : Model.Values.GetValueOrDefault(imageField.Key);
+    var hasImage = Uri.TryCreate(imageUrl, UriKind.Absolute, out var imageUri)
+        && imageUri.Scheme is "https" or "http";
+}
+<dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
+    <partial name="_DialogHeader" />
+    <form asp-action="Edit" asp-route-slug="@Model.Slug" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="Slug" type="hidden" />
+        <div class="px-6 py-5">
+            <div asp-validation-summary="All" role="alert"></div>
+            @if (imageField is not null)
+            {
+                <div data-image-preview hidden="@(!hasImage)" class="mb-4 overflow-hidden rounded-xl border border-navy-100">
+                    <img src="@(hasImage ? imageUrl : null)" alt="Görsel önizlemesi" class="h-40 w-full object-cover" />
+                </div>
+            }
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                @foreach (var field in Model.Definition.Fields)
+                {
+                    var value = Model.Values.GetValueOrDefault(field.Key) ?? "";
+                    var inputId = "content-" + field.Key;
+                    var hintId = inputId + "-hint";
+                    var errorId = inputId + "-error";
+                    var descriptionIds = field.Hint is null ? errorId : $"{hintId} {errorId}";
+                    <div class="@(field.Full || field.Type == "textarea" ? "sm:col-span-2" : "")">
+                        @if (field.Type == "checkbox")
+                        {
+                            <label class="flex items-center gap-2 text-sm text-navy-700">
+                                <input type="checkbox" name="Values[@field.Key]" value="true"
+                                       checked="@(value.Equals("true", StringComparison.OrdinalIgnoreCase))"
+                                       aria-describedby="@descriptionIds" class="h-5 w-5 accent-teal-600" />
+                                @field.Label
+                            </label>
+                        }
+                        else
+                        {
+                            <label for="@inputId" class="field-label">@field.Label</label>
+                            @if (field.Type == "textarea")
+                            {
+                                <textarea id="@inputId" name="Values[@field.Key]" rows="4" maxlength="8000"
+                                          aria-describedby="@descriptionIds" class="input">@value</textarea>
+                            }
+                            else if (field.Type == "select")
+                            {
+                                <select id="@inputId" name="Values[@field.Key]" aria-describedby="@descriptionIds" class="input" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var option in field.Options ?? [])
+                                    {
+                                        <option value="@option" selected="@(value == option)">@option</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input id="@inputId" name="Values[@field.Key]" value="@value"
+                                       type="@(field.Type is "date" or "number" ? field.Type : "text")"
+                                       step="@(field.Type == "number" ? "any" : null)"
+                                       min="@(field.Type == "number" ? "0" : null)"
+                                       placeholder="@(field.Type == "image" ? "https://..." : null)"
+                                       data-image-input="@(field.Key == imageField?.Key ? "true" : null)"
+                                       aria-describedby="@descriptionIds" maxlength="8000"
+                                       class="input @(field.Type == "image" ? "font-mono text-xs" : "")" />
+                            }
+                        }
+                        @if (field.Hint is not null)
+                        {
+                            <p id="@hintId" class="mt-1 text-xs text-muted-foreground">@field.Hint</p>
+                        }
+                        @Html.ValidationMessage($"Values[{field.Key}]", null, new { id = errorId })
+                    </div>
+                }
+            </div>
+        </div>
+        <partial name="_DialogFooter" />
+    </form>
+</dialog>
