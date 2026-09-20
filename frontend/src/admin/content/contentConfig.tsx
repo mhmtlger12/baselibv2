@@ -304,36 +304,90 @@ export const contentConfigs: Record<string, ContentConfig> = {
     ],
   },
 
+  'content/jobs': {
+    title: 'İlanlar',
+    description: 'Kamu personel alım ilanlarını (memur, sözleşmeli, akademik, işçi vb.) yönetin.',
+    addLabel: 'Yeni İlan',
+    columns: [
+      { key: 'institution', label: 'Kurum / Kuruluş' },
+      { key: 'summary', label: 'İlan Özeti' },
+      { key: 'categoryLabel', label: 'Kategori', render: (v) => <StatusPill value={String(v)} /> },
+      { key: 'publishedAt', label: 'Yayın' },
+      { key: 'range', label: 'Başvuru', render: (_v, r) => `${r.startDate} - ${r.endDate}` },
+      activeColumn,
+    ],
+    fields: [
+      { key: 'institution', label: 'Kurum / Kuruluş Adı', type: 'text', full: true },
+      { key: 'summary', label: 'İlan Özeti', type: 'text', full: true, hint: 'Örn: 25 Öğretim Elemanı Alacak' },
+      {
+        key: 'categoryLabel',
+        label: 'Kategori',
+        type: 'select',
+        options: [
+          'A Grubu Memur (Kariyer Meslek)',
+          'B Grubu Memur',
+          'Kariyer Sözleşmeli Personel',
+          '4/B Sözleşmeli Personel',
+          'KİT Sözleşmeli Personel',
+          'Kurumsal Sözleşmeli Personel',
+          'Öğretim Üyesi',
+          'Öğretim Görevlisi',
+          'Araştırma Görevlisi',
+          'Sürekli İşçi',
+          'Geçici İşçi',
+          'Askeri Personel',
+          'Yargı Mensubu (Hakim - Savcı)',
+        ],
+      },
+      { key: 'publishedAt', label: 'Yayın Tarihi', type: 'date' },
+      { key: 'startDate', label: 'Başvuru Başlangıcı', type: 'text', hint: 'Örn: 20 Eylül' },
+      { key: 'endDate', label: 'Başvuru Bitişi', type: 'text', hint: 'Örn: 4 Ekim' },
+      activeField,
+    ],
+    rows: [
+      { id: 1, institution: 'Adana Alparslan Türkeş Bilim ve Teknoloji Üniversitesi', summary: '25 Öğretim Elemanı Alacak', categoryLabel: 'Öğretim Üyesi', publishedAt: '2026-09-20', startDate: '20 Eylül', endDate: '4 Ekim', active: true },
+      { id: 2, institution: 'İstanbul Teknik Üniversitesi', summary: '44 Öğretim Üyesi Alacak', categoryLabel: 'Öğretim Üyesi', publishedAt: '2026-09-18', startDate: '18 Eylül', endDate: '2 Ekim', active: true },
+      { id: 3, institution: 'Gençlik ve Spor Bakanlığı', summary: '9 Bilişim Personeli Alacak', categoryLabel: '4/B Sözleşmeli Personel', publishedAt: '2026-09-18', startDate: '21 Eylül', endDate: '25 Eylül', active: true },
+      { id: 4, institution: 'Adalet Bakanlığı', summary: '250 Zabıt Kâtibi (B Grubu) Alacak', categoryLabel: 'B Grubu Memur', publishedAt: '2026-09-16', startDate: '16 Eylül', endDate: '29 Eylül', active: true },
+      { id: 5, institution: 'Hâkimler ve Savcılar Kurulu', summary: '150 Adli Yargı Hâkim Adayı Alacak', categoryLabel: 'Yargı Mensubu (Hakim - Savcı)', publishedAt: '2026-09-15', startDate: '15 Eylül', endDate: '3 Ekim', active: false },
+    ],
+  },
+
+  'content/job-categories': {
+    title: 'İlan Kategorileri',
+    description: 'İlanlar sayfasının sol menüsündeki kategori ağacını yönetin.',
+    addLabel: 'Yeni Kategori',
+    columns: [
+      { key: 'label', label: 'Kategori' },
+      { key: 'parent', label: 'Üst Kategori' },
+      { key: 'order', label: 'Sıra' },
+      activeColumn,
+    ],
+    fields: [
+      { key: 'label', label: 'Kategori Adı', type: 'text', full: true },
+      {
+        key: 'parent',
+        label: 'Üst Kategori',
+        type: 'select',
+        options: ['—', 'Memur', 'Sözleşmeli Personel', 'Akademik Personel', 'İşçi'],
+      },
+      { key: 'order', label: 'Sıra', type: 'number' },
+      activeField,
+    ],
+    rows: [
+      { id: 1, label: 'Memur', parent: '—', order: 1, active: true },
+      { id: 2, label: 'A Grubu Memur (Kariyer Meslek)', parent: 'Memur', order: 1, active: true },
+      { id: 3, label: 'B Grubu Memur', parent: 'Memur', order: 2, active: true },
+      { id: 4, label: 'Akademik Personel', parent: '—', order: 2, active: true },
+      { id: 5, label: 'Öğretim Üyesi', parent: 'Akademik Personel', order: 1, active: true },
+      { id: 6, label: 'Askeri Personel', parent: '—', order: 3, active: true },
+    ],
+  },
+
   'content/taban-kpss': makeScoreConfig('KPSS'),
   'content/taban-dgs': makeScoreConfig('DGS'),
   'content/taban-yks': makeScoreConfig('YKS'),
 
-  'content/popular': {
-    title: 'Popüler Üniversiteler',
-    description: 'Ana sayfada öne çıkan popüler üniversite kartlarını yönetin.',
-    addLabel: 'Yeni Üniversite',
-    columns: [
-      { key: 'rank', label: 'Sıra', render: (v) => <RankBadge rank={Number(v)} /> },
-      { key: 'name', label: 'Üniversite' },
-      { key: 'city', label: 'Şehir' },
-      { key: 'programs', label: 'Program Sayısı' },
-      activeColumn,
-    ],
-    fields: [
-      { key: 'rank', label: 'Sıralama', type: 'number' },
-      { key: 'name', label: 'Üniversite Adı', type: 'text', full: true },
-      { key: 'city', label: 'Şehir', type: 'text' },
-      { key: 'programs', label: 'Program Sayısı', type: 'number' },
-      { key: 'color', label: 'Kart Rengi', type: 'select', options: ['Turkuaz', 'Lacivert', 'Amber', 'Pembe', 'Mor'] },
-      activeField,
-    ],
-    rows: [
-      { id: 1, rank: 1, name: 'Boğaziçi Üniversitesi', city: 'İstanbul', programs: 42, color: 'Lacivert', active: true },
-      { id: 2, rank: 2, name: 'ODTÜ', city: 'Ankara', programs: 38, color: 'Turkuaz', active: true },
-      { id: 3, rank: 3, name: 'İTÜ', city: 'İstanbul', programs: 45, color: 'Amber', active: true },
-      { id: 4, rank: 4, name: 'Hacettepe Üniversitesi', city: 'Ankara', programs: 51, color: 'Pembe', active: true },
-    ],
-  },
 }
 
 function makeScoreConfig(exam: string): ContentConfig {
@@ -373,17 +427,4 @@ function makeScoreConfig(exam: string): ContentConfig {
     ],
     rows: sampleByExam[exam],
   }
-}
-
-function RankBadge({ rank }: { rank: number }) {
-  const tones = ['bg-amber-100 text-amber-700', 'bg-navy-100 text-navy-700', 'bg-teal-100 text-teal-700']
-  return (
-    <span
-      className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm font-bold ${
-        tones[rank - 1] ?? 'bg-navy-50 text-navy-500'
-      }`}
-    >
-      {rank}
-    </span>
-  )
 }

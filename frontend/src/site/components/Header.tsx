@@ -3,10 +3,11 @@ import { SITE_NAME, SITE_TAGLINE, navLinks } from '../data/site'
 
 type HeaderProps = {
   onNavigate: (page: 'home') => void
+  onOpenJobs: () => void
   onOpenPanel: () => void
 }
 
-export default function Header({ onNavigate, onOpenPanel }: HeaderProps) {
+export default function Header({ onNavigate, onOpenJobs, onOpenPanel }: HeaderProps) {
   const [query, setQuery] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const menuId = useId()
@@ -14,6 +15,11 @@ export default function Header({ onNavigate, onOpenPanel }: HeaderProps) {
   function goHome() {
     setMenuOpen(false)
     onNavigate('home')
+  }
+
+  function goJobs() {
+    setMenuOpen(false)
+    onOpenJobs()
   }
 
   return (
@@ -42,7 +48,7 @@ export default function Header({ onNavigate, onOpenPanel }: HeaderProps) {
 
           {/* Inline nav (desktop) */}
           <nav aria-label="Ana menü" className="hidden lg:block">
-            <NavList onHome={goHome} onLinkClick={() => setMenuOpen(false)} />
+            <NavList onHome={goHome} onJobs={goJobs} onLinkClick={() => setMenuOpen(false)} />
           </nav>
 
           {/* Inline search (desktop) */}
@@ -89,7 +95,7 @@ export default function Header({ onNavigate, onOpenPanel }: HeaderProps) {
         {/* Mobile collapsible menu + search */}
         <div id={menuId} className={`${menuOpen ? 'block' : 'hidden'} lg:hidden`}>
           <nav aria-label="Ana menü (mobil)">
-            <NavList onHome={goHome} onLinkClick={() => setMenuOpen(false)} mobile />
+            <NavList onHome={goHome} onJobs={goJobs} onLinkClick={() => setMenuOpen(false)} mobile />
           </nav>
           <form className="mt-3 flex items-center" role="search" onSubmit={(e) => e.preventDefault()}>
             <SearchField value={query} onChange={setQuery} id="site-search-mobile" />
@@ -115,11 +121,13 @@ export default function Header({ onNavigate, onOpenPanel }: HeaderProps) {
 
 type NavListProps = {
   onHome: () => void
+  onJobs: () => void
   onLinkClick: () => void
   mobile?: boolean
 }
 
-function NavList({ onHome, onLinkClick, mobile = false }: NavListProps) {
+function NavList({ onHome, onJobs, onLinkClick, mobile = false }: NavListProps) {
+  const buttonKeys: Record<string, () => void> = { home: onHome, ilanlar: onJobs }
   return (
     <ul
       className={
@@ -129,10 +137,10 @@ function NavList({ onHome, onLinkClick, mobile = false }: NavListProps) {
       }
     >
       {navLinks.map((link) =>
-        link.key === 'home' ? (
+        buttonKeys[link.key] ? (
           <li key={link.key}>
             <button
-              onClick={onHome}
+              onClick={buttonKeys[link.key]}
               className="block w-full rounded-md px-3 py-2 text-left text-navy-700 transition-colors hover:bg-teal-50 hover:text-teal-700"
             >
               {link.label}

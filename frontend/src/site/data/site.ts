@@ -3,6 +3,7 @@ export const SITE_TAGLINE = 'Taban puanları, tek noktada.'
 
 export const navLinks = [
   { key: 'home', label: 'Ana Sayfa' },
+  { key: 'ilanlar', label: 'İlanlar' },
   { key: 'kpss', label: 'KPSS' },
   { key: 'yks', label: 'YKS' },
   { key: 'ales', label: 'ALES' },
@@ -94,16 +95,6 @@ export const announcements: Announcement[] = [
   { id: 1, title: '2024 KPSS tercih kılavuzu yayımlandı', date: '19 Eyl 2024' },
   { id: 2, title: 'ALES/3 başvuruları başladı', date: '12 Eyl 2024' },
   { id: 3, title: 'YKS ek yerleştirme takvimi açıklandı', date: '05 Eyl 2024' },
-]
-
-export type University = { id: number; name: string; city: string }
-
-export const popularUniversities: University[] = [
-  { id: 1, name: 'Boğaziçi Üniversitesi', city: 'İstanbul' },
-  { id: 2, name: 'Orta Doğu Teknik Üniversitesi', city: 'Ankara' },
-  { id: 3, name: 'İstanbul Teknik Üniversitesi', city: 'İstanbul' },
-  { id: 4, name: 'Hacettepe Üniversitesi', city: 'Ankara' },
-  { id: 5, name: 'Ege Üniversitesi', city: 'İzmir' },
 ]
 
 export type ExamLevel = 'lisans' | 'onlisans' | 'ortaogretim'
@@ -263,6 +254,208 @@ export const scoreRows: ScoreRow[] = [
     minScore: 79.9012,
     maxScore: 85.5533,
     qualification: '3607 - Bilgisayar Müh.',
+  },
+]
+
+// --- İlanlar (kamu personel alım ilanları) ---
+
+export type JobCategory = { key: string; label: string; children?: JobCategory[] }
+
+export const jobCategories: JobCategory[] = [
+  { key: 'all', label: 'Tüm İlanlar' },
+  {
+    key: 'memur',
+    label: 'Memur',
+    children: [
+      { key: 'memur-a', label: 'A Grubu Memur (Kariyer Meslek)' },
+      { key: 'memur-b', label: 'B Grubu Memur' },
+    ],
+  },
+  {
+    key: 'sozlesmeli',
+    label: 'Sözleşmeli Personel',
+    children: [
+      { key: 'sozlesmeli-kariyer', label: 'Kariyer Sözleşmeli Personel' },
+      { key: 'sozlesmeli-4b', label: '4/B Sözleşmeli Personel' },
+      { key: 'sozlesmeli-kit', label: 'KİT Sözleşmeli Personel' },
+      { key: 'sozlesmeli-kurumsal', label: 'Kurumsal Sözleşmeli Personel' },
+    ],
+  },
+  {
+    key: 'akademik',
+    label: 'Akademik Personel',
+    children: [
+      { key: 'akademik-uye', label: 'Öğretim Üyesi' },
+      { key: 'akademik-gorevli', label: 'Öğretim Görevlisi' },
+      { key: 'akademik-arastirma', label: 'Araştırma Görevlisi' },
+    ],
+  },
+  {
+    key: 'isci',
+    label: 'İşçi',
+    children: [
+      { key: 'isci-kariyer', label: 'Kariyer İşçi' },
+      { key: 'isci-surekli', label: 'Sürekli İşçi' },
+      { key: 'isci-gecici', label: 'Geçici İşçi' },
+      { key: 'isci-engelli', label: 'Engelli İşçi' },
+      { key: 'isci-eski-hukumlu', label: 'Eski Hükümlü İşçi' },
+    ],
+  },
+  { key: 'askeri', label: 'Askeri Personel' },
+  { key: 'yargi', label: 'Yargı Mensubu (Hakim - Savcı)' },
+]
+
+export type JobListing = {
+  id: number
+  institution: string
+  summary: string
+  categoryKey: string
+  categoryLabel: string
+  publishedAt: string // ISO date, timeline gruplaması için
+  startDate: string
+  endDate: string
+}
+
+export const jobListings: JobListing[] = [
+  {
+    id: 1,
+    institution: 'Adana Alparslan Türkeş Bilim ve Teknoloji Üniversitesi',
+    summary: '25 Öğretim Elemanı Alacak',
+    categoryKey: 'akademik-uye',
+    categoryLabel: 'Öğretim Üyesi',
+    publishedAt: '2026-09-20',
+    startDate: '20 Eylül',
+    endDate: '4 Ekim',
+  },
+  {
+    id: 2,
+    institution: 'Munzur Üniversitesi',
+    summary: '1 Öğretim Üyesi İptal İlanı',
+    categoryKey: 'akademik-uye',
+    categoryLabel: 'Öğretim Üyesi',
+    publishedAt: '2026-09-19',
+    startDate: '29 Eylül',
+    endDate: '29 Eylül',
+  },
+  {
+    id: 3,
+    institution: 'İstanbul Teknik Üniversitesi',
+    summary: '44 Öğretim Üyesi Alacak',
+    categoryKey: 'akademik-uye',
+    categoryLabel: 'Öğretim Üyesi',
+    publishedAt: '2026-09-18',
+    startDate: '18 Eylül',
+    endDate: '2 Ekim',
+  },
+  {
+    id: 4,
+    institution: 'Karabük Üniversitesi',
+    summary: 'Öğretim Elemanı Düzeltme İlanı',
+    categoryKey: 'akademik-gorevli',
+    categoryLabel: 'Öğretim Görevlisi',
+    publishedAt: '2026-09-18',
+    startDate: '18 Eylül',
+    endDate: '2 Ekim',
+  },
+  {
+    id: 5,
+    institution: 'İzmir Demokrasi Üniversitesi',
+    summary: '20 Öğretim Üyesi Alacak',
+    categoryKey: 'akademik-uye',
+    categoryLabel: 'Öğretim Üyesi',
+    publishedAt: '2026-09-18',
+    startDate: '18 Eylül',
+    endDate: '2 Ekim',
+  },
+  {
+    id: 6,
+    institution: 'Niğde Ömer Halisdemir Üniversitesi',
+    summary: '120 Öğretim Üyesi Alacak',
+    categoryKey: 'akademik-uye',
+    categoryLabel: 'Öğretim Üyesi',
+    publishedAt: '2026-09-18',
+    startDate: '18 Eylül',
+    endDate: '5 Ekim',
+  },
+  {
+    id: 7,
+    institution: 'Gençlik ve Spor Bakanlığı',
+    summary: '9 Bilişim Personeli Alacak',
+    categoryKey: 'sozlesmeli-4b',
+    categoryLabel: '4/B Sözleşmeli Personel',
+    publishedAt: '2026-09-18',
+    startDate: '21 Eylül',
+    endDate: '25 Eylül',
+  },
+  {
+    id: 8,
+    institution: 'İletişim Başkanlığı',
+    summary: '15 Uzman Yardımcısı Alacak',
+    categoryKey: 'memur-a',
+    categoryLabel: 'A Grubu Memur (Kariyer Meslek)',
+    publishedAt: '2026-09-18',
+    startDate: '5 Ekim',
+    endDate: '20 Ekim',
+  },
+  {
+    id: 9,
+    institution: 'Sivas Bilim ve Teknoloji Üniversitesi',
+    summary: '9 Sözleşmeli Personel Alacak',
+    categoryKey: 'sozlesmeli-kurumsal',
+    categoryLabel: 'Kurumsal Sözleşmeli Personel',
+    publishedAt: '2026-09-18',
+    startDate: '18 Eylül',
+    endDate: '2 Ekim',
+  },
+  {
+    id: 10,
+    institution: 'Tokat Gaziosmanpaşa Üniversitesi',
+    summary: '30 Araştırma Görevlisi Alacak',
+    categoryKey: 'akademik-arastirma',
+    categoryLabel: 'Araştırma Görevlisi',
+    publishedAt: '2026-09-17',
+    startDate: '17 Eylül',
+    endDate: '1 Ekim',
+  },
+  {
+    id: 11,
+    institution: 'Sağlık Bakanlığı',
+    summary: '3.500 Sürekli İşçi Alacak',
+    categoryKey: 'isci-surekli',
+    categoryLabel: 'Sürekli İşçi',
+    publishedAt: '2026-09-17',
+    startDate: '17 Eylül',
+    endDate: '30 Eylül',
+  },
+  {
+    id: 12,
+    institution: 'Adalet Bakanlığı',
+    summary: '250 Zabıt Kâtibi (B Grubu) Alacak',
+    categoryKey: 'memur-b',
+    categoryLabel: 'B Grubu Memur',
+    publishedAt: '2026-09-16',
+    startDate: '16 Eylül',
+    endDate: '29 Eylül',
+  },
+  {
+    id: 13,
+    institution: 'Jandarma Genel Komutanlığı',
+    summary: '1.200 Uzman Erbaş Alacak',
+    categoryKey: 'askeri',
+    categoryLabel: 'Askeri Personel',
+    publishedAt: '2026-09-16',
+    startDate: '16 Eylül',
+    endDate: '10 Ekim',
+  },
+  {
+    id: 14,
+    institution: 'Hâkimler ve Savcılar Kurulu',
+    summary: '150 Adli Yargı Hâkim Adayı Alacak',
+    categoryKey: 'yargi',
+    categoryLabel: 'Yargı Mensubu (Hakim - Savcı)',
+    publishedAt: '2026-09-15',
+    startDate: '15 Eylül',
+    endDate: '3 Ekim',
   },
 ]
 

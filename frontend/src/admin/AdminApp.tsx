@@ -17,9 +17,9 @@ import {
   IconImage,
   IconAd,
   IconClock,
-  IconStar,
   IconChat,
   IconMail,
+  IconBriefcase,
 } from './icons'
 import Dashboard from './sections/Dashboard'
 import Users from './sections/Users'
@@ -74,7 +74,15 @@ const nav: NavNode[] = [
           { key: 'content/taban-yks', label: 'YKS' },
         ],
       },
-      { key: 'content/popular', label: 'Popüler Üniversiteler', icon: <IconStar className="h-4 w-4" /> },
+      {
+        key: 'jobs',
+        label: 'İlanlar',
+        icon: <IconBriefcase className="h-4 w-4" />,
+        children: [
+          { key: 'content/jobs', label: 'İlan Listesi' },
+          { key: 'content/job-categories', label: 'Kategoriler' },
+        ],
+      },
       { key: 'content/comments', label: 'Yorumlar', icon: <IconChat className="h-4 w-4" /> },
       { key: 'content/messages', label: 'İletişim Mesajları', icon: <IconMail className="h-4 w-4" /> },
     ],

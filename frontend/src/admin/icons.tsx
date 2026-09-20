@@ -147,9 +147,10 @@ export const IconClock = (p: IconProps) => (
     <path d="M12 7v5l3 2" />
   </Base>
 )
-export const IconStar = (p: IconProps) => (
+export const IconBriefcase = (p: IconProps) => (
   <Base {...p}>
-    <path d="m12 3 2.6 5.6 6 .7-4.4 4.1 1.2 5.9L12 16.9 6.6 19.3l1.2-5.9L3.4 9.3l6-.7L12 3Z" />
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18" />
   </Base>
 )
 export const IconChat = (p: IconProps) => (
