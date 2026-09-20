@@ -87,8 +87,8 @@ for (const input of document.querySelectorAll('[data-image-input]')) {
     const image = preview.querySelector('img');
     input.addEventListener('input', () => {
         let url;
-        try { url = new URL(input.value.trim()); } catch { /* Incomplete address. */ }
-        const valid = url && ['http:', 'https:'].includes(url.protocol);
+        try { url = new URL(input.value.trim(), window.location.origin); } catch { /* Incomplete address. */ }
+        const valid = input.value.trim() && url && ['http:', 'https:'].includes(url.protocol);
         preview.hidden = !valid;
         if (valid) image.src = url.href;
         else image.removeAttribute('src');

@@ -1,0 +1,58 @@
+@model SliderEditModel
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Yeni Slayt" : "Slaytı Düzenle";
+    var hasImage = !string.IsNullOrWhiteSpace(Model.ImageUrl)
+        && new Baselib.Entities.Validation.WebAddressAttribute().IsValid(Model.ImageUrl);
+}
+<dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
+    <partial name="_DialogHeader" />
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        <input asp-for="Id" type="hidden" />
+        <div class="px-6 py-5">
+            <div asp-validation-summary="All" role="alert"></div>
+            <div data-image-preview hidden="@(!hasImage)" class="mb-4 overflow-hidden rounded-xl border border-navy-100">
+                <img src="@(hasImage ? Model.ImageUrl : null)" alt="Slayt görseli önizlemesi" class="h-40 w-full object-cover" />
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label asp-for="Title" class="field-label">Başlık</label>
+                    <input asp-for="Title" class="input" required maxlength="200" aria-describedby="title-hint title-error" />
+                    <p id="title-hint" class="mt-1 text-xs text-muted-foreground">Ana sayfada görsel üzerinde gösterilir. En fazla 200 karakter.</p>
+                    <span asp-validation-for="Title" id="title-error"></span>
+                </div>
+                <div class="sm:col-span-2">
+                    <label asp-for="Description" class="field-label">Açıklama</label>
+                    <textarea asp-for="Description" rows="4" maxlength="1000" class="input" aria-describedby="description-hint description-error"></textarea>
+                    <p id="description-hint" class="mt-1 text-xs text-muted-foreground">Başlığın altında gösterilir. En fazla 1000 karakter.</p>
+                    <span asp-validation-for="Description" id="description-error"></span>
+                </div>
+                <div class="sm:col-span-2">
+                    <label asp-for="ImageUrl" class="field-label">Görsel URL</label>
+                    <input asp-for="ImageUrl" class="input font-mono text-xs" placeholder="https://..." required maxlength="2048" data-image-input="true" aria-describedby="image-hint image-error" />
+                    <p id="image-hint" class="mt-1 text-xs text-muted-foreground">Bir görsel adresi veya / ile başlayan yerel yol girin. 1200 × 500 piksel önerilir.</p>
+                    <span asp-validation-for="ImageUrl" id="image-error"></span>
+                </div>
+                <div>
+                    <label asp-for="LinkUrl" class="field-label">Bağlantı (URL)</label>
+                    <input asp-for="LinkUrl" class="input" maxlength="2048" placeholder="/taban-puanlari/yks" aria-describedby="link-hint link-error" />
+                    <p id="link-hint" class="mt-1 text-xs text-muted-foreground">İsteğe bağlıdır. Slayt başlığına tıklandığında açılır.</p>
+                    <span asp-validation-for="LinkUrl" id="link-error"></span>
+                </div>
+                <div>
+                    <label asp-for="Order" class="field-label">Sıra</label>
+                    <input asp-for="Order" type="number" min="0" max="10000" step="1" required class="input" aria-describedby="order-hint order-error" />
+                    <p id="order-hint" class="mt-1 text-xs text-muted-foreground">Küçük sayı önce gösterilir.</p>
+                    <span asp-validation-for="Order" id="order-error"></span>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="flex items-center gap-2 text-sm text-navy-700">
+                        <input asp-for="IsActive" class="h-5 w-5 accent-teal-600" aria-describedby="active-hint active-error" />Aktif
+                    </label>
+                    <p id="active-hint" class="mt-1 text-xs text-muted-foreground">Yalnızca aktif slaytlar ana sayfada gösterilir.</p>
+                    <span asp-validation-for="IsActive" id="active-error"></span>
+                </div>
+            </div>
+        </div>
+        <partial name="_DialogFooter" />
+    </form>
+</dialog>

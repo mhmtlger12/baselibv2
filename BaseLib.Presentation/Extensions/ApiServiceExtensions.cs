@@ -6,6 +6,8 @@ public static class ApiServiceExtensions
     public static IServiceCollection AddManagementApi(this IServiceCollection services)
     {
         services.AddScoped<ISystemApiService, SystemApiService>();
+        services.AddScoped<IPublicSliderApiService, PublicSliderApiService>();
+        AddResource<SliderDto, SaveSliderDto, SaveSliderDto>(services, ApiRoutes.Sliders);
         AddResource<UserDto, CreateUserDto, UpdateUserDto>(services, ApiRoutes.Users);
         AddResource<RoleDto, CreateRoleDto, UpdateRoleDto>(services, ApiRoutes.Roles);
         AddResource<PermissionDto, CreatePermissionDto, CreatePermissionDto>(services, ApiRoutes.Permissions);

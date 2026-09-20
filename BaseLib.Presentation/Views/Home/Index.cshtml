@@ -6,7 +6,7 @@
     <div class="grid gap-6 lg:grid-cols-3">
 
         <div class="lg:col-span-2">
-            <partial name="_Slider" model="Model.Slides" />
+            @await Component.InvokeAsync("Slider")
         </div>
         <partial name="_Ad" model='@("h-28 lg:h-72")' />
 

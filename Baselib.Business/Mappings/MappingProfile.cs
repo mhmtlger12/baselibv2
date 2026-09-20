@@ -46,5 +46,6 @@ public class MappingProfile : Profile
 
         // ── AppSetting ────────────────────────────────────────────
         CreateMap<AppSetting, SettingDto>();
+        CreateMap<Slider, SliderDto>();
     }
 }

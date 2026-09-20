@@ -2,7 +2,6 @@ namespace BaseLib.Presentation.Models.Site;
 public sealed class SiteContent
 {
     public List<NavLink> NavLinks { get; init; } = [];
-    public List<Slide> Slides { get; init; } = [];
     public List<Countdown> Countdowns { get; init; } = [];
     public List<ScoreCard> ScoreCards { get; init; } = [];
     public List<NewsItem> RecentItems { get; init; } = [];
@@ -16,7 +15,6 @@ public sealed class SiteContent
     public List<SiteComment> Comments { get; init; } = [];
 }
 public sealed record NavLink(string Key, string Label);
-public sealed record Slide(int Id, string Title, string Description, string Image);
 public sealed record Countdown(string Key, string Label, DateTime Target);
 public sealed record ScoreCard(string Key, string Title, string Category, string Href);
 public sealed record NewsItem(int Id, string Title, string Date);

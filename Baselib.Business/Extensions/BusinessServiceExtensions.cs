@@ -20,6 +20,7 @@ public static class BusinessServiceExtensions
         services.AddScoped<IPermissionCheckService, PermissionCheckService>();
         services.AddScoped<IDepartmentService, DepartmentService>();
         services.AddScoped<IMenuService, MenuService>();
+        services.AddScoped<ISliderService, SliderService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ISettingService, SettingService>();
         services.AddScoped<IAuditLogService, AuditLogService>();

@@ -31,26 +31,6 @@
       "label": "İletişim"
     }
   ],
-  "slides": [
-    {
-      "id": 1,
-      "title": "2024 KPSS Yerleştirme Sonuçları Açıklandı",
-      "description": "Merkezi yerleştirme taban puanları güncellendi. Bölümüne göre en güncel atama puanlarını incele.",
-      "image": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=500&fit=crop&auto=format"
-    },
-    {
-      "id": 2,
-      "title": "YKS Tercih Döneminde Doğru Karar",
-      "description": "Üniversite ve bölüm bazında taban puanları ve başarı sıralamalarını karşılaştırarak tercih yap.",
-      "image": "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1200&h=500&fit=crop&auto=format"
-    },
-    {
-      "id": 3,
-      "title": "DGS ile Lisans Tamamlama Fırsatları",
-      "description": "Önlisans mezunları için geçiş yapılabilecek bölümler ve güncel taban puanları burada.",
-      "image": "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=1200&h=500&fit=crop&auto=format"
-    }
-  ],
   "countdowns": [
     {
       "key": "yks",

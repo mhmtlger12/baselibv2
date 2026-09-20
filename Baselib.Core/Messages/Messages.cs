@@ -57,6 +57,11 @@ public static class Messages
         public const string NotFound = "Menü bulunamadı";
     }
 
+    public static class Slider
+    {
+        public const string NotFound = "Slayt bulunamadı.";
+    }
+
     public static class Auth
     {
         public const string InvalidRefreshToken = "Geçersiz yenileme token'ı";

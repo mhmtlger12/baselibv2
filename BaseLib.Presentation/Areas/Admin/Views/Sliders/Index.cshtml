@@ -1,0 +1,41 @@
+@model IReadOnlyList<SliderDto>
+@{ ViewData["Title"] = "Slider Yönetimi"; }
+<div class="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div>
+        <h2 class="text-xl font-bold text-navy-900">Slider Yönetimi</h2>
+        <p class="mt-1 text-sm text-muted-foreground">Ana sayfa üst alanındaki kayan görselleri (slider) yönetin.</p>
+    </div>
+    <a asp-action="Edit" asp-route-id="0" class="btn"><span aria-hidden="true">＋</span>Yeni Slayt</a>
+</div>
+<div class="panel overflow-hidden" data-filter-table>
+    <partial name="_TableSearch" />
+    <div class="overflow-x-auto">
+        <table class="admin-table">
+            <caption class="sr-only">Slider Yönetimi</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Görsel</th>
+                    <th scope="col">Başlık</th>
+                    <th scope="col">Sıra</th>
+                    <th scope="col">Durum</th>
+                    <th scope="col">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var slider in Model)
+                {
+                    <tr data-row>
+                        <td><img src="@slider.ImageUrl" alt="" loading="lazy" width="64" height="44" class="h-11 w-16 rounded-lg object-cover" /></td>
+                        <td>@slider.Title</td>
+                        <td>@slider.Order</td>
+                        <td><partial name="_Status" model="slider.IsActive" /></td>
+                        <td><partial name="_RowActions" model="slider.Id" /></td>
+                    </tr>
+                }
+                <tr data-empty hidden="@(Model.Count > 0)">
+                    <td colspan="5" class="text-center">Kayıt bulunamadı.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

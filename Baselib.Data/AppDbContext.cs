@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Slider> Sliders => Set<Slider>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -138,6 +139,53 @@ public class AppDbContext : DbContext
 
             modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
         }
+
+        modelBuilder.Entity<Slider>(entity =>
+        {
+            entity.Property(slider => slider.Title).HasMaxLength(200).IsRequired();
+            entity.Property(slider => slider.Description).HasMaxLength(1000).IsRequired();
+            entity.Property(slider => slider.ImageUrl).HasMaxLength(2048).IsRequired();
+            entity.Property(slider => slider.LinkUrl).HasMaxLength(2048);
+            entity.HasIndex(slider => new { slider.IsDeleted, slider.IsActive, slider.Order });
+            entity.HasQueryFilter(slider => !slider.IsDeleted && slider.IsActive);
+
+            entity.HasData(
+                new Slider
+                {
+                    Id = 2,
+                    Title = "YKS Tercih Döneminde Doğru Karar",
+                    Description = "Üniversite ve bölüm bazında taban puanları ve başarı sıralamalarını karşılaştırarak tercih yap.",
+                    ImageUrl = "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1200&h=500&fit=crop&auto=format",
+                    LinkUrl = "/taban-puanlari/yks",
+                    Order = 2,
+                    IsActive = true,
+                    CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Slider
+                {
+                    Id = 3,
+                    Title = "DGS ile Lisans Tamamlama Fırsatları",
+                    Description = "Önlisans mezunları için geçiş yapılabilecek bölümler ve güncel taban puanları burada.",
+                    ImageUrl = "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=1200&h=500&fit=crop&auto=format",
+                    LinkUrl = "/taban-puanlari/dgs",
+                    Order = 3,
+                    IsActive = true,
+                    CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, DateTimeKind.Utc)
+                });
+        });
+
+        modelBuilder.Entity<Permission>().HasData(
+            new Permission { Id = 31, Name = "Slider Listele", ControllerName = "Sliders", ActionName = "List", Code = "Sliders_Read", Description = "Slaytları listeleme ve görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 32, Name = "Slider Oluştur", ControllerName = "Sliders", ActionName = "Add", Code = "Sliders_Create", Description = "Slayt oluşturma", CRUDActionType = CRUDActionType.Add, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 33, Name = "Slider Güncelle", ControllerName = "Sliders", ActionName = "Update", Code = "Sliders_Update", Description = "Slayt güncelleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
+            new Permission { Id = 34, Name = "Slider Sil", ControllerName = "Sliders", ActionName = "Delete", Code = "Sliders_Delete", Description = "Slayt silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
+        );
+        modelBuilder.Entity<RolePermission>().HasData(
+            new RolePermission { RoleId = 1, PermissionId = 31 },
+            new RolePermission { RoleId = 1, PermissionId = 32 },
+            new RolePermission { RoleId = 1, PermissionId = 33 },
+            new RolePermission { RoleId = 1, PermissionId = 34 }
+        );
 
         // Seed Data
         modelBuilder.Entity<Role>().HasData(
