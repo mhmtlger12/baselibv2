@@ -2372,6 +2372,30 @@ namespace Baselib.Data.Migrations
                     b.HasData(
                         new
                         {
+                            Id = 43,
+                            ActionName = "ResetPassword",
+                            CRUDActionType = 3,
+                            Code = "Users_ResetPassword",
+                            ControllerName = "Users",
+                            CreatedDate = new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Kullanıcı parolasını sıfırlama",
+                            IsActive = true,
+                            Name = "Kullanıcı Parolası Sıfırla"
+                        },
+                        new
+                        {
+                            Id = 44,
+                            ActionName = "ResetPrivilegedPassword",
+                            CRUDActionType = 3,
+                            Code = "Users_ResetPrivilegedPassword",
+                            ControllerName = "Users",
+                            CreatedDate = new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Ayrıcalıklı hesap parolasını sıfırlama; kullanıcı parolası sıfırlama izni de gerekir",
+                            IsActive = true,
+                            Name = "Ayrıcalıklı Hesap Parolası Sıfırla"
+                        },
+                        new
+                        {
                             Id = 31,
                             ActionName = "List",
                             CRUDActionType = 1,
@@ -3005,6 +3029,16 @@ namespace Baselib.Data.Migrations
                     b.ToTable("RolePermissions");
 
                     b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 43
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 44
+                        },
                         new
                         {
                             RoleId = 1,

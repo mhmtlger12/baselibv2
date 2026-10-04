@@ -32,7 +32,15 @@ public sealed class JobListingService(
 
     public async Task<IDataResult<JobListingDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        var item = await listings.FirstOrDefaultAsync(job => job.Id == id, includes: [job => job.InstitutionEntity!]);
+        var item = await listings.FirstOrDefaultAsync(job => job.Id == id && !job.IsDeleted,
+            ignoreQueryFilters: true, includes: [job => job.InstitutionEntity!]);
+        return item is null ? DataResult<JobListingDto>.NotFound("İlan bulunamadı.") : DataResult<JobListingDto>.Ok(mapper.Map<JobListingDto>(item));
+    }
+
+    public async Task<IDataResult<JobListingDto>> GetPublishedByIdAsync(int id, CancellationToken ct = default)
+    {
+        var item = await listings.FirstOrDefaultAsync(job => job.Id == id && job.IsActive && !job.IsDeleted,
+            includes: [job => job.InstitutionEntity!]);
         return item is null ? DataResult<JobListingDto>.NotFound("İlan bulunamadı.") : DataResult<JobListingDto>.Ok(mapper.Map<JobListingDto>(item));
     }
 

@@ -21,6 +21,9 @@ public static class Messages
         public const string InvalidCredentials = "Kullanıcı adı veya şifre hatalı";
         public const string NotFound = "Kullanıcı bulunamadı";
         public const string WrongPassword = "Mevcut şifreniz yanlış.";
+        public const string PasswordReset = "Kullanıcının şifresi sıfırlandı.";
+        public const string PasswordResetNotAllowed = "Kullanıcı şifresi sıfırlama yetkiniz yok.";
+        public const string PrivilegedPasswordResetNotAllowed = "Ayrıcalıklı hesapların şifresini sıfırlama yetkiniz yok.";
         public const string PasswordChanged = "Şifreniz başarıyla güncellendi.";
         public const string InvalidRoleSelection = "Geçersiz veya pasif rol seçildi.";
         public const string RoleAssignmentNotAllowed = "Rol atama yetkiniz yok.";

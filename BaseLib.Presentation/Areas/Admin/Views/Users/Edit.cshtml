@@ -49,14 +49,19 @@
                     <option value="@item.Id">@item.Name</option>
                     }</select>
                 </div>
+                @if (Model.Id == 0) {
                 <div class="sm:col-span-2">
-                    <div>
-                        <label asp-for="Password" class="field-label">Şifre</label>
-                        <input asp-for="Password" aria-describedby="Password-hint Password-error" type="password" class="input" autocomplete="new-password" minlength="12" maxlength="128" required="@(Model.Id == 0)" />
-                        <p id="Password-hint" class="mt-1 text-xs text-muted-foreground">@(Model.Id == 0 ? "En az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir." : "Boş bırakırsanız mevcut şifre korunur. Girerseniz en az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir.")</p>
-                        <span asp-validation-for="Password" id="Password-error"></span>
-                    </div>
+                    <label asp-for="Password" class="field-label">Şifre</label>
+                    <input asp-for="Password" aria-describedby="Password-hint Password-error" type="password" class="input" autocomplete="new-password" minlength="12" maxlength="128" required />
+                    <p id="Password-hint" class="mt-1 text-xs text-muted-foreground">En az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir.</p>
+                    <span asp-validation-for="Password" id="Password-error"></span>
                 </div>
+                }
+                else {
+                <div class="sm:col-span-2">
+                    <a asp-action="ResetPassword" asp-route-id="@Model.Id" class="btn-soft">Şifreyi sıfırla</a>
+                </div>
+                }
                 <fieldset class="sm:col-span-2">
                     <legend class="field-label">Roller
                     </legend>

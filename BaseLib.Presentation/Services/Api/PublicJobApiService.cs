@@ -16,7 +16,7 @@ public sealed class PublicJobApiService(ApiTransport transport) : IPublicJobApiS
 
     public async Task<JobListingDto?> GetAsync(int id, CancellationToken ct)
     {
-        try { return await transport.SendAsync<JobListingDto>(HttpMethod.Get, ApiRoutes.Item(ApiRoutes.Jobs, id), cancellationToken: ct); }
+        try { return await transport.SendAsync<JobListingDto>(HttpMethod.Get, ApiRoutes.Item(ApiRoutes.PublishedJobs, id), cancellationToken: ct); }
         catch (ApiException error) when (error.StatusCode == 404) { return null; }
     }
 }

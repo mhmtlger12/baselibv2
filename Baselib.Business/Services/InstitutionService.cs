@@ -22,7 +22,8 @@ public sealed class InstitutionService(
 
     public async Task<IDataResult<InstitutionDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        var item = await institutions.FirstOrDefaultAsync(x => x.Id == id, includes: []);
+        var item = await institutions.FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted,
+            ignoreQueryFilters: true, includes: []);
         return item is null ? DataResult<InstitutionDto>.NotFound("Kurum bulunamadı.") : DataResult<InstitutionDto>.Ok(mapper.Map<InstitutionDto>(item));
     }
 

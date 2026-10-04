@@ -206,6 +206,8 @@ public class AppDbContext : DbContext
         });
 
         modelBuilder.Entity<Permission>().HasData(
+            new Permission { Id = 43, Name = "Kullanıcı Parolası Sıfırla", ControllerName = "Users", ActionName = "ResetPassword", Code = "Users_ResetPassword", Description = "Kullanıcı parolasını sıfırlama", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 27) },
+            new Permission { Id = 44, Name = "Ayrıcalıklı Hesap Parolası Sıfırla", ControllerName = "Users", ActionName = "ResetPrivilegedPassword", Code = "Users_ResetPrivilegedPassword", Description = "Ayrıcalıklı hesap parolasını sıfırlama; kullanıcı parolası sıfırlama izni de gerekir", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 27) },
             new Permission { Id = 31, Name = "Slider Listele", ControllerName = "Sliders", ActionName = "List", Code = "Sliders_Read", Description = "Slaytları listeleme ve görüntüleme", CRUDActionType = CRUDActionType.View, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
             new Permission { Id = 32, Name = "Slider Oluştur", ControllerName = "Sliders", ActionName = "Add", Code = "Sliders_Create", Description = "Slayt oluşturma", CRUDActionType = CRUDActionType.Add, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
             new Permission { Id = 33, Name = "Slider Güncelle", ControllerName = "Sliders", ActionName = "Update", Code = "Sliders_Update", Description = "Slayt güncelleme", CRUDActionType = CRUDActionType.Update, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) },
@@ -220,6 +222,8 @@ public class AppDbContext : DbContext
             , new Permission { Id = 42, Name = "Kurum Sil", ControllerName = "Institutions", ActionName = "Delete", Code = "Institutions_Delete", Description = "Kurum silme", CRUDActionType = CRUDActionType.Delete, IsActive = true, CreatedDate = new DateTime(2026, 9, 21) }
         );
         modelBuilder.Entity<RolePermission>().HasData(
+            new RolePermission { RoleId = 1, PermissionId = 43 },
+            new RolePermission { RoleId = 1, PermissionId = 44 },
             new RolePermission { RoleId = 1, PermissionId = 31 },
             new RolePermission { RoleId = 1, PermissionId = 32 },
             new RolePermission { RoleId = 1, PermissionId = 33 },

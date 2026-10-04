@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
-using Baselib.Core.Constants;
+using System.Text.Json.Serialization;
 
 namespace Baselib.Business.DTOs;
 
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public class UpdateUserDto
 {
     [Required, StringLength(100, MinimumLength = 3)]
@@ -10,9 +11,6 @@ public class UpdateUserDto
 
     [Required, EmailAddress, StringLength(254)]
     public string Email { get; set; } = string.Empty;
-
-    [StringLength(PasswordPolicyConstants.MaximumLength)]
-    public string? Password { get; set; }
 
     [StringLength(100)]
     public string? FirstName { get; set; }

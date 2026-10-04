@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Baselib.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260920213044_AddJobListings")]
-    partial class AddJobListings
+    [Migration("20260927202130_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -184,6 +184,607 @@ namespace Baselib.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Baselib.Entities.Institution", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Institutions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kamu Denetçiliği Kurumu"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Rekabet Kurumu"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Gelir İdaresi Başkanlığı"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ticaret Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Devlet Arşivleri Başkanlığı"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Adalet Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Aile ve Sosyal Hizmetler Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Karayolları Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tapu ve Kadastro Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Sermaye Piyasası Kurulu"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bankacılık Düzenleme ve Denetleme Kurumu"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye İstatistik Kurumu"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kamu İhale Kurumu"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Enerji Piyasaları Düzenleme Kurumu"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Gençlik ve Spor Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Sağlık Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tarım ve Orman Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ulaştırma ve Altyapı Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Elektrik İletim A.Ş."
+                        },
+                        new
+                        {
+                            Id = 22,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Eti Maden İşletmeleri"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Petrolleri A.O."
+                        },
+                        new
+                        {
+                            Id = 24,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Devlet Demiryolları Taşımacılık A.Ş."
+                        },
+                        new
+                        {
+                            Id = 25,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Boru Hatları ile Petrol Taşıma A.Ş."
+                        },
+                        new
+                        {
+                            Id = 26,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Sivas Bilim ve Teknoloji Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Devlet Su İşleri Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "TÜBİTAK"
+                        },
+                        new
+                        {
+                            Id = 29,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Karadeniz Teknik Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 30,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kültür ve Turizm Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 31,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ankara Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 32,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ege Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 33,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Marmara Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 34,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Selçuk Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 35,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bursa Uludağ Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 36,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Karabük Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 37,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hacettepe Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 38,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Ondokuz Mayıs Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 39,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Çukurova Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 40,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Erciyes Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 41,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tokat Gaziosmanpaşa Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 42,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Boğaziçi Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 43,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "İstanbul Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 44,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Akdeniz Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 45,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kocaeli Üniversitesi"
+                        },
+                        new
+                        {
+                            Id = 46,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Taşkömürü Kurumu"
+                        },
+                        new
+                        {
+                            Id = 47,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Kömür İşletmeleri"
+                        },
+                        new
+                        {
+                            Id = 48,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Orman Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 49,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Devlet Malzeme Ofisi"
+                        },
+                        new
+                        {
+                            Id = 50,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Makina ve Kimya Endüstrisi"
+                        },
+                        new
+                        {
+                            Id = 53,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Şeker Fabrikaları"
+                        },
+                        new
+                        {
+                            Id = 54,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Toprak Mahsulleri Ofisi"
+                        },
+                        new
+                        {
+                            Id = 55,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Belediye İştirakleri Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 56,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tarım İşletmeleri Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 59,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Devlet Demiryolları"
+                        },
+                        new
+                        {
+                            Id = 60,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kıyı Emniyeti Genel Müdürlüğü"
+                        },
+                        new
+                        {
+                            Id = 62,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Posta ve Telgraf Teşkilatı"
+                        },
+                        new
+                        {
+                            Id = 63,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Devlet Hava Meydanları İşletmesi"
+                        },
+                        new
+                        {
+                            Id = 64,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Cumhuriyeti Devlet Demiryolları"
+                        },
+                        new
+                        {
+                            Id = 65,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "İller Bankası"
+                        },
+                        new
+                        {
+                            Id = 68,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Belediye Başkanlığı"
+                        },
+                        new
+                        {
+                            Id = 71,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Jandarma Genel Komutanlığı"
+                        },
+                        new
+                        {
+                            Id = 72,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Milli Savunma Bakanlığı"
+                        },
+                        new
+                        {
+                            Id = 73,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Kara Kuvvetleri Komutanlığı"
+                        },
+                        new
+                        {
+                            Id = 74,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Deniz Kuvvetleri Komutanlığı"
+                        },
+                        new
+                        {
+                            Id = 75,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hava Kuvvetleri Komutanlığı"
+                        },
+                        new
+                        {
+                            Id = 77,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hâkimler ve Savcılar Kurulu"
+                        },
+                        new
+                        {
+                            Id = 78,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Yargıtay Başkanlığı"
+                        },
+                        new
+                        {
+                            Id = 79,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Danıştay Başkanlığı"
+                        },
+                        new
+                        {
+                            Id = 80,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Türkiye Adalet Akademisi"
+                        });
+                });
+
             modelBuilder.Entity("Baselib.Entities.JobListing", b =>
                 {
                     b.Property<int>("Id")
@@ -217,6 +818,9 @@ namespace Baselib.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("InstitutionId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
@@ -252,6 +856,8 @@ namespace Baselib.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InstitutionId");
 
                     b.HasIndex("CategoryKey", "IsActive", "IsDeleted");
 
@@ -1700,6 +2306,17 @@ namespace Baselib.Data.Migrations
                             Order = 10,
                             PermissionId = 35,
                             Url = "/Admin/Jobs"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Icon = "bi-building",
+                            IsActive = true,
+                            Name = "Kurumlar",
+                            Order = 11,
+                            PermissionId = 39,
+                            Url = "/Admin/Institutions"
                         });
                 });
 
@@ -1756,6 +2373,30 @@ namespace Baselib.Data.Migrations
                     b.ToTable("Permissions");
 
                     b.HasData(
+                        new
+                        {
+                            Id = 43,
+                            ActionName = "ResetPassword",
+                            CRUDActionType = 3,
+                            Code = "Users_ResetPassword",
+                            ControllerName = "Users",
+                            CreatedDate = new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Kullanıcı parolasını sıfırlama",
+                            IsActive = true,
+                            Name = "Kullanıcı Parolası Sıfırla"
+                        },
+                        new
+                        {
+                            Id = 44,
+                            ActionName = "ResetPrivilegedPassword",
+                            CRUDActionType = 3,
+                            Code = "Users_ResetPrivilegedPassword",
+                            ControllerName = "Users",
+                            CreatedDate = new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Ayrıcalıklı hesap parolasını sıfırlama; kullanıcı parolası sıfırlama izni de gerekir",
+                            IsActive = true,
+                            Name = "Ayrıcalıklı Hesap Parolası Sıfırla"
+                        },
                         new
                         {
                             Id = 31,
@@ -1851,6 +2492,54 @@ namespace Baselib.Data.Migrations
                             Description = "İlan silme",
                             IsActive = true,
                             Name = "İlan Sil"
+                        },
+                        new
+                        {
+                            Id = 39,
+                            ActionName = "List",
+                            CRUDActionType = 1,
+                            Code = "Institutions_Read",
+                            ControllerName = "Institutions",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Kurumları listeleme",
+                            IsActive = true,
+                            Name = "Kurum Listele"
+                        },
+                        new
+                        {
+                            Id = 40,
+                            ActionName = "Add",
+                            CRUDActionType = 2,
+                            Code = "Institutions_Create",
+                            ControllerName = "Institutions",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Kurum oluşturma",
+                            IsActive = true,
+                            Name = "Kurum Oluştur"
+                        },
+                        new
+                        {
+                            Id = 41,
+                            ActionName = "Update",
+                            CRUDActionType = 3,
+                            Code = "Institutions_Update",
+                            ControllerName = "Institutions",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Kurum güncelleme",
+                            IsActive = true,
+                            Name = "Kurum Güncelle"
+                        },
+                        new
+                        {
+                            Id = 42,
+                            ActionName = "Delete",
+                            CRUDActionType = 6,
+                            Code = "Institutions_Delete",
+                            ControllerName = "Institutions",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Kurum silme",
+                            IsActive = true,
+                            Name = "Kurum Sil"
                         },
                         new
                         {
@@ -2346,6 +3035,16 @@ namespace Baselib.Data.Migrations
                         new
                         {
                             RoleId = 1,
+                            PermissionId = 43
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 44
+                        },
+                        new
+                        {
+                            RoleId = 1,
                             PermissionId = 31
                         },
                         new
@@ -2382,6 +3081,26 @@ namespace Baselib.Data.Migrations
                         {
                             RoleId = 1,
                             PermissionId = 38
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 39
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 40
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 41
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 42
                         },
                         new
                         {
@@ -2756,6 +3475,16 @@ namespace Baselib.Data.Migrations
                     b.Navigation("ParentDepartment");
                 });
 
+            modelBuilder.Entity("Baselib.Entities.JobListing", b =>
+                {
+                    b.HasOne("Baselib.Entities.Institution", "InstitutionEntity")
+                        .WithMany("JobListings")
+                        .HasForeignKey("InstitutionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("InstitutionEntity");
+                });
+
             modelBuilder.Entity("Baselib.Entities.Menu", b =>
                 {
                     b.HasOne("Baselib.Entities.Menu", "Parent")
@@ -2837,6 +3566,11 @@ namespace Baselib.Data.Migrations
                     b.Navigation("SubDepartments");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Baselib.Entities.Institution", b =>
+                {
+                    b.Navigation("JobListings");
                 });
 
             modelBuilder.Entity("Baselib.Entities.Menu", b =>

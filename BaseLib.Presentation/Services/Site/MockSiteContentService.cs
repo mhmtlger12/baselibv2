@@ -29,15 +29,21 @@ public sealed class MockSiteContentService : ISiteContentService
         return new(card, department, period!, institution ?? "", city ?? "", page, pages, rows.Count,
             rows.Sum(x => x.Quota), rows.Count == 0 ? null : rows.Min(x => x.MinScore), rows.Count == 0 ? null : rows.Max(x => x.MaxScore), rows.Skip((page - 1) * 5).Take(5).ToList());
     }
-    public JobsPage Jobs(string? category, string? query)
+    public JobsPage Jobs(string? category, string? query, IReadOnlyList<JobListing> listings)
     {
-        var node = Content.JobCategories.SelectMany(x => new[] { x }.Concat(x.Children ?? [])).FirstOrDefault(x => x.Key == category);
-        var keys = node?.Children?.Select(x => x.Key).ToHashSet() ?? [category ?? "all"];
-        var jobs = Content.JobListings.Where(x => (node is null || node.Key == "all" || keys.Contains(x.CategoryKey)) && Contains(x.Institution + " " + x.Summary, query)).OrderByDescending(x => x.PublishedAt).ToList();
-        return new(node?.Key ?? "all", query ?? "", node?.Label ?? "Tüm İlanlar", jobs);
+        var categories = Content.JobCategories.SelectMany(x => new[] { x }.Concat(x.Children ?? [])).ToArray();
+        var node = categories.FirstOrDefault(x => x.Key == category);
+        var counts = categories.ToDictionary(x => x.Key, x => listings.Count(job => MatchesCategory(x, job)));
+        var jobs = listings.Where(x => MatchesCategory(node, x) && Contains(x.Institution + " " + x.Summary, query))
+            .OrderByDescending(x => x.PublishedAt).ThenBy(x => x.Id).ToArray();
+        return new(node?.Key ?? "all", query ?? "", node?.Label ?? "Tüm İlanlar", jobs, Content.JobCategories, counts);
     }
-    public SearchPage Search(string? query) => new(query ?? "", Content.ScoreCards.Where(x => Contains(x.Title, query)).ToList(),
-        Content.Departments.Where(x => Contains(x.Name, query)).ToList(), Content.JobListings.Where(x => Contains(x.Institution + " " + x.Summary, query)).ToList());
+    public SearchPage Search(string? query, IReadOnlyList<JobListing> listings) => new(query ?? "", Content.ScoreCards.Where(x => Contains(x.Title, query)).ToList(),
+        Content.Departments.Where(x => Contains(x.Name, query)).ToList(), listings.Where(x => Contains(x.Institution + " " + x.Summary, query)).ToArray());
+
+    private static bool MatchesCategory(JobCategory? category, JobListing job) =>
+        category is null || category.Key == "all" || category.Key == job.CategoryKey ||
+        category.Children?.Any(child => MatchesCategory(child, job)) == true;
 
     private static bool Contains(string value, string? query) => string.IsNullOrWhiteSpace(query) || Turkish.IndexOf(value, query.Trim(), CompareOptions.IgnoreCase) >= 0;
 }

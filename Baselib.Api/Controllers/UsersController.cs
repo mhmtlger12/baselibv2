@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Baselib.Business.DTOs;
 using Baselib.Business.Interfaces;
 using Baselib.Api.Attributes;
+using Baselib.Core.Constants;
 
 namespace Baselib.Api.Controllers;
 
@@ -50,6 +51,14 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
         var result = await _userService.UpdateAsync(id, dto);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [HttpPut("{id:int}/password")]
+    [RequirePermission(Constants.Permissions.UsersResetPassword)]
+    public async Task<IActionResult> ResetPassword(int id, [FromBody] ResetUserPasswordDto dto)
+    {
+        var result = await _userService.ResetPasswordAsync(User, id, dto);
         return StatusCode(result.StatusCode, result);
     }
 

@@ -10,6 +10,7 @@ public interface ISystemApiService
     Task UpdateSettingAsync(int id, UpdateSettingDto input, CancellationToken ct);
     Task<UserDto> ProfileAsync(CancellationToken ct);
     Task ChangePasswordAsync(ChangePasswordDto input, CancellationToken ct);
+    Task ResetUserPasswordAsync(int id, ResetUserPasswordDto input, CancellationToken ct);
     Task AssignRolesAsync(int id, List<int> roleIds, CancellationToken ct);
     Task<List<MenuDto>> MyMenusAsync(CancellationToken ct);
 }
@@ -23,6 +24,8 @@ public sealed class SystemApiService(IApiClient api) : ISystemApiService
     public Task UpdateSettingAsync(int id, UpdateSettingDto input, CancellationToken ct) => api.SendAsync(HttpMethod.Put, ApiRoutes.Item(ApiRoutes.Settings, id), new UpdateSettingDto { Value = input.Value }, ct);
     public Task<UserDto> ProfileAsync(CancellationToken ct) => api.GetAsync<UserDto>(ApiRoutes.Profile, ct);
     public Task ChangePasswordAsync(ChangePasswordDto input, CancellationToken ct) => api.SendAsync(HttpMethod.Put, ApiRoutes.Password, new ChangePasswordDto { CurrentPassword = input.CurrentPassword, NewPassword = input.NewPassword }, ct);
+    public Task ResetUserPasswordAsync(int id, ResetUserPasswordDto input, CancellationToken ct) =>
+        api.SendAsync(HttpMethod.Put, ApiRoutes.UserPassword(id), new ResetUserPasswordDto { NewPassword = input.NewPassword }, ct);
     public Task AssignRolesAsync(int id, List<int> roleIds, CancellationToken ct) => api.SendAsync(HttpMethod.Put, ApiRoutes.UserRoles(id), roleIds, ct);
     public Task<List<MenuDto>> MyMenusAsync(CancellationToken ct) => api.GetAsync<List<MenuDto>>(ApiRoutes.MyMenus, ct);
 }

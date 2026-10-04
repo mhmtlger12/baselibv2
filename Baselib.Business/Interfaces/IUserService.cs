@@ -11,6 +11,7 @@ public interface IUserService
     Task<IDataResult<UserDto>> RegisterAsync(RegisterUserDto dto);
     Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto, ClaimsPrincipal? principal = null);
     Task<IResult> UpdateAsync(int id, UpdateUserDto dto);
+    Task<IResult> ResetPasswordAsync(ClaimsPrincipal principal, int id, ResetUserPasswordDto dto);
     Task<IResult> DeleteAsync(int id);
     Task<IResult> AssignRolesAsync(ClaimsPrincipal principal, int userId, List<int> roleIds);
     Task<IResult> ChangePasswordAsync(int userId, string currentPassword, string newPassword);

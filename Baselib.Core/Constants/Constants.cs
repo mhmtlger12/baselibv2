@@ -19,6 +19,8 @@ public static class Constants
 
     public static class Permissions
     {
+        public const string UsersResetPassword = "Users_ResetPassword";
+        public const string UsersResetPrivilegedPassword = "Users_ResetPrivilegedPassword";
         public const string UsersAssignRoles = "Users_AssignRoles";
         public const string UsersAssignPrivilegedRoles = "Users_AssignPrivilegedRoles";
     }

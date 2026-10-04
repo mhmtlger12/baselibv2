@@ -1,9 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 namespace BaseLib.Presentation.Models.Site;
+public sealed record HomePage(IReadOnlyList<Countdown> Countdowns, IReadOnlyList<ScoreCard> ScoreCards,
+    IReadOnlyList<JobListing> JobListings);
 public sealed record DepartmentPage(ScoreCard Card, string Level, string Query, IReadOnlyList<StudyDepartment> Departments);
 public sealed record ScoreDetailPage(ScoreCard Card, StudyDepartment Department, string Period, string Institution,
     string City, int Page, int PageCount, int TotalCount, int TotalQuota, decimal? MinScore, decimal? MaxScore, IReadOnlyList<ScoreRow> Rows);
-public sealed record JobsPage(string Category, string Query, string Title, IReadOnlyList<JobListing> Jobs);
+public sealed record JobsPage(string Category, string Query, string Title, IReadOnlyList<JobListing> Jobs,
+    IReadOnlyList<JobCategory> Categories, IReadOnlyDictionary<string, int> CategoryCounts);
 public sealed record SearchPage(string Query, IReadOnlyList<ScoreCard> Cards, IReadOnlyList<StudyDepartment> Departments, IReadOnlyList<JobListing> Jobs);
 public sealed class ContactInput
 {

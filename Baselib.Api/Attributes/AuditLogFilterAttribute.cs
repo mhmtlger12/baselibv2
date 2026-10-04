@@ -1,5 +1,7 @@
 using Baselib.Business.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -18,8 +20,20 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
         if (method != "POST" && method != "PUT" && method != "DELETE")
             return;
 
-        if (resultContext.Exception != null || context.HttpContext.Response.StatusCode >= 400)
-            return; // Hata alan işlemleri loglama (isteğe bağlı)
+        if (resultContext.Exception != null || resultContext.Canceled)
+            return;
+
+        // Action sonucu henüz HTTP yanıtına uygulanmadığı için durum kodunu sonuçtan oku.
+        var statusCode = resultContext.Result switch
+        {
+            ObjectResult { Value: ProblemDetails problem } objectResult =>
+                objectResult.StatusCode ?? problem.Status ?? context.HttpContext.Response.StatusCode,
+            IStatusCodeActionResult statusResult =>
+                statusResult.StatusCode ?? context.HttpContext.Response.StatusCode,
+            _ => (int?)null
+        };
+        if (statusCode is not (>= 200 and < 300))
+            return;
 
         var userIdClaim = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         int? userId = null;
@@ -46,11 +60,9 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
             details = "Argümanlar serileştirilemedi.";
         }
 
-        // Service Locator pattern ile servisi çekiyoruz (Filter içinde DI için)
-        var auditService = context.HttpContext.RequestServices.GetService<IAuditLogService>();
-        if (auditService != null)
-        {
-            await auditService.LogAsync(userId, method, controller, route, details);
-        }
+        // Ayrı scope, audit kaydının istekteki bekleyen entity değişikliklerini kaydetmesini önler.
+        await using var auditScope = context.HttpContext.RequestServices.CreateAsyncScope();
+        var auditService = auditScope.ServiceProvider.GetRequiredService<IAuditLogService>();
+        await auditService.LogAsync(userId, method, controller, route, details);
     }
 }

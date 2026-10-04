@@ -25,7 +25,14 @@ public sealed class JobsController(IJobListingService jobs) : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpGet("{id:int}"), AllowAnonymous]
+    [HttpGet("published/{id:int}"), AllowAnonymous]
+    public async Task<IActionResult> PublishedDetail(int id, CancellationToken ct)
+    {
+        var result = await jobs.GetPublishedByIdAsync(id, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [HttpGet("{id:int}"), RequirePermission("Jobs_Read")]
     public async Task<IActionResult> Get(int id, CancellationToken ct)
     {
         var result = await jobs.GetByIdAsync(id, ct);

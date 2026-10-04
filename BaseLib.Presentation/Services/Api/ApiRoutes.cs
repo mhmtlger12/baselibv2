@@ -22,6 +22,7 @@ public static class ApiRoutes
     public const string AuditLogs = "api/auditlogs";
     public const string RecycleBin = "api/recyclebin";
     public static string Item(string resource, int id) => $"{resource}/{id}";
+    public static string UserPassword(int id) => $"{Users}/{id}/password";
     public static string UserRoles(int id) => $"{Users}/{id}/roles";
     public static string SwitchRole(int id) => $"api/auth/switch-role/{id}";
     public static string Restore(string type, int id) => $"{RecycleBin}/{Uri.EscapeDataString(type)}/{id}/restore";

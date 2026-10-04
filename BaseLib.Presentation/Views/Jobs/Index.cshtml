@@ -1,5 +1,4 @@
 @model JobsPage
-@inject ISiteContentService Site
 @{ ViewData["Title"] = Model.Title + " – Kamu Personel Alımı"; }
 <div class="job-page mx-auto max-w-6xl px-4 py-6 sm:px-6">
 
@@ -25,7 +24,7 @@
 
                 <nav aria-label="İlan kategorileri" class="p-2">
                     <ul class="space-y-0.5">
-                        @foreach(var category in Site.Content.JobCategories) {
+                        @foreach(var category in Model.Categories) {
                         <li>
                         @if(category.Children?.Count > 0) {
                             <div class="job-category-link flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-semibold uppercase tracking-wide">
@@ -35,7 +34,7 @@
                                 </span>
                                 @category.Label
                             </span>
-                            <span class="text-[10px]">@Site.Jobs(category.Key, null).Jobs.Count</span>
+                            <span class="text-[10px]">@Model.CategoryCounts[category.Key]</span>
                             </div>
                         }
                         else {
@@ -46,14 +45,14 @@
                                 </span>
                                 @category.Label
                             </span>
-                            <span class="text-[10px]">@Site.Jobs(category.Key, null).Jobs.Count</span>
+                            <span class="text-[10px]">@Model.CategoryCounts[category.Key]</span>
                             </a>
                         }
                             @if(category.Children?.Count > 0) {
                             <ul class="ml-3 space-y-0.5 border-l border-navy-100 pl-2">
                                     @foreach(var child in category.Children) {
                                     <li>
-                                        <a asp-route-category="@child.Key" asp-route-q="@Model.Query" class="job-child-link flex items-center justify-between rounded-lg px-3 py-1.5 text-[13px] @(Model.Category == child.Key ? "is-active" : "")" aria-current="@(Model.Category == child.Key ? "page" : null)">@child.Label<span class="text-[10px] text-navy-400">@Site.Jobs(child.Key, null).Jobs.Count</span>
+                                        <a asp-route-category="@child.Key" asp-route-q="@Model.Query" class="job-child-link flex items-center justify-between rounded-lg px-3 py-1.5 text-[13px] @(Model.Category == child.Key ? "is-active" : "")" aria-current="@(Model.Category == child.Key ? "page" : null)">@child.Label<span class="text-[10px] text-navy-400">@Model.CategoryCounts[child.Key]</span>
                                         </a>
                                     </li>
                                     }

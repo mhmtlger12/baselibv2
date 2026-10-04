@@ -35,7 +35,7 @@ public sealed class UsersController(
             {
                 await users.UpdateAsync(model.Id, new UpdateUserDto
                 {
-                    Username = model.Username, Email = model.Email, Password = model.Password,
+                    Username = model.Username, Email = model.Email,
                     FirstName = model.FirstName, LastName = model.LastName, Phone = model.Phone,
                     DepartmentId = model.DepartmentId, IsActive = model.IsActive
                 }, ct);
@@ -47,6 +47,21 @@ public sealed class UsersController(
         await LoadOptionsAsync(model, ct);
         return View(model);
     }
+    [HttpGet]
+    public async Task<IActionResult> ResetPassword(int id, CancellationToken ct)
+    {
+        var user = await users.GetAsync(id, ct);
+        return View(new UserPasswordResetModel { Id = id, Username = user.Username });
+    }
+    [HttpPost]
+    public async Task<IActionResult> ResetPassword(int id, UserPasswordResetModel model, CancellationToken ct)
+    {
+        model.Id = id;
+        if (ModelState.IsValid && await ExecuteAsync(() => system.ResetUserPasswordAsync(id, model, ct)))
+            return Saved("Kullanıcının şifresi sıfırlandı.");
+        model.Username = (await users.GetAsync(id, ct)).Username;
+        return View(model);
+    }
     [HttpGet] public async Task<IActionResult> Delete(int id, CancellationToken ct) => View("Delete", new DeleteModel(id, (await users.GetAsync(id, ct)).Username));
     [HttpPost, ActionName("Delete")]
     public async Task<IActionResult> ConfirmDelete(int id, CancellationToken ct)
@@ -56,7 +71,7 @@ public sealed class UsersController(
     }
     private async Task LoadOptionsAsync(UserEditModel model, CancellationToken ct)
     {
-        model.AvailableRoles = await roles.ListAsync(ct);
-        model.Departments = await departments.ListAsync(ct);
+        model.AvailableRoles = await roles.ListSelectOptionsAsync(ct);
+        model.Departments = await departments.ListSelectOptionsAsync(ct);
     }
 }

@@ -159,6 +159,7 @@ public class UserService : IUserService
         if (!dto.IsActive && await WouldRemoveLastPrivilegedAdminAsync(id, null, userWillRemainActive: false))
             return Result.BadRequest(Messages.User.LastPrivilegedAdminMustRemain);
 
+        // Complete validation before changing the tracked user.
         user.Username = username;
         user.NormalizedUsername = normalizedUsername;
         user.Email = email;
@@ -170,19 +171,45 @@ public class UserService : IUserService
         user.IsActive = dto.IsActive;
         user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
-        if (!string.IsNullOrWhiteSpace(dto.Password))
-        {
-            if (!PasswordHelper.MeetsPolicy(dto.Password))
-                return Result.BadRequest(Messages.User.PasswordPolicyNotMet);
-
-            user.PasswordHash = PasswordHelper.Hash(dto.Password);
-            await RevokeUserSessionsAsync(user.Id, "PasswordResetByAdministrator");
-        }
-
         _users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
         return Result.Ok(Messages.General.Updated);
+    }
+
+    public async Task<IResult> ResetPasswordAsync(
+        System.Security.Claims.ClaimsPrincipal principal, int id, ResetUserPasswordDto dto)
+    {
+        if (principal.Identity?.IsAuthenticated != true)
+            return Result.Unauthorized("Oturum bulunamadı.");
+
+        var callerUserId = ClaimsPrincipalHelper.GetUserId(principal);
+        var activeRoleId = ClaimsPrincipalHelper.GetActiveRoleId(principal);
+        if (!await _permissionCheckService.HasAccessAsync(
+                callerUserId, activeRoleId, Constants.Permissions.UsersResetPassword))
+            return Result.Forbidden(Messages.User.PasswordResetNotAllowed);
+
+        var user = await _users.GetByIdAsync(id);
+        if (user == null)
+            return Result.NotFound(Messages.User.NotFound);
+
+        // Inactive accounts/roles must not bypass protection of a privileged account.
+        var isPrivileged = await _userRoles.AnyAsync(
+            userRole => userRole.UserId == id && userRole.Role.IsPrivileged, ignoreQueryFilters: true);
+        if (isPrivileged && !await _permissionCheckService.HasAccessAsync(
+                callerUserId, activeRoleId, Constants.Permissions.UsersResetPrivilegedPassword))
+            return Result.Forbidden(Messages.User.PrivilegedPasswordResetNotAllowed);
+
+        if (!PasswordHelper.MeetsPolicy(dto.NewPassword))
+            return Result.BadRequest(Messages.User.PasswordPolicyNotMet);
+
+        var passwordHash = PasswordHelper.Hash(dto.NewPassword);
+        user.PasswordHash = passwordHash;
+        user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
+        await RevokeUserSessionsAsync(user.Id, "PasswordResetByAdministrator");
+        _users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+        return Result.Ok(Messages.User.PasswordReset);
     }
 
     public async Task<IResult> DeleteAsync(int id)
@@ -248,7 +275,7 @@ public class UserService : IUserService
     public async Task RevokeUserSessionsAsync(int userId, string reason)
     {
         var activeTokens = await _refreshTokens.GetAllAsync(
-            token => token.UserId == userId && !token.RevokedDate.HasValue);
+            token => token.UserId == userId && !token.RevokedDate.HasValue, ignoreQueryFilters: true);
 
         var revokedAt = _timeProvider.GetUtcNow().UtcDateTime;
         foreach (var token in activeTokens)
