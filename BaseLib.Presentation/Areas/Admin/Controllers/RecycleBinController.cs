@@ -7,7 +7,7 @@ public sealed class RecycleBinController(ISystemApiService system) : AdminContro
     [HttpPost]
     public async Task<IActionResult> Restore(string type, int id, CancellationToken ct)
     {
-        if (await ExecuteAsync(() => system.RestoreAsync(type, id, ct))) return Saved("Kayıt geri yüklendi.");
+        if (await ExecuteAsync(() => system.RestoreAsync(type, id, ct))) return Saved("Kayıt pasif olarak geri yüklendi. İlgili yönetim ekranından etkinleştirebilirsiniz.");
         return View("Index", await system.RecycleBinAsync(ct));
     }
 }

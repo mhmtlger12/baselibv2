@@ -18,6 +18,10 @@ public class ExceptionHandlingMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // The client has disconnected; do not turn cancellation into a JSON 500 response.
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(context, ex);

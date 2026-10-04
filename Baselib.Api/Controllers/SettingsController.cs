@@ -20,17 +20,25 @@ public class SettingsController : ControllerBase
 
     [HttpGet]
     [RequirePermission("Settings_Read")]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List(CancellationToken cancellationToken = default)
     {
-        var result = await _settingService.GetAllAsync();
+        var result = await _settingService.GetAllAsync(cancellationToken: cancellationToken);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [HttpGet("public")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Public(CancellationToken cancellationToken)
+    {
+        var result = await _settingService.GetPublicAsync(cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}")]
     [RequirePermission("Settings_Update")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateSettingDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateSettingDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _settingService.UpdateAsync(id, dto);
+        var result = await _settingService.UpdateAsync(id, dto, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 }

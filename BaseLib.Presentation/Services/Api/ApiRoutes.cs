@@ -19,6 +19,7 @@ public static class ApiRoutes
     public const string PublishedJobs = Jobs + "/published";
     public const string MyMenus = "api/menus/me";
     public const string Settings = "api/settings";
+    public const string PublicSiteSettings = Settings + "/public";
     public const string AuditLogs = "api/auditlogs";
     public const string RecycleBin = "api/recyclebin";
     public static string Item(string resource, int id) => $"{resource}/{id}";

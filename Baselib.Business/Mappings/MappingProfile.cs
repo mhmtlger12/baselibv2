@@ -14,16 +14,16 @@ public class MappingProfile : Profile
         // ── Role ──────────────────────────────────────────────────
         CreateMap<Role, RoleDto>()
             .ForMember(dest => dest.Permissions,
-                opt => opt.MapFrom(src => src.RolePermissions.Select(rp => rp.Permission)));
+                opt => opt.MapFrom(src => src.RolePermissions.Where(rp => !rp.Permission.IsDeleted && rp.Permission.IsActive).Select(rp => rp.Permission)));
 
         // ── User ──────────────────────────────────────────────────
         CreateMap<User, UserDto>()
             .ForMember(dest => dest.DepartmentName,
                 opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : null))
             .ForMember(dest => dest.Roles,
-                opt => opt.MapFrom(src => src.UserRoles.Select(ur => ur.Role.Name).ToList()))
+                opt => opt.MapFrom(src => src.UserRoles.Where(ur => !ur.Role.IsDeleted && ur.Role.IsActive).Select(ur => ur.Role.Name).ToList()))
             .ForMember(dest => dest.RoleIds,
-                opt => opt.MapFrom(src => src.UserRoles.Select(ur => ur.RoleId).ToList()))
+                opt => opt.MapFrom(src => src.UserRoles.Where(ur => !ur.Role.IsDeleted && ur.Role.IsActive).Select(ur => ur.RoleId).ToList()))
             .ForMember(dest => dest.ActiveRoleId, opt => opt.Ignore())
             .ForMember(dest => dest.ActiveRoleName, opt => opt.Ignore());
 

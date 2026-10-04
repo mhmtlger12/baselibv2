@@ -15,7 +15,6 @@ public sealed class PermissionsController(ICrudApiService<PermissionDto, CreateP
             var item = await permissions.GetAsync(id, ct);
             model = new() { Id = id, Name = item.Name, Code = item.Code, Description = item.Description, ControllerName = item.ControllerName, ActionName = item.ActionName, CRUDActionType = item.CRUDActionType, IsActive = item.IsActive };
         }
-        await LoadOptionsAsync(model, ct);
         return View(model);
     }
     [HttpPost]
@@ -24,7 +23,6 @@ public sealed class PermissionsController(ICrudApiService<PermissionDto, CreateP
         if (ModelState.IsValid && await ExecuteAsync(() => model.Id == 0
             ? permissions.CreateAsync(ToDto(model), ct)
             : permissions.UpdateAsync(model.Id, ToDto(model), ct))) return Saved();
-        await LoadOptionsAsync(model, ct);
         return View(model);
     }
     [HttpGet] public async Task<IActionResult> Delete(int id, CancellationToken ct) => View("Delete", new DeleteModel(id, (await permissions.GetAsync(id, ct)).Name));
@@ -41,8 +39,4 @@ public sealed class PermissionsController(ICrudApiService<PermissionDto, CreateP
         CRUDActionType = model.CRUDActionType, IsActive = model.IsActive
     };
 
-    private Task LoadOptionsAsync(PermissionEditModel model, CancellationToken ct)
-    {
-        return Task.CompletedTask;
-    }
 }

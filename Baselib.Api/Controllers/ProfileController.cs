@@ -18,16 +18,16 @@ public class ProfileController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMyProfile()
+    public async Task<IActionResult> GetMyProfile(CancellationToken cancellationToken = default)
     {
-        var result = await _profileService.GetMyProfileAsync(User);
+        var result = await _profileService.GetMyProfileAsync(User, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("password")]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _profileService.ChangeMyPasswordAsync(User, dto.CurrentPassword, dto.NewPassword);
+        var result = await _profileService.ChangeMyPasswordAsync(User, dto.CurrentPassword, dto.NewPassword, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 }

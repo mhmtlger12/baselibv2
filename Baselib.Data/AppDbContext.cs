@@ -1,3 +1,4 @@
+using Baselib.Core.Constants;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Baselib.Core.Enums;
@@ -86,7 +87,7 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
 
             // Required User/Role ilişkileri, soft-delete filtreleriyle aynı davranmalıdır.
-            entity.HasQueryFilter(ur => ur.User.IsActive && ur.Role.IsActive);
+            entity.HasQueryFilter(ur => ur.User.IsActive && !ur.User.IsDeleted && ur.Role.IsActive && !ur.Role.IsDeleted);
         });
 
         modelBuilder.Entity<RolePermission>(entity =>
@@ -102,14 +103,14 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
 
             // Devre dışı role veya permission'a ait ilişki satırları okunmaz.
-            entity.HasQueryFilter(rp => rp.Role.IsActive && rp.Permission.IsActive);
+            entity.HasQueryFilter(rp => rp.Role.IsActive && !rp.Role.IsDeleted && rp.Permission.IsActive && !rp.Permission.IsDeleted);
         });
 
         modelBuilder.Entity<UserSession>(entity =>
         {
             entity.Property(session => session.FamilyId).HasMaxLength(32).IsRequired();
             entity.Property(session => session.RevokedReason).HasMaxLength(64);
-            entity.HasQueryFilter(session => session.User.IsActive);
+            entity.HasQueryFilter(session => session.User.IsActive && !session.User.IsDeleted);
             entity.HasIndex(session => session.FamilyId).IsUnique();
             entity.HasIndex(session => new { session.UserId, session.RevokedDate });
             entity.HasOne(session => session.User).WithMany().HasForeignKey(session => session.UserId)
@@ -131,7 +132,7 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
 
             // Devre dışı kullanıcıya ait oturum tokenı normal sorgularda görünmez.
-            entity.HasQueryFilter(rt => rt.User.IsActive);
+            entity.HasQueryFilter(rt => rt.User.IsActive && !rt.User.IsDeleted);
         });
 
         modelBuilder.Entity<AppSetting>(entity =>
@@ -148,7 +149,9 @@ public class AppDbContext : DbContext
 
             var parameter = Expression.Parameter(entityType.ClrType, "e");
             var isActive = Expression.Property(parameter, nameof(BaseEntity.IsActive));
-            var condition = Expression.Equal(isActive, Expression.Constant(true));
+            Expression condition = Expression.Equal(isActive, Expression.Constant(true));
+            if (typeof(SoftDeleteEntity).IsAssignableFrom(entityType.ClrType))
+                condition = Expression.AndAlso(condition, Expression.Not(Expression.Property(parameter, nameof(SoftDeleteEntity.IsDeleted))));
             var filter = Expression.Lambda(condition, parameter);
 
             modelBuilder.Entity(entityType.ClrType).HasQueryFilter(filter);
@@ -352,7 +355,9 @@ public class AppDbContext : DbContext
         );
 
         modelBuilder.Entity<AppSetting>().HasData(
-            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) }
+            new AppSetting { Id = 2, Key = "MaxLoginAttempts", Value = "5", Description = "Maksimum hatalı giriş denemesi", IsActive = true, CreatedDate = new DateTime(2025, 1, 1) },
+            new AppSetting { Id = 3, Key = SiteSettingConstants.Name, Value = "puannokta", Description = "Site adı (en fazla 100 karakter)", IsActive = true, CreatedDate = new DateTime(2026, 10, 4) },
+            new AppSetting { Id = 4, Key = SiteSettingConstants.Tagline, Value = "Taban puanları, tek noktada.", Description = "Site sloganı (en fazla 200 karakter)", IsActive = true, CreatedDate = new DateTime(2026, 10, 4) }
         );
     }
 

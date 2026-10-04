@@ -18,6 +18,7 @@ public static class DataServiceExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped(typeof(IEntityRepository<>), typeof(EntityRepository<>));
 
         return services;
     }

@@ -6,6 +6,7 @@ public static class ApiServiceExtensions
     public static IServiceCollection AddManagementApi(this IServiceCollection services)
     {
         services.AddScoped<ISystemApiService, SystemApiService>();
+        services.AddScoped<IPublicSiteSettingsApiService, PublicSiteSettingsApiService>();
         services.AddScoped<IPublicSliderApiService, PublicSliderApiService>();
         services.AddScoped<IPublicJobApiService, PublicJobApiService>();
         AddResource<SliderDto, SaveSliderDto, SaveSliderDto>(services, ApiRoutes.Sliders);

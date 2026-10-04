@@ -44,7 +44,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         var activeRoleIdClaim = context.User.FindFirst("ActiveRoleId")?.Value;
         int? activeRoleId = int.TryParse(activeRoleIdClaim, out var roleId) ? roleId : null;
 
-        var hasAccess = await _permissionCheckService.HasAccessAsync(userId, activeRoleId, permission.Code);
+        var hasAccess = await _permissionCheckService.HasAccessAsync(userId, activeRoleId, permission.Code, httpContext.RequestAborted);
 
         if (hasAccess)
         {

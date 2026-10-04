@@ -1,6 +1,8 @@
+using Baselib.Core.Interfaces;
+
 namespace Baselib.Entities;
 
-public sealed class UserSession
+public sealed class UserSession : IEntity
 {
     public int Id { get; set; }
     public string FamilyId { get; set; } = string.Empty;

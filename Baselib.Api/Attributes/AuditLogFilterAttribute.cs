@@ -51,7 +51,9 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
             // Eğer varsa Action argümanlarını JSON olarak kaydet ve hassas alanları maskele
             if (context.ActionArguments.Any())
             {
-                details = JsonSerializer.Serialize(context.ActionArguments);
+                details = JsonSerializer.Serialize(context.ActionArguments
+                    .Where(argument => argument.Value is not CancellationToken)
+                    .ToDictionary(argument => argument.Key, argument => argument.Value));
                 details = Regex.Replace(details, @"(""(?i)(?:password|currentpassword|newpassword|token|refreshtoken)""\s*:\s*"")[^""]*("")", "$1***$2");
             }
         }
@@ -63,6 +65,7 @@ public class AuditLogFilterAttribute : IAsyncActionFilter
         // Ayrı scope, audit kaydının istekteki bekleyen entity değişikliklerini kaydetmesini önler.
         await using var auditScope = context.HttpContext.RequestServices.CreateAsyncScope();
         var auditService = auditScope.ServiceProvider.GetRequiredService<IAuditLogService>();
-        await auditService.LogAsync(userId, method, controller, route, details);
+        // A completed mutation still needs its audit record if the client disconnects.
+        await auditService.LogAsync(userId, method, controller, route, details, CancellationToken.None);
     }
 }

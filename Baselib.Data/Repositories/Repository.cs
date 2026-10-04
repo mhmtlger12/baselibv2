@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Baselib.Core.Interfaces;
-using Baselib.Entities;
 
 namespace Baselib.Data.Repositories;
 
@@ -14,15 +13,6 @@ public class Repository<T> : IRepository<T> where T : class
     {
         _context = context;
         _dbSet = context.Set<T>();
-    }
-
-    public virtual async Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false, CancellationToken cancellationToken = default)
-    {
-        IQueryable<T> query = _dbSet;
-        if (asNoTracking)
-            query = query.AsNoTracking();
-
-        return await query.ToListAsync(cancellationToken);
     }
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(
@@ -51,7 +41,7 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<IEnumerable<T>> GetAllAsync(
         Expression<Func<T, bool>>? predicate,
-        Func<IQueryable<T>, IQueryable<T>>? include = null,
+        Func<IQueryable<T>, IQueryable<T>>? include,
         bool ignoreQueryFilters = false,
         bool asNoTracking = false,
         CancellationToken cancellationToken = default)
@@ -71,46 +61,10 @@ public class Repository<T> : IRepository<T> where T : class
         return await query.ToListAsync(cancellationToken);
     }
 
-    public virtual async Task<T?> GetByIdAsync(int id)
-    {
-        return await _dbSet.FindAsync(id);
-    }
-
-    public virtual async Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes)
-    {
-        return await GetByIdAsync(id, ignoreQueryFilters: false, includes);
-    }
-
-    public virtual async Task<T?> GetByIdAsync(int id, bool ignoreQueryFilters, params Expression<Func<T, object>>[] includes)
-    {
-        IQueryable<T> query = _dbSet;
-        if (ignoreQueryFilters)
-            query = query.IgnoreQueryFilters();
-        foreach (var include in includes)
-        {
-            query = query.Include(include);
-        }
-        return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
-    }
-
-    public virtual async Task<T?> GetByIdAsync(int id, Func<IQueryable<T>, IQueryable<T>>? include, bool ignoreQueryFilters = false)
-    {
-        IQueryable<T> query = _dbSet;
-        if (ignoreQueryFilters)
-            query = query.IgnoreQueryFilters();
-        if (include != null)
-            query = include(query);
-        return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
-    }
-
-    public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
-    {
-        return await _dbSet.FirstOrDefaultAsync(predicate);
-    }
-
     public virtual async Task<T?> FirstOrDefaultAsync(
         Expression<Func<T, bool>> predicate,
         bool ignoreQueryFilters = false,
+        CancellationToken cancellationToken = default,
         params Expression<Func<T, object>>[] includes)
     {
         IQueryable<T> query = _dbSet;
@@ -120,45 +74,36 @@ public class Repository<T> : IRepository<T> where T : class
         {
             query = query.Include(include);
         }
-        return await query.FirstOrDefaultAsync(predicate);
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public virtual async Task<T?> FirstOrDefaultAsync(
         Expression<Func<T, bool>> predicate,
         Func<IQueryable<T>, IQueryable<T>>? include,
-        bool ignoreQueryFilters = false)
+        bool ignoreQueryFilters = false, CancellationToken cancellationToken = default)
     {
         IQueryable<T> query = _dbSet;
         if (ignoreQueryFilters)
             query = query.IgnoreQueryFilters();
         if (include != null)
             query = include(query);
-        return await query.FirstOrDefaultAsync(predicate);
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
-    public virtual async Task<T> AddAsync(T entity)
+    public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddAsync(entity);
+        await _dbSet.AddAsync(entity, cancellationToken);
         return entity;
     }
 
-    public virtual async Task AddRangeAsync(IEnumerable<T> entities)
+    public virtual async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddRangeAsync(entities);
+        await _dbSet.AddRangeAsync(entities, cancellationToken);
     }
 
     public virtual void Update(T entity)
     {
         _dbSet.Update(entity);
-    }
-
-    public virtual async Task DeleteAsync(int id)
-    {
-        var entity = await GetByIdAsync(id);
-        if (entity != null)
-        {
-            _dbSet.Remove(entity);
-        }
     }
 
     public virtual void Remove(T entity)

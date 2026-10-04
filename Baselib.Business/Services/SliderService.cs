@@ -9,66 +9,66 @@ using Baselib.Entities;
 namespace Baselib.Business.Services;
 
 public sealed class SliderService(
-    IRepository<Slider> sliders,
+    IEntityRepository<Slider> sliders,
     IUnitOfWork unitOfWork,
     IMapper mapper,
     TimeProvider timeProvider) : ISliderService
 {
-    public async Task<IDataResult<IEnumerable<SliderDto>>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IDataResult<IEnumerable<SliderDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var items = await sliders.GetAllAsync(predicate: slider => !slider.IsDeleted,
-            ignoreQueryFilters: true, asNoTracking: true, cancellationToken: ct, includes: []);
+            ignoreQueryFilters: true, asNoTracking: true, cancellationToken: cancellationToken, includes: []);
         return MapList(items);
     }
 
-    public async Task<IDataResult<IEnumerable<SliderDto>>> GetPublishedAsync(CancellationToken ct = default)
+    public async Task<IDataResult<IEnumerable<SliderDto>>> GetPublishedAsync(CancellationToken cancellationToken = default)
     {
-        var items = await sliders.GetAllAsync(asNoTracking: true, cancellationToken: ct);
+        var items = await sliders.GetAllAsync(asNoTracking: true, cancellationToken: cancellationToken);
         return MapList(items);
     }
 
-    public async Task<IDataResult<SliderDto>> GetByIdAsync(int id)
+    public async Task<IDataResult<SliderDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var slider = await FindAsync(id);
+        var slider = await FindAsync(id, cancellationToken: cancellationToken);
         return slider is null
             ? DataResult<SliderDto>.NotFound(Messages.Slider.NotFound)
             : DataResult<SliderDto>.Ok(mapper.Map<SliderDto>(slider));
     }
 
-    public async Task<IDataResult<SliderDto>> CreateAsync(SaveSliderDto dto)
+    public async Task<IDataResult<SliderDto>> CreateAsync(SaveSliderDto dto, CancellationToken cancellationToken = default)
     {
         var slider = new Slider { CreatedDate = timeProvider.GetUtcNow().UtcDateTime };
         Apply(slider, dto);
-        await sliders.AddAsync(slider);
-        await unitOfWork.SaveChangesAsync();
+        await sliders.AddAsync(slider, cancellationToken: cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return DataResult<SliderDto>.Created(mapper.Map<SliderDto>(slider), Messages.General.Saved);
     }
 
-    public async Task<IResult> UpdateAsync(int id, SaveSliderDto dto)
+    public async Task<IResult> UpdateAsync(int id, SaveSliderDto dto, CancellationToken cancellationToken = default)
     {
-        var slider = await FindAsync(id);
+        var slider = await FindAsync(id, cancellationToken: cancellationToken);
         if (slider is null) return Result.NotFound(Messages.Slider.NotFound);
         Apply(slider, dto);
         slider.UpdatedDate = timeProvider.GetUtcNow().UtcDateTime;
         sliders.Update(slider);
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task<IResult> DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var slider = await FindAsync(id);
+        var slider = await FindAsync(id, cancellationToken: cancellationToken);
         if (slider is null) return Result.NotFound(Messages.Slider.NotFound);
         slider.IsDeleted = true;
         slider.IsActive = false;
         slider.UpdatedDate = timeProvider.GetUtcNow().UtcDateTime;
         sliders.Update(slider);
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return Result.Ok(Messages.General.Deleted);
     }
 
-    private Task<Slider?> FindAsync(int id) => sliders.FirstOrDefaultAsync(
-        slider => slider.Id == id && !slider.IsDeleted, ignoreQueryFilters: true, includes: []);
+    private Task<Slider?> FindAsync(int id, CancellationToken cancellationToken = default) => sliders.FirstOrDefaultAsync(
+        slider => slider.Id == id && !slider.IsDeleted, ignoreQueryFilters: true, includes: [], cancellationToken: cancellationToken);
 
     private IDataResult<IEnumerable<SliderDto>> MapList(IEnumerable<Slider> items) =>
         DataResult<IEnumerable<SliderDto>>.Ok(items.OrderBy(slider => slider.Order)

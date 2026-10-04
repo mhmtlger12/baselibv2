@@ -8,15 +8,15 @@ namespace Baselib.Business.Services;
 
 public class DashboardService : IDashboardService
 {
-    private readonly IRepository<User> _users;
-    private readonly IRepository<Role> _roles;
-    private readonly IRepository<Department> _departments;
+    private readonly IEntityRepository<User> _users;
+    private readonly IEntityRepository<Role> _roles;
+    private readonly IEntityRepository<Department> _departments;
     private readonly IRepository<UserRole> _userRoles;
 
     public DashboardService(
-        IRepository<User> users,
-        IRepository<Role> roles,
-        IRepository<Department> departments,
+        IEntityRepository<User> users,
+        IEntityRepository<Role> roles,
+        IEntityRepository<Department> departments,
         IRepository<UserRole> userRoles)
     {
         _users = users;
@@ -27,7 +27,7 @@ public class DashboardService : IDashboardService
 
     public async Task<IDataResult<DashboardStatsDto>> GetStatsAsync(CancellationToken cancellationToken = default)
     {
-        var totalUsers = await _users.CountAsync(ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        var totalUsers = await _users.CountAsync(u => !u.IsDeleted, ignoreQueryFilters: true, cancellationToken: cancellationToken);
         var activeUsers = await _users.CountAsync(cancellationToken: cancellationToken);
         var totalRoles = await _roles.CountAsync(cancellationToken: cancellationToken);
         var totalDepartments = await _departments.CountAsync(cancellationToken: cancellationToken);

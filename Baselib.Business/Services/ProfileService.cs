@@ -15,17 +15,17 @@ public class ProfileService : IProfileService
         _userService = userService;
     }
 
-    public async Task<IDataResult<UserDto>> GetMyProfileAsync(ClaimsPrincipal principal)
+    public async Task<IDataResult<UserDto>> GetMyProfileAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
         var activeRoleId = ClaimsPrincipalHelper.GetActiveRoleId(principal);
 
-        return await _userService.GetByIdAsync(userId, activeRoleId);
+        return await _userService.GetByIdAsync(userId, activeRoleId, cancellationToken: cancellationToken);
     }
 
-    public async Task<IResult> ChangeMyPasswordAsync(ClaimsPrincipal principal, string currentPassword, string newPassword)
+    public async Task<IResult> ChangeMyPasswordAsync(ClaimsPrincipal principal, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
-        return await _userService.ChangePasswordAsync(userId, currentPassword, newPassword);
+        return await _userService.ChangePasswordAsync(userId, currentPassword, newPassword, cancellationToken: cancellationToken);
     }
 }

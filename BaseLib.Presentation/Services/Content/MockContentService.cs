@@ -1,3 +1,4 @@
+using Baselib.Entities.Validation;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,6 +9,7 @@ public sealed class MockContentService : IContentService
 {
     private readonly Dictionary<string, ContentDefinition> definitions;
     private readonly object gate = new();
+    private static readonly WebAddressAttribute WebAddress = new();
     public MockContentService(IWebHostEnvironment environment)
     {
         definitions = JsonSerializer.Deserialize<Dictionary<string, ContentDefinition>>(
@@ -60,7 +62,7 @@ public sealed class MockContentService : IContentService
                     else errors[key] = "Geçerli bir tarih girin.";
                 }
                 else if (field.Type == "select" && !(field.Options?.Contains(value) ?? false)) errors[key] = "Listeden bir seçenek seçin.";
-                else if ((field.Type == "image" || field.Key == "link") && value.Length > 0 && !SafeUrl(value)) errors[key] = "Yerel bir yol veya http/https adresi girin.";
+                else if ((field.Type == "image" || field.Key == "link") && value.Length > 0 && !WebAddress.IsValid(value)) errors[key] = "Yerel bir yol veya http/https adresi girin.";
                 else if (field.Key == "email" && !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(value)) errors[key] = "Geçerli bir e-posta adresi girin.";
                 else row[field.Key] = value;
                 if (field.Key is "title" or "name" or "label" or "institution" or "program" or "author" && value.Length == 0) errors[key] = "Bu alan zorunludur.";
@@ -78,6 +80,4 @@ public sealed class MockContentService : IContentService
     {
         lock (gate) return definitions.TryGetValue(slug, out var definition) && definition.Rows.RemoveAll(x => x["id"]!.GetValue<int>() == id) > 0;
     }
-    private static bool SafeUrl(string value) => (value.StartsWith('/') && !value.StartsWith("//") && !value.Contains('\\')) ||
-        (Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https");
 }

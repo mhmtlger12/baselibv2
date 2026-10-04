@@ -6,6 +6,6 @@ namespace Baselib.Business.Interfaces;
 /// </summary>
 public interface IPermissionCheckService
 {
-    Task<IReadOnlySet<string>> GetGrantedCodesAsync(int userId, int? activeRoleId);
-    Task<bool> HasAccessAsync(int userId, int? activeRoleId, string permissionCode);
+    Task<IReadOnlySet<string>> GetGrantedCodesAsync(int userId, int? activeRoleId, CancellationToken cancellationToken = default);
+    Task<bool> HasAccessAsync(int userId, int? activeRoleId, string permissionCode, CancellationToken cancellationToken = default);
 }

@@ -4,7 +4,12 @@ public enum RecycleBinType
 {
     User = 1,
     Role = 2,
-    Department = 3
+    Department = 3,
+    Menu = 4,
+    Permission = 5,
+    Slider = 6,
+    JobListing = 7,
+    Institution = 8
 }
 
 public static class RecycleBinTypeExtensions
@@ -14,6 +19,11 @@ public static class RecycleBinTypeExtensions
         RecycleBinType.User => "Kullanıcı",
         RecycleBinType.Role => "Rol",
         RecycleBinType.Department => "Departman",
+        RecycleBinType.Menu => "Menü",
+        RecycleBinType.Permission => "İzin",
+        RecycleBinType.Slider => "Slider",
+        RecycleBinType.JobListing => "İlan",
+        RecycleBinType.Institution => "Kurum",
         _ => type.ToString()
     };
 

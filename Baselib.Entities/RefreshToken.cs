@@ -1,6 +1,8 @@
+using Baselib.Core.Interfaces;
+
 namespace Baselib.Entities;
 
-public class RefreshToken
+public class RefreshToken : IEntity
 {
     public int Id { get; set; }
     public int UserId { get; set; }

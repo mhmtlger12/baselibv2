@@ -70,6 +70,24 @@ namespace Baselib.Data.Migrations
                             IsActive = true,
                             Key = "MaxLoginAttempts",
                             Value = "5"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 10, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Site adı (en fazla 100 karakter)",
+                            IsActive = true,
+                            Key = "SiteName",
+                            Value = "puannokta"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 10, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Site sloganı (en fazla 200 karakter)",
+                            IsActive = true,
+                            Key = "SiteTagline",
+                            Value = "Taban puanları, tek noktada."
                         });
                 });
 
@@ -130,6 +148,9 @@ namespace Baselib.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -159,6 +180,7 @@ namespace Baselib.Data.Migrations
                             Code = "YT",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Yönetim"
                         },
                         new
@@ -167,6 +189,7 @@ namespace Baselib.Data.Migrations
                             Code = "BT",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Bilgi Teknolojileri",
                             ParentDepartmentId = 1
                         },
@@ -176,6 +199,7 @@ namespace Baselib.Data.Migrations
                             Code = "IK",
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "İnsan Kaynakları",
                             ParentDepartmentId = 1
                         });
@@ -2163,6 +2187,9 @@ namespace Baselib.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -2200,6 +2227,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-speedometer2",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Dashboard",
                             Order = 1,
                             PermissionId = 28,
@@ -2211,6 +2239,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-people",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Kullanıcılar",
                             Order = 2,
                             PermissionId = 1,
@@ -2222,6 +2251,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-shield-check",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Roller",
                             Order = 3,
                             PermissionId = 5,
@@ -2233,6 +2263,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-key",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "İzinler",
                             Order = 4,
                             PermissionId = 9,
@@ -2244,6 +2275,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-diagram-3",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Departmanlar",
                             Order = 5,
                             PermissionId = 13,
@@ -2255,6 +2287,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-menu-button",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Menüler",
                             Order = 6,
                             PermissionId = 17,
@@ -2266,6 +2299,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-gear",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Sistem Ayarları",
                             Order = 7,
                             PermissionId = 21,
@@ -2277,6 +2311,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-activity",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Sistem Hareketleri",
                             Order = 8,
                             PermissionId = 23,
@@ -2288,6 +2323,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-trash3",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Çöp Kutusu",
                             Order = 9,
                             PermissionId = 24,
@@ -2299,6 +2335,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-megaphone",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "İlanlar",
                             Order = 10,
                             PermissionId = 35,
@@ -2310,6 +2347,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Icon = "bi-building",
                             IsActive = true,
+                            IsDeleted = false,
                             Name = "Kurumlar",
                             Order = 11,
                             PermissionId = 39,
@@ -2352,6 +2390,9 @@ namespace Baselib.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsSystem")
                         .HasColumnType("tinyint(1)");
 
@@ -2383,6 +2424,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcı parolasını sıfırlama",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kullanıcı Parolası Sıfırla"
                         },
@@ -2396,6 +2438,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Ayrıcalıklı hesap parolasını sıfırlama; kullanıcı parolası sıfırlama izni de gerekir",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Ayrıcalıklı Hesap Parolası Sıfırla"
                         },
@@ -2409,6 +2452,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Slaytları listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Slider Listele"
                         },
@@ -2422,6 +2466,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Slayt oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Slider Oluştur"
                         },
@@ -2435,6 +2480,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Slayt güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Slider Güncelle"
                         },
@@ -2448,6 +2494,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Slayt silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Slider Sil"
                         },
@@ -2461,6 +2508,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İlanları listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İlan Listele"
                         },
@@ -2474,6 +2522,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İlan oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İlan Oluştur"
                         },
@@ -2487,6 +2536,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İlan güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İlan Güncelle"
                         },
@@ -2500,6 +2550,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İlan silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İlan Sil"
                         },
@@ -2513,6 +2564,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kurumları listeleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kurum Listele"
                         },
@@ -2526,6 +2578,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kurum oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kurum Oluştur"
                         },
@@ -2539,6 +2592,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kurum güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kurum Güncelle"
                         },
@@ -2552,6 +2606,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kurum silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kurum Sil"
                         },
@@ -2565,6 +2620,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcı listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kullanıcı Listele"
                         },
@@ -2578,6 +2634,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcı oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kullanıcı Oluştur"
                         },
@@ -2591,6 +2648,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcı güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kullanıcı Güncelle"
                         },
@@ -2604,6 +2662,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcı silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kullanıcı Sil"
                         },
@@ -2617,6 +2676,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Rol listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Rol Listele"
                         },
@@ -2630,6 +2690,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Rol oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Rol Oluştur"
                         },
@@ -2643,6 +2704,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Rol güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Rol Güncelle"
                         },
@@ -2656,6 +2718,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Rol silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Rol Sil"
                         },
@@ -2669,6 +2732,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İzin listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İzin Listele"
                         },
@@ -2682,6 +2746,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İzin oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İzin Oluştur"
                         },
@@ -2695,6 +2760,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İzin güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İzin Güncelle"
                         },
@@ -2708,6 +2774,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "İzin silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "İzin Sil"
                         },
@@ -2721,6 +2788,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Departman listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Departman Listele"
                         },
@@ -2734,6 +2802,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Departman oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Departman Oluştur"
                         },
@@ -2747,6 +2816,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Departman güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Departman Güncelle"
                         },
@@ -2760,6 +2830,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Departman silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Departman Sil"
                         },
@@ -2773,6 +2844,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Menü listeleme ve görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Menü Listele"
                         },
@@ -2786,6 +2858,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Menü oluşturma",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Menü Oluştur"
                         },
@@ -2799,6 +2872,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Menü güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Menü Güncelle"
                         },
@@ -2812,6 +2886,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Menü silme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Menü Sil"
                         },
@@ -2825,6 +2900,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sistem ayarlarını listeleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Ayar Listele"
                         },
@@ -2838,6 +2914,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sistem ayarlarını güncelleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Ayar Güncelle"
                         },
@@ -2851,6 +2928,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Sistem hareketlerini (logları) görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Hareket Listele"
                         },
@@ -2864,6 +2942,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Silinmiş kayıtları görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Çöp Kutusu Görüntüle"
                         },
@@ -2877,6 +2956,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Silinmiş kayıtları geri yükleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Çöp Kutusu Geri Yükle"
                         },
@@ -2890,6 +2970,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Rol seçim listelerini görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Rol Seçenekleri"
                         },
@@ -2903,6 +2984,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Departman seçim listelerini görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Departman Seçenekleri"
                         },
@@ -2916,6 +2998,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Dashboard istatistiklerini görüntüleme",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Dashboard Görüntüle"
                         },
@@ -2929,6 +3012,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcılara normal rol atama",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kullanıcı Rolü Ata"
                         },
@@ -2942,6 +3026,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Kullanıcılara kritik rol atama",
                             IsActive = true,
+                            IsDeleted = false,
                             IsSystem = true,
                             Name = "Kritik Kullanıcı Rolü Ata"
                         });
@@ -3025,6 +3110,9 @@ namespace Baselib.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsPrivileged")
                         .HasColumnType("tinyint(1)");
 
@@ -3055,6 +3143,7 @@ namespace Baselib.Data.Migrations
                             CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Yönetici",
                             IsActive = true,
+                            IsDeleted = false,
                             IsPrivileged = true,
                             IsSystemRole = true,
                             Name = "Admin"
@@ -3409,6 +3498,9 @@ namespace Baselib.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("LastName")
                         .HasColumnType("longtext");
 
@@ -3470,6 +3562,7 @@ namespace Baselib.Data.Migrations
                             FailedLoginCount = 0,
                             FirstName = "Admin",
                             IsActive = true,
+                            IsDeleted = false,
                             LastName = "User",
                             NormalizedEmail = "ADMIN@BASELIB.COM",
                             NormalizedUsername = "ADMIN",

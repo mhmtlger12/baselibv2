@@ -19,9 +19,9 @@ public class AuditLogsController : ControllerBase
 
     [HttpGet]
     [RequirePermission("AuditLogs_Read")]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List(CancellationToken cancellationToken = default)
     {
-        var result = await _auditLogService.GetAllAsync();
+        var result = await _auditLogService.GetAllAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 }

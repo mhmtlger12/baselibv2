@@ -23,17 +23,17 @@ public class AuditLogService : IAuditLogService
         _timeProvider = timeProvider;
     }
 
-    public async Task<IDataResult<IEnumerable<AuditLogDto>>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<AuditLogDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var logs = await _auditLogs.GetAllAsync(
             predicate: null,
             include: q => q.Include(a => a.User).OrderByDescending(a => a.CreatedDate).Take(500),
-            asNoTracking: true);
+            asNoTracking: true, cancellationToken: cancellationToken);
 
         return DataResult<IEnumerable<AuditLogDto>>.Ok(_mapper.Map<IEnumerable<AuditLogDto>>(logs));
     }
 
-    public async Task LogAsync(int? userId, string action, string controller, string route, string? details)
+    public async Task LogAsync(int? userId, string action, string controller, string route, string? details, CancellationToken cancellationToken = default)
     {
         var log = new AuditLog
         {
@@ -45,7 +45,7 @@ public class AuditLogService : IAuditLogService
             CreatedDate = _timeProvider.GetUtcNow().UtcDateTime
         };
 
-        await _auditLogs.AddAsync(log);
-        await _unitOfWork.SaveChangesAsync();
+        await _auditLogs.AddAsync(log, cancellationToken: cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
     }
 }

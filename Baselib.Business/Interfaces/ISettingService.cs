@@ -5,6 +5,7 @@ namespace Baselib.Business.Interfaces;
 
 public interface ISettingService
 {
-    Task<IDataResult<IEnumerable<SettingDto>>> GetAllAsync();
-    Task<IResult> UpdateAsync(int id, UpdateSettingDto dto);
+    Task<IDataResult<IEnumerable<SettingDto>>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IDataResult<PublicSiteSettingsDto>> GetPublicAsync(CancellationToken cancellationToken = default);
+    Task<IResult> UpdateAsync(int id, UpdateSettingDto dto, CancellationToken cancellationToken = default);
 }

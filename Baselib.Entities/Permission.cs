@@ -2,7 +2,7 @@ using Baselib.Core.Enums;
 
 namespace Baselib.Entities;
 
-public class Permission : BaseEntity
+public class Permission : SoftDeleteEntity
 {
     public bool IsSystem { get; set; }
     public string Name { get; set; } = string.Empty;

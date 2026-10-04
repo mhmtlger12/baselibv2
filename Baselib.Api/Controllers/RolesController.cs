@@ -20,41 +20,41 @@ public class RolesController : ControllerBase
 
     [HttpGet]
     [RequirePermission("Roles_Read")]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List(CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.GetAllAsync();
+        var result = await _roleService.GetAllAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("selectOption")]
     [RequirePermission("Roles_SelectOption")]
-    public async Task<IActionResult> SelectOption()
+    public async Task<IActionResult> SelectOption(CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.GetSelectOptionsAsync();
+        var result = await _roleService.GetSelectOptionsAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
     [RequirePermission("Roles_Read")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IActionResult> Get(int id, CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.GetByIdAsync(id);
+        var result = await _roleService.GetByIdAsync(id, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}/permissions")]
     [RequirePermission("Roles_Read")]
-    public async Task<IActionResult> GetPermissions(int id)
+    public async Task<IActionResult> GetPermissions(int id, CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.GetPermissionsByRoleIdAsync(id);
+        var result = await _roleService.GetPermissionsByRoleIdAsync(id, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost]
     [RequirePermission("Roles_Create")]
-    public async Task<IActionResult> Add([FromBody] CreateRoleDto dto)
+    public async Task<IActionResult> Add([FromBody] CreateRoleDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.CreateAsync(User, dto);
+        var result = await _roleService.CreateAsync(User, dto, cancellationToken: cancellationToken);
         if (result.Success && result.Data != null)
             return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
 
@@ -63,26 +63,26 @@ public class RolesController : ControllerBase
 
     [HttpPut("{id:int}")]
     [RequirePermission("Roles_Update")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.UpdateAsync(User, id, dto);
+        var result = await _roleService.UpdateAsync(User, id, dto, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
 
     [HttpDelete("{id:int}")]
     [RequirePermission("Roles_Delete")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.DeleteAsync(User, id);
+        var result = await _roleService.DeleteAsync(User, id, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{id:int}/permissions")]
     [RequirePermission("Roles_Update")]
-    public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds)
+    public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds, CancellationToken cancellationToken = default)
     {
-        var result = await _roleService.AssignPermissionsAsync(User, id, permissionIds);
+        var result = await _roleService.AssignPermissionsAsync(User, id, permissionIds, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 }

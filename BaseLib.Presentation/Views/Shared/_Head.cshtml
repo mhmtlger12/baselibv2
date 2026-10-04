@@ -1,3 +1,4 @@
+@{ var branding = await SiteSettings.GetAsync(Context.RequestAborted); }
 @inject IConfiguration Configuration
 @{
 var title = ViewData["Title"]?.ToString() ?? "Taban Puanları ve Güncel İlanlar";
@@ -7,11 +8,11 @@ var noindex = Context.Request.Path.StartsWithSegments("/Admin") || Context.Reque
 }
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>@title | puannokta</title>
+<title>@title | @branding.Name</title>
 <meta name="description" content="@description" />
 <meta name="robots" content="@(noindex ? "noindex,follow" : "index,follow")" />
 <link rel="canonical" href="@canonical" />
-<meta property="og:title" content="@title | puannokta" />
+<meta property="og:title" content="@title | @branding.Name" />
 <meta property="og:description" content="@description" />
 <meta property="og:url" content="@canonical" />
 <meta property="og:type" content="website" />

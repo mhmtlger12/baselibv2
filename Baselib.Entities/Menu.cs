@@ -1,6 +1,6 @@
 namespace Baselib.Entities;
 
-public class Menu : BaseEntity
+public class Menu : SoftDeleteEntity
 {
     public string Name { get; set; } = string.Empty;
     public string? Url { get; set; }

@@ -20,41 +20,41 @@ public class DepartmentsController : ControllerBase
 
     [HttpGet]
     [RequirePermission("Departments_Read")]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List(CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.GetAllAsync();
+        var result = await _departmentService.GetAllAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("selectOption")]
     [RequirePermission("Departments_SelectOption")]
-    public async Task<IActionResult> SelectOption()
+    public async Task<IActionResult> SelectOption(CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.GetSelectOptionsAsync();
+        var result = await _departmentService.GetSelectOptionsAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("tree")]
     [RequirePermission("Departments_Read")]
-    public async Task<IActionResult> Tree()
+    public async Task<IActionResult> Tree(CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.GetTreeAsync();
+        var result = await _departmentService.GetTreeAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpGet("{id:int}")]
     [RequirePermission("Departments_Read")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IActionResult> Get(int id, CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.GetByIdAsync(id);
+        var result = await _departmentService.GetByIdAsync(id, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost]
     [RequirePermission("Departments_Create")]
-    public async Task<IActionResult> Add([FromBody] CreateDepartmentDto dto)
+    public async Task<IActionResult> Add([FromBody] CreateDepartmentDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.CreateAsync(dto);
+        var result = await _departmentService.CreateAsync(dto, cancellationToken: cancellationToken);
         if (result.Success && result.Data != null)
             return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
 
@@ -63,17 +63,17 @@ public class DepartmentsController : ControllerBase
 
     [HttpPut("{id:int}")]
     [RequirePermission("Departments_Update")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.UpdateAsync(id, dto);
+        var result = await _departmentService.UpdateAsync(id, dto, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpDelete("{id:int}")]
     [RequirePermission("Departments_Delete")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
     {
-        var result = await _departmentService.DeleteAsync(id);
+        var result = await _departmentService.DeleteAsync(id, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 }

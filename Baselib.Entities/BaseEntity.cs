@@ -1,6 +1,8 @@
+using Baselib.Core.Interfaces;
+
 namespace Baselib.Entities;
 
-public abstract class BaseEntity
+public abstract class BaseEntity : IEntity
 {
     public int Id { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

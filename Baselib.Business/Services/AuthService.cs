@@ -14,9 +14,9 @@ namespace Baselib.Business.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly IRepository<User> _users;
+    private readonly IEntityRepository<User> _users;
     private readonly IRepository<RefreshToken> _refreshTokens;
-    private readonly IRepository<AppSetting> _settings;
+    private readonly IEntityRepository<AppSetting> _settings;
     private readonly ISessionService _sessions;
     private readonly IRefreshTokenStore _tokenStore;
     private readonly IUnitOfWork _unitOfWork;
@@ -25,9 +25,9 @@ public class AuthService : IAuthService
     private readonly TimeProvider _timeProvider;
 
     public AuthService(
-        IRepository<User> users,
+        IEntityRepository<User> users,
         IRepository<RefreshToken> refreshTokens,
-        IRepository<AppSetting> settings,
+        IEntityRepository<AppSetting> settings,
         ISessionService sessions,
         IRefreshTokenStore tokenStore,
         IUnitOfWork unitOfWork,
@@ -46,12 +46,12 @@ public class AuthService : IAuthService
         _timeProvider = timeProvider;
     }
 
-    public async Task<IDataResult<AuthResultDto>> LoginAsync(LoginDto dto, ClientSessionInfoDto clientSession)
+    public async Task<IDataResult<AuthResultDto>> LoginAsync(LoginDto dto, ClientSessionInfoDto clientSession, CancellationToken cancellationToken = default)
     {
         var identifier = UserIdentityHelper.Normalize(dto.Username);
         var user = await _users.FirstOrDefaultAsync(
             u => u.NormalizedUsername == identifier || u.NormalizedEmail == identifier,
-            include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department));
+            include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department), cancellationToken: cancellationToken);
 
         if (user == null)
             return DataResult<AuthResultDto>.Unauthorized(Messages.User.InvalidCredentials);
@@ -69,11 +69,11 @@ public class AuthService : IAuthService
         if (!PasswordHelper.Verify(dto.Password, user.PasswordHash))
         {
             user.FailedLoginCount++;
-            if (user.FailedLoginCount >= await GetMaxLoginAttemptsAsync())
+            if (user.FailedLoginCount >= await GetMaxLoginAttemptsAsync(cancellationToken: cancellationToken))
                 user.LockoutEndDate = now.AddMinutes(Constants.Authentication.LockoutMinutes);
 
             _users.Update(user);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
             return DataResult<AuthResultDto>.Unauthorized(Messages.User.InvalidCredentials);
         }
 
@@ -82,16 +82,16 @@ public class AuthService : IAuthService
 
         var activeRole = user.UserRoles.FirstOrDefault()?.Role;
 
-        var familyId = await _sessions.CreateAsync(user.Id);
+        var familyId = await _sessions.CreateAsync(user.Id, cancellationToken: cancellationToken);
         var accessToken = GenerateToken(user, activeRole?.Id, familyId);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, activeRole?.Id, familyId, clientSession, now);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id, activeRole?.Id, familyId, clientSession, now, cancellationToken: cancellationToken);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return DataResult<AuthResultDto>.Ok(BuildAuthResult(accessToken, refreshToken, user, activeRole?.Id));
     }
 
-    public async Task<IDataResult<AuthResultDto>> RefreshTokenAsync(string refreshToken, ClientSessionInfoDto clientSession)
+    public async Task<IDataResult<AuthResultDto>> RefreshTokenAsync(string refreshToken, ClientSessionInfoDto clientSession, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
             return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
@@ -101,29 +101,29 @@ public class AuthService : IAuthService
         var token = await _refreshTokens.FirstOrDefaultAsync(
             rt => rt.TokenHash == tokenHash,
             include: q => q.Include(rt => rt.User).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
-                           .Include(rt => rt.User).ThenInclude(u => u.Department));
+                           .Include(rt => rt.User).ThenInclude(u => u.Department), cancellationToken: cancellationToken);
         if (token == null)
             return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
         if (token.RevokedDate.HasValue)
-            return await RejectReuseAsync(token);
+            return await RejectReuseAsync(token, cancellationToken: cancellationToken);
         if (token.ExpiryDate <= now ||
-            !await _sessions.IsActiveAsync(token.UserId, token.FamilyId, token.ActiveRoleId))
+            !await _sessions.IsActiveAsync(token.UserId, token.FamilyId, token.ActiveRoleId, cancellationToken: cancellationToken))
             return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
 
-        await _unitOfWork.BeginTransactionAsync();
+        await _unitOfWork.BeginTransactionAsync(cancellationToken: cancellationToken);
         try
         {
             // Conditional UPDATE takes the database row lock. Exactly one request can consume it.
-            if (!await _tokenStore.TryConsumeAsync(token.Id, now))
+            if (!await _tokenStore.TryConsumeAsync(token.Id, now, cancellationToken: cancellationToken))
             {
-                await _unitOfWork.RollbackTransactionAsync();
-                return await RejectReuseAsync(token);
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken: cancellationToken);
+                return await RejectReuseAsync(token, cancellationToken: cancellationToken);
             }
 
-            var newRefreshToken = await CreateRefreshTokenAsync(token.UserId, token.ActiveRoleId, token.FamilyId, clientSession, now);
+            var newRefreshToken = await CreateRefreshTokenAsync(token.UserId, token.ActiveRoleId, token.FamilyId, clientSession, now, cancellationToken: cancellationToken);
             var newAccessToken = GenerateToken(token.User, token.ActiveRoleId, token.FamilyId);
-            await _unitOfWork.SaveChangesAsync();
-            await _unitOfWork.CommitTransactionAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
+            await _unitOfWork.CommitTransactionAsync(cancellationToken: cancellationToken);
             return DataResult<AuthResultDto>.Ok(BuildAuthResult(newAccessToken, newRefreshToken, token.User, token.ActiveRoleId));
         }
         catch
@@ -133,20 +133,20 @@ public class AuthService : IAuthService
         }
     }
 
-    private async Task<IDataResult<AuthResultDto>> RejectReuseAsync(RefreshToken token)
+    private async Task<IDataResult<AuthResultDto>> RejectReuseAsync(RefreshToken token, CancellationToken cancellationToken = default)
     {
         // Persist session revocation, so a concurrent successor cannot revive the family.
-        await _sessions.RevokeAsync(token.UserId, token.FamilyId, "ReuseDetected");
-        await _unitOfWork.SaveChangesAsync();
+        await _sessions.RevokeAsync(token.UserId, token.FamilyId, "ReuseDetected", cancellationToken: cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
     }
 
-    public async Task<IResult> LogoutAsync(System.Security.Claims.ClaimsPrincipal principal)
+    public async Task<IResult> LogoutAsync(System.Security.Claims.ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
 
-        await _sessions.RevokeAllAsync(userId, "Logout");
-        await _unitOfWork.SaveChangesAsync();
+        await _sessions.RevokeAllAsync(userId, "Logout", cancellationToken: cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.Auth.LoggedOut);
     }
@@ -154,13 +154,13 @@ public class AuthService : IAuthService
     public async Task<IDataResult<AuthResultDto>> SwitchRoleAsync(
         System.Security.Claims.ClaimsPrincipal principal,
         int newRoleId,
-        ClientSessionInfoDto clientSession)
+        ClientSessionInfoDto clientSession, CancellationToken cancellationToken = default)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
 
         var user = await _users.FirstOrDefaultAsync(
             u => u.Id == userId,
-            include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department));
+            include: q => q.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).Include(u => u.Department), cancellationToken: cancellationToken);
 
         if (user == null)
             return DataResult<AuthResultDto>.NotFound(Messages.User.NotFound);
@@ -170,15 +170,15 @@ public class AuthService : IAuthService
 
         var currentFamilyId = principal.FindFirst(SessionIdClaim)?.Value;
         if (string.IsNullOrWhiteSpace(currentFamilyId) ||
-            !await _sessions.IsActiveAsync(userId, currentFamilyId, ClaimsPrincipalHelper.GetActiveRoleId(principal)))
+            !await _sessions.IsActiveAsync(userId, currentFamilyId, ClaimsPrincipalHelper.GetActiveRoleId(principal), cancellationToken: cancellationToken))
             return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
 
-        await _sessions.RevokeAsync(userId, currentFamilyId, "RoleChanged");
-        var familyId = await _sessions.CreateAsync(user.Id);
+        await _sessions.RevokeAsync(userId, currentFamilyId, "RoleChanged", cancellationToken: cancellationToken);
+        var familyId = await _sessions.CreateAsync(user.Id, cancellationToken: cancellationToken);
         var accessToken = GenerateToken(user, newRoleId, familyId);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, newRoleId, familyId, clientSession, _timeProvider.GetUtcNow().UtcDateTime);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id, newRoleId, familyId, clientSession, _timeProvider.GetUtcNow().UtcDateTime, cancellationToken: cancellationToken);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return DataResult<AuthResultDto>.Ok(BuildAuthResult(accessToken, refreshToken, user, newRoleId));
     }
@@ -201,7 +201,7 @@ public class AuthService : IAuthService
         int? activeRoleId,
         string familyId,
         ClientSessionInfoDto clientSession,
-        DateTime now)
+        DateTime now, CancellationToken cancellationToken = default)
     {
         var refreshToken = JwtHelper.GenerateRefreshToken();
         await _refreshTokens.AddAsync(new RefreshToken
@@ -214,7 +214,7 @@ public class AuthService : IAuthService
             CreatedDate = now,
             IpAddress = Limit(clientSession.IpAddress, 45),
             UserAgent = Limit(clientSession.UserAgent, 512)
-        });
+        }, cancellationToken: cancellationToken);
 
         return refreshToken;
     }
@@ -227,9 +227,9 @@ public class AuthService : IAuthService
         return value.Length <= maximumLength ? value : value[..maximumLength];
     }
 
-    private async Task<int> GetMaxLoginAttemptsAsync()
+    private async Task<int> GetMaxLoginAttemptsAsync(CancellationToken cancellationToken = default)
     {
-        var setting = await _settings.FirstOrDefaultAsync(setting => setting.Key == "MaxLoginAttempts");
+        var setting = await _settings.FirstOrDefaultAsync(setting => setting.Key == "MaxLoginAttempts", cancellationToken: cancellationToken);
         return int.TryParse(setting?.Value, out var maxAttempts) && maxAttempts is >= 3 and <= 20
             ? maxAttempts
             : Constants.Authentication.DefaultMaxLoginAttempts;

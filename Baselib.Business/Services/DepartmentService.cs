@@ -10,12 +10,12 @@ namespace Baselib.Business.Services;
 
 public class DepartmentService : IDepartmentService
 {
-    private readonly IRepository<Department> _departments;
+    private readonly IEntityRepository<Department> _departments;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly TimeProvider _timeProvider;
 
-    public DepartmentService(IRepository<Department> departments, IUnitOfWork unitOfWork, IMapper mapper, TimeProvider timeProvider)
+    public DepartmentService(IEntityRepository<Department> departments, IUnitOfWork unitOfWork, IMapper mapper, TimeProvider timeProvider)
     {
         _departments = departments;
         _unitOfWork = unitOfWork;
@@ -23,19 +23,19 @@ public class DepartmentService : IDepartmentService
         _timeProvider = timeProvider;
     }
 
-    public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var departments = await _departments.GetAllAsync(
-            asNoTracking: true,
-            includes: [d => d.ParentDepartment!]);
+            predicate: item => !item.IsDeleted, ignoreQueryFilters: true, asNoTracking: true,
+            includes: [d => d.ParentDepartment!], cancellationToken: cancellationToken);
 
         return DataResult<IEnumerable<DepartmentDto>>.Ok(
             departments.OrderBy(d => d.Name).Select(d => _mapper.Map<DepartmentDto>(d)));
     }
 
-    public async Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync()
+    public async Task<IDataResult<IEnumerable<SelectOptionDto>>> GetSelectOptionsAsync(CancellationToken cancellationToken = default)
     {
-        var departments = await _departments.GetAllAsync(asNoTracking: true);
+        var departments = await _departments.GetAllAsync(asNoTracking: true, cancellationToken: cancellationToken);
         var options = departments.OrderBy(d => d.Name).Select(d => new SelectOptionDto
         {
             Id = d.Id,
@@ -45,34 +45,34 @@ public class DepartmentService : IDepartmentService
         return DataResult<IEnumerable<SelectOptionDto>>.Ok(options);
     }
 
-    public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync()
+    public async Task<IDataResult<IEnumerable<DepartmentDto>>> GetTreeAsync(CancellationToken cancellationToken = default)
     {
-        var departments = await _departments.GetAllAsync(asNoTracking: true);
+        var departments = await _departments.GetAllAsync(asNoTracking: true, cancellationToken: cancellationToken);
 
         return DataResult<IEnumerable<DepartmentDto>>.Ok(
             BuildTree(departments.OrderBy(d => d.Name), null));
     }
 
-    public async Task<IDataResult<DepartmentDto>> GetByIdAsync(int id)
+    public async Task<IDataResult<DepartmentDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var department = await _departments.GetByIdAsync(
             id,
-            d => d.ParentDepartment!,
-            d => d.SubDepartments);
+            ignoreQueryFilters: true,
+            includes: [d => d.ParentDepartment!, d => d.SubDepartments], cancellationToken: cancellationToken);
 
-        if (department == null)
+        if (department == null || department.IsDeleted)
             return DataResult<DepartmentDto>.NotFound(Messages.Department.NotFound);
 
         return DataResult<DepartmentDto>.Ok(_mapper.Map<DepartmentDto>(department));
     }
 
-    public async Task<IDataResult<DepartmentDto>> CreateAsync(CreateDepartmentDto dto)
+    public async Task<IDataResult<DepartmentDto>> CreateAsync(CreateDepartmentDto dto, CancellationToken cancellationToken = default)
     {
         var code = dto.Code.Trim();
-        if (await _departments.AnyAsync(d => d.Code == code, ignoreQueryFilters: true))
+        if (await _departments.AnyAsync(d => d.Code == code, ignoreQueryFilters: true, cancellationToken: cancellationToken))
             return DataResult<DepartmentDto>.BadRequest(Messages.Department.CodeAlreadyExists);
 
-        var parentValidation = await ValidateParentAsync(dto.ParentDepartmentId, null);
+        var parentValidation = await ValidateParentAsync(dto.ParentDepartmentId, null, cancellationToken: cancellationToken);
         if (!parentValidation.Success)
             return DataResult<DepartmentDto>.ErrorDataResult(parentValidation.Message, parentValidation.StatusCode);
 
@@ -85,28 +85,28 @@ public class DepartmentService : IDepartmentService
             IsActive = true
         };
 
-        await _departments.AddAsync(department);
-        await _unitOfWork.SaveChangesAsync();
+        await _departments.AddAsync(department, cancellationToken: cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        var created = await GetByIdAsync(department.Id);
+        var created = await GetByIdAsync(department.Id, cancellationToken: cancellationToken);
         return DataResult<DepartmentDto>.Created(created.Data!, Messages.General.Saved);
     }
 
-    public async Task<IResult> UpdateAsync(int id, UpdateDepartmentDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateDepartmentDto dto, CancellationToken cancellationToken = default)
     {
-        var department = await _departments.GetByIdAsync(id);
-        if (department == null)
+        var department = await _departments.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (department == null || department.IsDeleted)
             return Result.NotFound(Messages.Department.NotFound);
 
         if (dto.ParentDepartmentId == id)
             return Result.BadRequest(Messages.General.SelfReferenceNotAllowed);
 
-        var parentValidation = await ValidateParentAsync(dto.ParentDepartmentId, id);
+        var parentValidation = await ValidateParentAsync(dto.ParentDepartmentId, id, cancellationToken: cancellationToken);
         if (!parentValidation.Success)
             return parentValidation;
 
         var code = dto.Code.Trim();
-        if (await _departments.AnyAsync(d => d.Code == code && d.Id != id, ignoreQueryFilters: true))
+        if (await _departments.AnyAsync(d => d.Code == code && d.Id != id, ignoreQueryFilters: true, cancellationToken: cancellationToken))
             return Result.BadRequest(Messages.Department.CodeAlreadyExists);
 
         department.Name = dto.Name.Trim();
@@ -116,21 +116,22 @@ public class DepartmentService : IDepartmentService
         department.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _departments.Update(department);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task<IResult> DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var department = await _departments.GetByIdAsync(id);
-        if (department == null)
+        var department = await _departments.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (department == null || department.IsDeleted)
             return Result.NotFound(Messages.Department.NotFound);
 
+        department.IsDeleted = true;
         department.IsActive = false;
         department.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _departments.Update(department);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.General.Deleted);
     }
@@ -148,7 +149,7 @@ public class DepartmentService : IDepartmentService
             .ToList();
     }
 
-    private async Task<IResult> ValidateParentAsync(int? parentDepartmentId, int? departmentId)
+    private async Task<IResult> ValidateParentAsync(int? parentDepartmentId, int? departmentId, CancellationToken cancellationToken = default)
     {
         if (!parentDepartmentId.HasValue)
             return Result.Ok();
@@ -161,7 +162,7 @@ public class DepartmentService : IDepartmentService
             if (departmentId == currentParentId || !visitedDepartmentIds.Add(currentParentId.Value))
                 return Result.BadRequest(Messages.General.HierarchyCycleNotAllowed);
 
-            var parent = await _departments.GetByIdAsync(currentParentId.Value);
+            var parent = await _departments.GetByIdAsync(currentParentId.Value, cancellationToken: cancellationToken);
             if (parent == null)
                 return Result.BadRequest(Messages.General.ParentNotFoundOrInactive);
 

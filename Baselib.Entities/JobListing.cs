@@ -1,6 +1,6 @@
 namespace Baselib.Entities;
 
-public sealed class JobListing : BaseEntity
+public sealed class JobListing : SoftDeleteEntity
 {
     public int? InstitutionId { get; set; }
     public Institution? InstitutionEntity { get; set; }
@@ -13,5 +13,4 @@ public sealed class JobListing : BaseEntity
     public string EndDate { get; set; } = string.Empty;
     public string? SourceUrl { get; set; }
     public string? PdfUrl { get; set; }
-    public bool IsDeleted { get; set; }
 }

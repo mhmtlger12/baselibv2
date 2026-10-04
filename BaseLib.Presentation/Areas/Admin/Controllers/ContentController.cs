@@ -9,18 +9,21 @@ public sealed class ContentController(IContentService content) : AdminController
     [HttpGet("")]
     public IActionResult Index(string slug)
     {
+        if (IsLegacyJobs(slug)) return RedirectToAction("Index", "Jobs");
         var page = content.List(slug);
         return page is null ? NotFound() : View(page);
     }
     [HttpGet("Edit/{id:int?}")]
     public IActionResult Edit(string slug, int id = 0)
     {
+        if (IsLegacyJobs(slug)) return RedirectToAction("Index", "Jobs");
         var model = content.Edit(slug, id);
         return model is null ? NotFound() : View(model);
     }
     [HttpPost("Edit/{id:int?}")]
     public IActionResult Edit(string slug, int id, ContentEditModel model)
     {
+        if (IsLegacyJobs(slug)) return StatusCode(StatusCodes.Status410Gone);
         var existing = content.Edit(slug, id);
         if (existing is null) return NotFound();
         model.Slug = slug; model.Id = id; model.Definition = existing.Definition;
@@ -33,14 +36,18 @@ public sealed class ContentController(IContentService content) : AdminController
     [HttpGet("Delete/{id:int}")]
     public IActionResult Delete(string slug, int id)
     {
+        if (IsLegacyJobs(slug)) return RedirectToAction("Index", "Jobs");
         var model = content.Edit(slug, id);
         return model is null ? NotFound() : View(model);
     }
     [HttpPost("Delete/{id:int}"), ActionName("Delete")]
     public IActionResult ConfirmDelete(string slug, int id)
     {
+        if (IsLegacyJobs(slug)) return StatusCode(StatusCodes.Status410Gone);
         if (!content.Delete(slug, id)) return NotFound();
         TempData["Success"] = "Kayıt silindi.";
         return RedirectToAction(nameof(Index), new { slug });
     }
+    // Mock IDs must never be forwarded to real records for editing or deletion.
+    private static bool IsLegacyJobs(string slug) => string.Equals(slug, "jobs", StringComparison.OrdinalIgnoreCase);
 }

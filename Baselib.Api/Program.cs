@@ -1,7 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Baselib.Api.Attributes;
 using Baselib.Api.Authentication;
@@ -9,7 +8,6 @@ using Baselib.Api.Extensions;
 using Baselib.Api.Middleware;
 using Baselib.Business.Extensions;
 using Baselib.Core.Constants;
-using Baselib.Core.Interfaces;
 using Baselib.Data.Extensions;
 using Scalar.AspNetCore;
 

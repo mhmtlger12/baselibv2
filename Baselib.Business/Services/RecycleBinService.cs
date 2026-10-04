@@ -8,91 +8,75 @@ using Baselib.Entities;
 
 namespace Baselib.Business.Services;
 
-public class RecycleBinService : IRecycleBinService
+public sealed class RecycleBinService(
+    IEntityRepository<User> users,
+    IEntityRepository<Role> roles,
+    IEntityRepository<Department> departments,
+    IEntityRepository<Menu> menus,
+    IEntityRepository<Permission> permissions,
+    IEntityRepository<Slider> sliders,
+    IEntityRepository<JobListing> jobs,
+    IEntityRepository<Institution> institutions,
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider) : IRecycleBinService
 {
-    private readonly IRepository<User> _users;
-    private readonly IRepository<Role> _roles;
-    private readonly IRepository<Department> _departments;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly TimeProvider _timeProvider;
-
-    public RecycleBinService(
-        IRepository<User> users,
-        IRepository<Role> roles,
-        IRepository<Department> departments,
-        IUnitOfWork unitOfWork,
-        TimeProvider timeProvider)
+    public async Task<IDataResult<IEnumerable<RecycleBinItemDto>>> GetAllDeletedItemsAsync(CancellationToken cancellationToken = default)
     {
-        _users = users;
-        _roles = roles;
-        _departments = departments;
-        _unitOfWork = unitOfWork;
-        _timeProvider = timeProvider;
-    }
-
-    public async Task<IDataResult<IEnumerable<RecycleBinItemDto>>> GetAllDeletedItemsAsync()
-    {
+        // These repositories share one DbContext: execute queries sequentially.
         var items = new List<RecycleBinItemDto>();
-
-        var deletedUsers = await _users.GetAllAsync(predicate: u => !u.IsActive, ignoreQueryFilters: true);
-        items.AddRange(deletedUsers.Select(u => new RecycleBinItemDto
-        {
-            Id = u.Id,
-            Type = RecycleBinType.User.ToString(),
-            TypeName = RecycleBinType.User.GetDisplayName(),
-            Name = u.Username,
-            DeletedDate = u.UpdatedDate
-        }));
-
-        var deletedRoles = await _roles.GetAllAsync(predicate: r => !r.IsActive, ignoreQueryFilters: true);
-        items.AddRange(deletedRoles.Select(r => new RecycleBinItemDto
-        {
-            Id = r.Id,
-            Type = RecycleBinType.Role.ToString(),
-            TypeName = RecycleBinType.Role.GetDisplayName(),
-            Name = r.Name,
-            DeletedDate = r.UpdatedDate
-        }));
-
-        var deletedDepts = await _departments.GetAllAsync(predicate: d => !d.IsActive, ignoreQueryFilters: true);
-        items.AddRange(deletedDepts.Select(d => new RecycleBinItemDto
-        {
-            Id = d.Id,
-            Type = RecycleBinType.Department.ToString(),
-            TypeName = RecycleBinType.Department.GetDisplayName(),
-            Name = d.Name,
-            DeletedDate = d.UpdatedDate
-        }));
-
-        return DataResult<IEnumerable<RecycleBinItemDto>>.Ok(items.OrderByDescending(i => i.DeletedDate));
+        items.AddRange(await ReadAsync(users, RecycleBinType.User, item => item.Username, cancellationToken));
+        items.AddRange(await ReadAsync(roles, RecycleBinType.Role, item => item.Name, cancellationToken));
+        items.AddRange(await ReadAsync(departments, RecycleBinType.Department, item => item.Name, cancellationToken));
+        items.AddRange(await ReadAsync(menus, RecycleBinType.Menu, item => item.Name, cancellationToken));
+        items.AddRange(await ReadAsync(permissions, RecycleBinType.Permission, item => item.Name, cancellationToken));
+        items.AddRange(await ReadAsync(sliders, RecycleBinType.Slider, item => item.Title, cancellationToken));
+        items.AddRange(await ReadAsync(jobs, RecycleBinType.JobListing, item => item.Institution + " — " + item.Summary, cancellationToken));
+        items.AddRange(await ReadAsync(institutions, RecycleBinType.Institution, item => item.Name, cancellationToken));
+        return DataResult<IEnumerable<RecycleBinItemDto>>.Ok(items.OrderByDescending(item => item.DeletedDate));
     }
 
-    public async Task<IResult> RestoreAsync(string type, int id)
+    public async Task<IResult> RestoreAsync(string type, int id, CancellationToken cancellationToken = default)
     {
         if (!RecycleBinTypeExtensions.TryParse(type, out var binType))
             return Result.BadRequest(Messages.RecycleBin.InvalidType);
-
-        return await RestoreAsync(binType, id);
+        return await RestoreAsync(binType, id, cancellationToken);
     }
 
-    public async Task<IResult> RestoreAsync(RecycleBinType type, int id)
+    public async Task<IResult> RestoreAsync(RecycleBinType type, int id, CancellationToken cancellationToken = default)
     {
-        BaseEntity? entity = type switch
+        SoftDeleteEntity? entity = type switch
         {
-            RecycleBinType.User => await _users.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true),
-            RecycleBinType.Role => await _roles.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true),
-            RecycleBinType.Department => await _departments.FirstOrDefaultAsync(x => x.Id == id, ignoreQueryFilters: true),
+            RecycleBinType.User => await users.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.Role => await roles.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.Department => await departments.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.Menu => await menus.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.Permission => await permissions.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.Slider => await sliders.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.JobListing => await jobs.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
+            RecycleBinType.Institution => await institutions.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken),
             _ => null
         };
-
-        if (entity == null)
+        if (entity is null || !entity.IsDeleted)
             return Result.NotFound(Messages.General.NotFound);
 
-        entity.IsActive = true;
-        entity.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
+        // Restoring never grants access or republishes content. Activation uses normal module permissions.
+        entity.IsDeleted = false;
+        entity.IsActive = false;
+        entity.UpdatedDate = timeProvider.GetUtcNow().UtcDateTime;
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok("Kayıt pasif olarak geri yüklendi.");
+    }
 
-        await _unitOfWork.SaveChangesAsync();
-
-        return Result.Ok(Messages.General.Updated);
+    private static async Task<IEnumerable<RecycleBinItemDto>> ReadAsync<T>(
+        IEntityRepository<T> repository, RecycleBinType type, Func<T, string> name,
+        CancellationToken cancellationToken) where T : SoftDeleteEntity
+    {
+        var items = await repository.GetAllAsync(item => item.IsDeleted,
+            ignoreQueryFilters: true, asNoTracking: true, cancellationToken: cancellationToken);
+        return items.Select(item => new RecycleBinItemDto
+        {
+            Id = item.Id, Type = type.ToString(), TypeName = type.GetDisplayName(),
+            Name = name(item), DeletedDate = item.UpdatedDate
+        });
     }
 }

@@ -4,7 +4,7 @@ using BaseLib.Presentation.Services.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace BaseLib.Presentation.Areas.Admin.Controllers;
-public sealed class AccountController(IAccountSession session, ILogger<AccountController> logger) : AdminController
+public sealed class AccountController(IAccountSession session) : AdminController
 {
     [AllowAnonymous, HttpGet]
     public IActionResult Login(string? returnUrl)
@@ -29,7 +29,10 @@ public sealed class AccountController(IAccountSession session, ILogger<AccountCo
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
         try { await session.LogoutAsync(ct); }
-        catch (ApiException error) { logger.LogWarning("Upstream logout failed with status {Status}.", error.StatusCode); }
+        catch (ApiException)
+        {
+            // AccountSession, API hatasında da yerel oturumu finally içinde kapatır.
+        }
         return RedirectToAction(nameof(Login));
     }
     [HttpGet] public IActionResult AccessDenied() { Response.StatusCode = 403; return View(); }

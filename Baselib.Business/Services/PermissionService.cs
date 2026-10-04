@@ -11,14 +11,14 @@ namespace Baselib.Business.Services;
 
 public class PermissionService : IPermissionService
 {
-    private readonly IRepository<Permission> _permissions;
+    private readonly IEntityRepository<Permission> _permissions;
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly TimeProvider _timeProvider;
 
     public PermissionService(
-        IRepository<Permission> permissions,
+        IEntityRepository<Permission> permissions,
         IRepository<RolePermission> rolePermissions,
         IUnitOfWork unitOfWork,
         IMapper mapper,
@@ -31,9 +31,9 @@ public class PermissionService : IPermissionService
         _timeProvider = timeProvider;
     }
 
-    public async Task<IDataResult<IEnumerable<PermissionDto>>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<PermissionDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var permissions = await _permissions.GetAllAsync(asNoTracking: true);
+        var permissions = await _permissions.GetAllAsync(predicate: item => !item.IsDeleted, ignoreQueryFilters: true, asNoTracking: true, cancellationToken: cancellationToken);
         var orderedPermissions = permissions
             .OrderBy(p => p.ControllerName)
             .ThenBy(p => p.CRUDActionType);
@@ -41,38 +41,38 @@ public class PermissionService : IPermissionService
         return DataResult<IEnumerable<PermissionDto>>.Ok(_mapper.Map<IEnumerable<PermissionDto>>(orderedPermissions));
     }
 
-    public async Task<IDataResult<PermissionDto>> GetByIdAsync(int id)
+    public async Task<IDataResult<PermissionDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var permission = await _permissions.GetByIdAsync(id);
-        if (permission == null)
+        var permission = await _permissions.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (permission == null || permission.IsDeleted)
             return DataResult<PermissionDto>.NotFound(Messages.Permission.NotFound);
 
         return DataResult<PermissionDto>.Ok(_mapper.Map<PermissionDto>(permission));
     }
 
-    public async Task<IDataResult<PermissionDto>> CreateAsync(CreatePermissionDto dto)
+    public async Task<IDataResult<PermissionDto>> CreateAsync(CreatePermissionDto dto, CancellationToken cancellationToken = default)
     {
         var permission = BuildPermission(dto);
 
-        if (await _permissions.AnyAsync(p => p.Code == permission.Code, ignoreQueryFilters: true))
+        if (await _permissions.AnyAsync(p => p.Code == permission.Code, ignoreQueryFilters: true, cancellationToken: cancellationToken))
             return DataResult<PermissionDto>.BadRequest(Messages.Permission.CodeAlreadyExists);
 
         if (await _permissions.AnyAsync(p =>
                 p.ControllerName == permission.ControllerName &&
                 p.ActionName == permission.ActionName,
-                ignoreQueryFilters: true))
+                ignoreQueryFilters: true, cancellationToken: cancellationToken))
             return DataResult<PermissionDto>.BadRequest(Messages.Permission.AlreadyExistsForAction);
 
-        await _permissions.AddAsync(permission);
-        await _unitOfWork.SaveChangesAsync();
+        await _permissions.AddAsync(permission, cancellationToken: cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return DataResult<PermissionDto>.Created(_mapper.Map<PermissionDto>(permission), Messages.General.Saved);
     }
 
-    public async Task<IResult> UpdateAsync(int id, CreatePermissionDto dto)
+    public async Task<IResult> UpdateAsync(int id, CreatePermissionDto dto, CancellationToken cancellationToken = default)
     {
-        var permission = await _permissions.GetByIdAsync(id);
-        if (permission == null)
+        var permission = await _permissions.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (permission == null || permission.IsDeleted)
             return Result.NotFound(Messages.Permission.NotFound);
 
         var normalized = BuildPermission(dto);
@@ -83,14 +83,14 @@ public class PermissionService : IPermissionService
 
         if (await _permissions.AnyAsync(
                 p => p.Code == normalized.Code && p.Id != id,
-                ignoreQueryFilters: true))
+                ignoreQueryFilters: true, cancellationToken: cancellationToken))
             return Result.BadRequest(Messages.Permission.CodeAlreadyExists);
 
         if (await _permissions.AnyAsync(p =>
                 p.Id != id &&
                 p.ControllerName == normalized.ControllerName &&
                 p.ActionName == normalized.ActionName,
-                ignoreQueryFilters: true))
+                ignoreQueryFilters: true, cancellationToken: cancellationToken))
             return Result.BadRequest(Messages.Permission.AlreadyExistsForAction);
 
         permission.Name = normalized.Name;
@@ -103,37 +103,38 @@ public class PermissionService : IPermissionService
         permission.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _permissions.Update(permission);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task<IResult> DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var permission = await _permissions.GetByIdAsync(id);
-        if (permission == null)
+        var permission = await _permissions.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (permission == null || permission.IsDeleted)
             return Result.NotFound(Messages.Permission.NotFound);
 
         if (permission.IsSystem)
             return Result.BadRequest(Messages.Permission.SystemPermissionProtected);
 
+        permission.IsDeleted = true;
         permission.IsActive = false;
         permission.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _permissions.Update(permission);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.General.Deleted);
     }
 
-    public async Task<IDataResult<IEnumerable<PermissionGroupDto>>> GetGroupedPermissionsAsync(int? roleId = null)
+    public async Task<IDataResult<IEnumerable<PermissionGroupDto>>> GetGroupedPermissionsAsync(int? roleId = null, CancellationToken cancellationToken = default)
     {
-        var allPermissions = await _permissions.GetAllAsync();
+        var allPermissions = await _permissions.GetAllAsync(cancellationToken: cancellationToken);
         var orderedPermissions = allPermissions
             .OrderBy(p => p.ControllerName)
             .ThenBy(p => p.CRUDActionType);
 
         var rolePermissionIds = roleId.HasValue
-            ? (await _rolePermissions.GetAllAsync(rp => rp.RoleId == roleId.Value))
+            ? (await _rolePermissions.GetAllAsync(rp => rp.RoleId == roleId.Value, ignoreQueryFilters: true, cancellationToken: cancellationToken))
                 .Select(rp => rp.PermissionId)
                 .ToList()
             : new List<int>();

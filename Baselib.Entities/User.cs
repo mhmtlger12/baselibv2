@@ -1,6 +1,6 @@
 namespace Baselib.Entities;
 
-public class User : BaseEntity
+public class User : SoftDeleteEntity
 {
     public string Username { get; set; } = string.Empty;
     public string NormalizedUsername { get; set; } = string.Empty;

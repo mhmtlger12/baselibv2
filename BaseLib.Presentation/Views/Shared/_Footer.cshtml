@@ -1,14 +1,15 @@
+@{ var branding = await SiteSettings.GetAsync(Context.RequestAborted); }
 <footer class="mt-14 border-t-2 border-teal-400 bg-navy-900 text-navy-100">
 
     <div class="mx-auto grid max-w-6xl gap-10 px-4 py-11 sm:px-6 lg:grid-cols-[1.15fr_1.7fr] lg:gap-16">
 
-        <section aria-label="puannokta hakkında">
+        <section aria-label="@branding.Name hakkında">
 
             <div class="flex items-center gap-3">
                 <span aria-hidden="true" class="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-500 text-lg font-bold text-white">p.</span>
                 <div>
-                    <p class="font-bold tracking-tight text-white">puannokta</p>
-                    <p class="text-xs text-navy-300">Taban puanları, tek noktada.</p>
+                    <p class="font-bold tracking-tight text-white">@branding.Name</p>
+                    <p class="text-xs text-navy-300">@branding.Tagline</p>
                 </div>
             </div>
 
@@ -57,7 +58,7 @@
 
     <div class="border-t border-white/10">
         <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-xs text-navy-300 sm:flex-row sm:justify-between sm:px-6">
-            <p>© @DateTime.Now.Year puannokta. Tüm hakları saklıdır.</p>
+            <p>© @DateTime.Now.Year @branding.Name. Tüm hakları saklıdır.</p>
             <p>Veriler ÖSYM ve kurum duyurularından derlenir.</p>
         </div>
     </div>

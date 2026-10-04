@@ -1,13 +1,14 @@
+@{ var branding = await SiteSettings.GetAsync(Context.RequestAborted); }
 <header class="sticky top-0 z-30 border-b border-border bg-white/90 backdrop-blur">
 
     <div class="mx-auto max-w-6xl px-4 py-3 sm:px-6">
 
         <div class="flex items-center gap-4 lg:gap-6">
-            <a href="/" class="flex shrink-0 items-center gap-3 text-left" aria-label="puannokta ana sayfa">
+            <a href="/" class="flex shrink-0 items-center gap-3 text-left" aria-label="@branding.Name ana sayfa">
             <span aria-hidden="true" class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-navy-600 to-teal-600 text-base font-bold text-white shadow-sm">p.</span>
             <span class="leading-tight">
-            <span class="block text-lg font-bold tracking-tight text-navy-900">puannokta</span>
-            <span class="hidden text-xs text-muted-foreground lg:block">Taban puanları, tek noktada.</span>
+            <span class="block text-lg font-bold tracking-tight text-navy-900">@branding.Name</span>
+            <span class="hidden text-xs text-muted-foreground lg:block">@branding.Tagline</span>
             </span>
             </a>
 

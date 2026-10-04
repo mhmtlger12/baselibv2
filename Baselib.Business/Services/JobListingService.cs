@@ -8,71 +8,71 @@ using Baselib.Entities;
 namespace Baselib.Business.Services;
 
 public sealed class JobListingService(
-    IRepository<JobListing> listings,
-    IRepository<Institution> institutions,
+    IEntityRepository<JobListing> listings,
+    IEntityRepository<Institution> institutions,
     IUnitOfWork unitOfWork,
     AutoMapper.IMapper mapper,
     TimeProvider timeProvider) : IJobListingService
 {
-    public async Task<IDataResult<IEnumerable<JobListingDto>>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IDataResult<IEnumerable<JobListingDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var items = await listings.GetAllAsync(predicate: job => !job.IsDeleted, ignoreQueryFilters: true,
-            asNoTracking: true, cancellationToken: ct, includes: [job => job.InstitutionEntity!]);
+            asNoTracking: true, cancellationToken: cancellationToken, includes: [job => job.InstitutionEntity!]);
         return DataResult<IEnumerable<JobListingDto>>.Ok(MapList(items));
     }
 
-    public async Task<IDataResult<IEnumerable<JobListingDto>>> GetPublishedAsync(string? categoryKey = null, string? query = null, CancellationToken ct = default)
+    public async Task<IDataResult<IEnumerable<JobListingDto>>> GetPublishedAsync(string? categoryKey = null, string? query = null, CancellationToken cancellationToken = default)
     {
         var items = await listings.GetAllAsync(predicate: job =>
                 (string.IsNullOrWhiteSpace(categoryKey) || categoryKey == "all" || job.CategoryKey == categoryKey) &&
                 (string.IsNullOrWhiteSpace(query) || job.Institution.Contains(query) || job.Summary.Contains(query)),
-            asNoTracking: true, cancellationToken: ct, includes: [job => job.InstitutionEntity!]);
+            asNoTracking: true, cancellationToken: cancellationToken, includes: [job => job.InstitutionEntity!]);
         return DataResult<IEnumerable<JobListingDto>>.Ok(MapList(items));
     }
 
-    public async Task<IDataResult<JobListingDto>> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<IDataResult<JobListingDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var item = await listings.FirstOrDefaultAsync(job => job.Id == id && !job.IsDeleted,
-            ignoreQueryFilters: true, includes: [job => job.InstitutionEntity!]);
+            ignoreQueryFilters: true, includes: [job => job.InstitutionEntity!], cancellationToken: cancellationToken);
         return item is null ? DataResult<JobListingDto>.NotFound("İlan bulunamadı.") : DataResult<JobListingDto>.Ok(mapper.Map<JobListingDto>(item));
     }
 
-    public async Task<IDataResult<JobListingDto>> GetPublishedByIdAsync(int id, CancellationToken ct = default)
+    public async Task<IDataResult<JobListingDto>> GetPublishedByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var item = await listings.FirstOrDefaultAsync(job => job.Id == id && job.IsActive && !job.IsDeleted,
-            includes: [job => job.InstitutionEntity!]);
+            includes: [job => job.InstitutionEntity!], cancellationToken: cancellationToken);
         return item is null ? DataResult<JobListingDto>.NotFound("İlan bulunamadı.") : DataResult<JobListingDto>.Ok(mapper.Map<JobListingDto>(item));
     }
 
-    public async Task<IDataResult<JobListingDto>> CreateAsync(SaveJobListingDto dto, CancellationToken ct = default)
+    public async Task<IDataResult<JobListingDto>> CreateAsync(SaveJobListingDto dto, CancellationToken cancellationToken = default)
     {
         var item = new JobListing { CreatedDate = timeProvider.GetUtcNow().UtcDateTime };
-        await ApplyAsync(item, dto);
-        await listings.AddAsync(item);
-        await unitOfWork.SaveChangesAsync();
+        await ApplyAsync(item, dto, cancellationToken: cancellationToken);
+        await listings.AddAsync(item, cancellationToken: cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return DataResult<JobListingDto>.Created(mapper.Map<JobListingDto>(item), Messages.General.Saved);
     }
 
-    public async Task<IResult> UpdateAsync(int id, SaveJobListingDto dto, CancellationToken ct = default)
+    public async Task<IResult> UpdateAsync(int id, SaveJobListingDto dto, CancellationToken cancellationToken = default)
     {
-        var item = await listings.FirstOrDefaultAsync(job => job.Id == id, ignoreQueryFilters: true, includes: []);
+        var item = await listings.FirstOrDefaultAsync(job => job.Id == id, ignoreQueryFilters: true, includes: [], cancellationToken: cancellationToken);
         if (item is null || item.IsDeleted) return Result.NotFound("İlan bulunamadı.");
-        await ApplyAsync(item, dto);
+        await ApplyAsync(item, dto, cancellationToken: cancellationToken);
         item.UpdatedDate = timeProvider.GetUtcNow().UtcDateTime;
         listings.Update(item);
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task<IResult> DeleteAsync(int id, CancellationToken ct = default)
+    public async Task<IResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var item = await listings.FirstOrDefaultAsync(job => job.Id == id, ignoreQueryFilters: true, includes: []);
+        var item = await listings.FirstOrDefaultAsync(job => job.Id == id, ignoreQueryFilters: true, includes: [], cancellationToken: cancellationToken);
         if (item is null || item.IsDeleted) return Result.NotFound("İlan bulunamadı.");
         item.IsDeleted = true;
         item.IsActive = false;
         item.UpdatedDate = timeProvider.GetUtcNow().UtcDateTime;
         listings.Update(item);
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
         return Result.Ok(Messages.General.Deleted);
     }
 
@@ -84,12 +84,12 @@ public sealed class JobListingService(
         return dto;
     });
 
-    private async Task ApplyAsync(JobListing item, SaveJobListingDto dto)
+    private async Task ApplyAsync(JobListing item, SaveJobListingDto dto, CancellationToken cancellationToken = default)
     {
         item.InstitutionId = dto.InstitutionId;
         if (dto.InstitutionId is int institutionId)
         {
-            var institution = await institutions.FirstOrDefaultAsync(x => x.Id == institutionId);
+            var institution = await institutions.FirstOrDefaultAsync(x => x.Id == institutionId, cancellationToken: cancellationToken);
             if (institution is not null) item.Institution = institution.Name;
         }
         else item.Institution = dto.Institution.Trim();

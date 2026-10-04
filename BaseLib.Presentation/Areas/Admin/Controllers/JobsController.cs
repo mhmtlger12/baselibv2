@@ -64,7 +64,7 @@ public sealed class JobsController(
     [HttpPost("Delete/{id:int}"), ActionName("Delete")]
     public async Task<IActionResult> ConfirmDelete(int id, CancellationToken ct)
     {
-        if (await ExecuteAsync(() => jobs.DeleteAsync(id, ct))) return Saved("İlan silindi.");
+        if (await ExecuteAsync(() => jobs.DeleteAsync(id, ct))) return Saved("İlan çöp kutusuna taşındı.");
         var item = await jobs.GetAsync(id, ct);
         return View("Delete", new DeleteModel(id, item.Institution));
     }

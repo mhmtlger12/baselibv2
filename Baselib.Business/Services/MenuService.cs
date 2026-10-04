@@ -10,7 +10,7 @@ namespace Baselib.Business.Services;
 
 public class MenuService : IMenuService
 {
-    private readonly IRepository<Menu> _menus;
+    private readonly IEntityRepository<Menu> _menus;
     private readonly IRepository<UserRole> _userRoles;
     private readonly IRepository<RolePermission> _rolePermissions;
     private readonly IUnitOfWork _unitOfWork;
@@ -18,7 +18,7 @@ public class MenuService : IMenuService
     private readonly TimeProvider _timeProvider;
 
     public MenuService(
-        IRepository<Menu> menus,
+        IEntityRepository<Menu> menus,
         IRepository<UserRole> userRoles,
         IRepository<RolePermission> rolePermissions,
         IUnitOfWork unitOfWork,
@@ -33,11 +33,11 @@ public class MenuService : IMenuService
         _timeProvider = timeProvider;
     }
 
-    public async Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync()
+    public async Task<IDataResult<IEnumerable<MenuDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var menus = await _menus.GetAllAsync(
-            asNoTracking: true,
-            includes: [m => m.Permission!]);
+            predicate: item => !item.IsDeleted, ignoreQueryFilters: true, asNoTracking: true,
+            includes: [m => m.Permission!], cancellationToken: cancellationToken);
 
         return DataResult<IEnumerable<MenuDto>>.Ok(
             menus.OrderBy(m => m.ParentId)
@@ -46,7 +46,7 @@ public class MenuService : IMenuService
                 .Select(m => _mapper.Map<MenuDto>(m)));
     }
 
-    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId, int? activeRoleId)
+    public async Task<IDataResult<IEnumerable<MenuDto>>> GetMenusForUserAsync(int userId, int? activeRoleId, CancellationToken cancellationToken = default)
     {
         var rolePermissionIds = new HashSet<int>();
 
@@ -56,34 +56,34 @@ public class MenuService : IMenuService
                 ur.UserId == userId &&
                 ur.RoleId == activeRoleId.Value &&
                 ur.User.IsActive &&
-                ur.Role.IsActive))
+                ur.Role.IsActive, cancellationToken: cancellationToken))
         {
             var rolePermissions = await _rolePermissions.GetAllAsync(
-                rp => rp.RoleId == activeRoleId.Value && rp.Permission.IsActive);
+                rp => rp.RoleId == activeRoleId.Value && rp.Permission.IsActive, cancellationToken: cancellationToken);
             rolePermissionIds = rolePermissions.Select(rp => rp.PermissionId).ToHashSet();
         }
 
         var menus = await _menus.GetAllAsync(
             predicate: m => m.PermissionId == null ||
                             (m.Permission!.IsActive && rolePermissionIds.Contains(m.PermissionId.Value)),
-            includes: [m => m.Permission!]);
+            includes: [m => m.Permission!], cancellationToken: cancellationToken);
 
         return DataResult<IEnumerable<MenuDto>>.Ok(BuildTree(menus.ToList(), null));
     }
 
-    public async Task<IDataResult<MenuDto>> GetByIdAsync(int id)
+    public async Task<IDataResult<MenuDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var menu = await _menus.GetByIdAsync(id, m => m.Permission!);
+        var menu = await _menus.GetByIdAsync(id, ignoreQueryFilters: true, includes: [m => m.Permission!], cancellationToken: cancellationToken);
 
-        if (menu == null)
+        if (menu == null || menu.IsDeleted)
             return DataResult<MenuDto>.NotFound(Messages.Menu.NotFound);
 
         return DataResult<MenuDto>.Ok(_mapper.Map<MenuDto>(menu));
     }
 
-    public async Task<IDataResult<MenuDto>> CreateAsync(CreateMenuDto dto)
+    public async Task<IDataResult<MenuDto>> CreateAsync(CreateMenuDto dto, CancellationToken cancellationToken = default)
     {
-        var parentValidation = await ValidateParentAsync(dto.ParentId, null);
+        var parentValidation = await ValidateParentAsync(dto.ParentId, null, cancellationToken: cancellationToken);
         if (!parentValidation.Success)
             return DataResult<MenuDto>.ErrorDataResult(parentValidation.Message, parentValidation.StatusCode);
 
@@ -99,23 +99,23 @@ public class MenuService : IMenuService
             IsActive = true
         };
 
-        await _menus.AddAsync(menu);
-        await _unitOfWork.SaveChangesAsync();
+        await _menus.AddAsync(menu, cancellationToken: cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
-        var created = await GetByIdAsync(menu.Id);
+        var created = await GetByIdAsync(menu.Id, cancellationToken: cancellationToken);
         return DataResult<MenuDto>.Created(created.Data!, Messages.General.Saved);
     }
 
-    public async Task<IResult> UpdateAsync(int id, UpdateMenuDto dto)
+    public async Task<IResult> UpdateAsync(int id, UpdateMenuDto dto, CancellationToken cancellationToken = default)
     {
-        var menu = await _menus.GetByIdAsync(id);
-        if (menu == null)
+        var menu = await _menus.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (menu == null || menu.IsDeleted)
             return Result.NotFound(Messages.Menu.NotFound);
 
         if (dto.ParentId == id)
             return Result.BadRequest(Messages.General.SelfReferenceNotAllowed);
 
-        var parentValidation = await ValidateParentAsync(dto.ParentId, id);
+        var parentValidation = await ValidateParentAsync(dto.ParentId, id, cancellationToken: cancellationToken);
         if (!parentValidation.Success)
             return parentValidation;
 
@@ -129,21 +129,22 @@ public class MenuService : IMenuService
         menu.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
         _menus.Update(menu);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.General.Updated);
     }
 
-    public async Task<IResult> DeleteAsync(int id)
+    public async Task<IResult> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var menu = await _menus.GetByIdAsync(id);
-        if (menu == null)
+        var menu = await _menus.GetByIdAsync(id, ignoreQueryFilters: true, cancellationToken: cancellationToken);
+        if (menu == null || menu.IsDeleted)
             return Result.NotFound(Messages.Menu.NotFound);
 
+        menu.IsDeleted = true;
         menu.IsActive = false;
         menu.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _menus.Update(menu);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken: cancellationToken);
 
         return Result.Ok(Messages.General.Deleted);
     }
@@ -163,7 +164,7 @@ public class MenuService : IMenuService
             .ToList();
     }
 
-    private async Task<IResult> ValidateParentAsync(int? parentId, int? menuId)
+    private async Task<IResult> ValidateParentAsync(int? parentId, int? menuId, CancellationToken cancellationToken = default)
     {
         if (!parentId.HasValue)
             return Result.Ok();
@@ -176,7 +177,7 @@ public class MenuService : IMenuService
             if (menuId == currentParentId || !visitedMenuIds.Add(currentParentId.Value))
                 return Result.BadRequest(Messages.General.HierarchyCycleNotAllowed);
 
-            var parent = await _menus.GetByIdAsync(currentParentId.Value);
+            var parent = await _menus.GetByIdAsync(currentParentId.Value, cancellationToken: cancellationToken);
             if (parent == null)
                 return Result.BadRequest(Messages.General.ParentNotFoundOrInactive);
 

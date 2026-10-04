@@ -19,17 +19,17 @@ public class RecycleBinController : ControllerBase
 
     [HttpGet]
     [RequirePermission("RecycleBin_Read")]
-    public async Task<IActionResult> List()
+    public async Task<IActionResult> List(CancellationToken cancellationToken = default)
     {
-        var result = await _recycleBinService.GetAllDeletedItemsAsync();
+        var result = await _recycleBinService.GetAllDeletedItemsAsync(cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("{type}/{id:int}/restore")]
     [RequirePermission("RecycleBin_Restore")]
-    public async Task<IActionResult> Restore(string type, int id)
+    public async Task<IActionResult> Restore(string type, int id, CancellationToken cancellationToken = default)
     {
-        var result = await _recycleBinService.RestoreAsync(type, id);
+        var result = await _recycleBinService.RestoreAsync(type, id, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 }

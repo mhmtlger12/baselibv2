@@ -1,6 +1,6 @@
 namespace Baselib.Entities;
 
-public class Department : BaseEntity
+public class Department : SoftDeleteEntity
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;

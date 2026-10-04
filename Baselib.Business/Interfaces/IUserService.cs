@@ -6,14 +6,14 @@ namespace Baselib.Business.Interfaces;
 
 public interface IUserService
 {
-    Task<IDataResult<IEnumerable<UserDto>>> GetAllAsync();
-    Task<IDataResult<UserDto>> GetByIdAsync(int id, int? activeRoleId = null);
-    Task<IDataResult<UserDto>> RegisterAsync(RegisterUserDto dto);
-    Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto, ClaimsPrincipal? principal = null);
-    Task<IResult> UpdateAsync(int id, UpdateUserDto dto);
-    Task<IResult> ResetPasswordAsync(ClaimsPrincipal principal, int id, ResetUserPasswordDto dto);
-    Task<IResult> DeleteAsync(int id);
-    Task<IResult> AssignRolesAsync(ClaimsPrincipal principal, int userId, List<int> roleIds);
-    Task<IResult> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
-    Task RevokeUserSessionsAsync(int userId, string reason);
+    Task<IDataResult<IEnumerable<UserDto>>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IDataResult<UserDto>> GetByIdAsync(int id, int? activeRoleId = null, CancellationToken cancellationToken = default);
+    Task<IDataResult<UserDto>> RegisterAsync(RegisterUserDto dto, CancellationToken cancellationToken = default);
+    Task<IDataResult<UserDto>> CreateAsync(CreateUserDto dto, ClaimsPrincipal? principal = null, CancellationToken cancellationToken = default);
+    Task<IResult> UpdateAsync(int id, UpdateUserDto dto, CancellationToken cancellationToken = default);
+    Task<IResult> ResetPasswordAsync(ClaimsPrincipal principal, int id, ResetUserPasswordDto dto, CancellationToken cancellationToken = default);
+    Task<IResult> DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<IResult> AssignRolesAsync(ClaimsPrincipal principal, int userId, List<int> roleIds, CancellationToken cancellationToken = default);
+    Task<IResult> ChangePasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default);
+    Task RevokeUserSessionsAsync(int userId, string reason, CancellationToken cancellationToken = default);
 }

@@ -23,18 +23,18 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.AuthLogin)]
     [RequestSizeLimit(16 * 1024)]
-    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+    public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _authService.LoginAsync(dto, GetClientSessionInfo());
+        var result = await _authService.LoginAsync(dto, GetClientSessionInfo(), cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("refresh")]
     [EnableRateLimiting(RateLimitPolicies.AuthRefresh)]
     [RequestSizeLimit(16 * 1024)]
-    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _authService.RefreshTokenAsync(dto.RefreshToken, GetClientSessionInfo());
+        var result = await _authService.RefreshTokenAsync(dto.RefreshToken, GetClientSessionInfo(), cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -42,25 +42,25 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitPolicies.AuthRegister)]
     [RequestSizeLimit(16 * 1024)]
-    public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
+    public async Task<IActionResult> Register([FromBody] RegisterUserDto dto, CancellationToken cancellationToken = default)
     {
-        var result = await _userService.RegisterAsync(dto);
+        var result = await _userService.RegisterAsync(dto, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("logout")]
     [Authorize]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken = default)
     {
-        var result = await _authService.LogoutAsync(User);
+        var result = await _authService.LogoutAsync(User, cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPost("switch-role/{roleId:int}")]
     [Authorize]
-    public async Task<IActionResult> SwitchRole(int roleId)
+    public async Task<IActionResult> SwitchRole(int roleId, CancellationToken cancellationToken = default)
     {
-        var result = await _authService.SwitchRoleAsync(User, roleId, GetClientSessionInfo());
+        var result = await _authService.SwitchRoleAsync(User, roleId, GetClientSessionInfo(), cancellationToken: cancellationToken);
         return StatusCode(result.StatusCode, result);
     }
 

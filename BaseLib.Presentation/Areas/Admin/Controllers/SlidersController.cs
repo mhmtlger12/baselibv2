@@ -46,7 +46,7 @@ public sealed class SlidersController(
     public async Task<IActionResult> ConfirmDelete(int id, CancellationToken ct)
     {
         var slider = await sliders.GetAsync(id, ct);
-        if (await ExecuteAsync(() => sliders.DeleteAsync(id, ct))) return Saved("Slayt silindi.");
+        if (await ExecuteAsync(() => sliders.DeleteAsync(id, ct))) return Saved("Slayt çöp kutusuna taşındı.");
         return View("Delete", new DeleteModel(id, slider.Title));
     }
 }

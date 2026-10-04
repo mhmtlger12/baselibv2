@@ -41,7 +41,7 @@ public sealed class InstitutionsController(
     [HttpPost("Delete/{id:int}"), ActionName("Delete")]
     public async Task<IActionResult> ConfirmDelete(int id, CancellationToken ct)
     {
-        if (await ExecuteAsync(() => institutions.DeleteAsync(id, ct))) return Saved("Kurum silindi.");
+        if (await ExecuteAsync(() => institutions.DeleteAsync(id, ct))) return Saved("Kurum çöp kutusuna taşındı.");
         var item = await institutions.GetAsync(id, ct);
         return View("Delete", new DeleteModel(id, item.Name));
     }
