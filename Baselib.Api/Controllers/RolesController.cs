@@ -54,7 +54,7 @@ public class RolesController : ControllerBase
     [RequirePermission("Roles_Create")]
     public async Task<IActionResult> Add([FromBody] CreateRoleDto dto)
     {
-        var result = await _roleService.CreateAsync(dto);
+        var result = await _roleService.CreateAsync(User, dto);
         if (result.Success && result.Data != null)
             return CreatedAtAction(nameof(Get), new { id = result.Data.Id }, result);
 
@@ -65,7 +65,7 @@ public class RolesController : ControllerBase
     [RequirePermission("Roles_Update")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateRoleDto dto)
     {
-        var result = await _roleService.UpdateAsync(id, dto);
+        var result = await _roleService.UpdateAsync(User, id, dto);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -74,7 +74,7 @@ public class RolesController : ControllerBase
     [RequirePermission("Roles_Delete")]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _roleService.DeleteAsync(id);
+        var result = await _roleService.DeleteAsync(User, id);
         return StatusCode(result.StatusCode, result);
     }
 
@@ -82,7 +82,7 @@ public class RolesController : ControllerBase
     [RequirePermission("Roles_Update")]
     public async Task<IActionResult> AssignPermissions(int id, [FromBody] List<int> permissionIds)
     {
-        var result = await _roleService.AssignPermissionsAsync(id, permissionIds);
+        var result = await _roleService.AssignPermissionsAsync(User, id, permissionIds);
         return StatusCode(result.StatusCode, result);
     }
 }

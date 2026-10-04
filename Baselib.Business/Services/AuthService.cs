@@ -17,7 +17,8 @@ public class AuthService : IAuthService
     private readonly IRepository<User> _users;
     private readonly IRepository<RefreshToken> _refreshTokens;
     private readonly IRepository<AppSetting> _settings;
-    private readonly IUserService _userService;
+    private readonly ISessionService _sessions;
+    private readonly IRefreshTokenStore _tokenStore;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
     private readonly AutoMapper.IMapper _mapper;
@@ -27,7 +28,8 @@ public class AuthService : IAuthService
         IRepository<User> users,
         IRepository<RefreshToken> refreshTokens,
         IRepository<AppSetting> settings,
-        IUserService userService,
+        ISessionService sessions,
+        IRefreshTokenStore tokenStore,
         IUnitOfWork unitOfWork,
         IConfiguration configuration,
         AutoMapper.IMapper mapper,
@@ -36,7 +38,8 @@ public class AuthService : IAuthService
         _users = users;
         _refreshTokens = refreshTokens;
         _settings = settings;
-        _userService = userService;
+        _sessions = sessions;
+        _tokenStore = tokenStore;
         _unitOfWork = unitOfWork;
         _configuration = configuration;
         _mapper = mapper;
@@ -79,8 +82,9 @@ public class AuthService : IAuthService
 
         var activeRole = user.UserRoles.FirstOrDefault()?.Role;
 
-        var accessToken = GenerateToken(user, activeRole?.Id);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, activeRole?.Id, clientSession);
+        var familyId = await _sessions.CreateAsync(user.Id);
+        var accessToken = GenerateToken(user, activeRole?.Id, familyId);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id, activeRole?.Id, familyId, clientSession, now);
 
         await _unitOfWork.SaveChangesAsync();
 
@@ -98,40 +102,50 @@ public class AuthService : IAuthService
             rt => rt.TokenHash == tokenHash,
             include: q => q.Include(rt => rt.User).ThenInclude(u => u.UserRoles).ThenInclude(ur => ur.Role)
                            .Include(rt => rt.User).ThenInclude(u => u.Department));
-
         if (token == null)
             return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
-
-        // Döndürülmüş veya logout edilmiş tokenın yeniden kullanılması token hırsızlığı göstergesidir.
-        // Aynı cihaz oturumundaki tüm tokenlar iptal edilir.
         if (token.RevokedDate.HasValue)
+            return await RejectReuseAsync(token);
+        if (token.ExpiryDate <= now ||
+            !await _sessions.IsActiveAsync(token.UserId, token.FamilyId, token.ActiveRoleId))
+            return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
         {
-            await RevokeFamilyAsync(token.FamilyId, now, "ReuseDetected");
+            // Conditional UPDATE takes the database row lock. Exactly one request can consume it.
+            if (!await _tokenStore.TryConsumeAsync(token.Id, now))
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                return await RejectReuseAsync(token);
+            }
+
+            var newRefreshToken = await CreateRefreshTokenAsync(token.UserId, token.ActiveRoleId, token.FamilyId, clientSession, now);
+            var newAccessToken = GenerateToken(token.User, token.ActiveRoleId, token.FamilyId);
             await _unitOfWork.SaveChangesAsync();
-            return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
+            await _unitOfWork.CommitTransactionAsync();
+            return DataResult<AuthResultDto>.Ok(BuildAuthResult(newAccessToken, newRefreshToken, token.User, token.ActiveRoleId));
         }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionSafelyAsync();
+            throw;
+        }
+    }
 
-        if (token.ExpiryDate <= now)
-            return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
-
-        var user = token.User;
-        var activeRole = token.ActiveRoleId.HasValue
-            ? user.UserRoles.FirstOrDefault(ur => ur.RoleId == token.ActiveRoleId.Value)?.Role
-            : user.UserRoles.FirstOrDefault()?.Role;
-
-        var newAccessToken = GenerateToken(user, activeRole?.Id);
-        var newRefreshToken = await RotateRefreshTokenAsync(token, activeRole?.Id, clientSession, now);
-
+    private async Task<IDataResult<AuthResultDto>> RejectReuseAsync(RefreshToken token)
+    {
+        // Persist session revocation, so a concurrent successor cannot revive the family.
+        await _sessions.RevokeAsync(token.UserId, token.FamilyId, "ReuseDetected");
         await _unitOfWork.SaveChangesAsync();
-
-        return DataResult<AuthResultDto>.Ok(BuildAuthResult(newAccessToken, newRefreshToken, user, activeRole?.Id));
+        return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
     }
 
     public async Task<IResult> LogoutAsync(System.Security.Claims.ClaimsPrincipal principal)
     {
         var userId = ClaimsPrincipalHelper.GetUserId(principal);
 
-        await _userService.RevokeUserSessionsAsync(userId, "Logout");
+        await _sessions.RevokeAllAsync(userId, "Logout");
         await _unitOfWork.SaveChangesAsync();
 
         return Result.Ok(Messages.Auth.LoggedOut);
@@ -154,8 +168,15 @@ public class AuthService : IAuthService
         if (!user.UserRoles.Any(ur => ur.RoleId == newRoleId))
             return DataResult<AuthResultDto>.Unauthorized(Messages.Role.NoSwitchAccess);
 
-        var accessToken = GenerateToken(user, newRoleId);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, newRoleId, clientSession);
+        var currentFamilyId = principal.FindFirst(SessionIdClaim)?.Value;
+        if (string.IsNullOrWhiteSpace(currentFamilyId) ||
+            !await _sessions.IsActiveAsync(userId, currentFamilyId, ClaimsPrincipalHelper.GetActiveRoleId(principal)))
+            return DataResult<AuthResultDto>.Unauthorized(Messages.Auth.InvalidRefreshToken);
+
+        await _sessions.RevokeAsync(userId, currentFamilyId, "RoleChanged");
+        var familyId = await _sessions.CreateAsync(user.Id);
+        var accessToken = GenerateToken(user, newRoleId, familyId);
+        var refreshToken = await CreateRefreshTokenAsync(user.Id, newRoleId, familyId, clientSession, _timeProvider.GetUtcNow().UtcDateTime);
 
         await _unitOfWork.SaveChangesAsync();
 
@@ -164,10 +185,10 @@ public class AuthService : IAuthService
 
     // ── Private Helpers ──────────────────────────────────────────
 
-    private string GenerateToken(User user, int? activeRoleId)
+    private string GenerateToken(User user, int? activeRoleId, string familyId)
     {
         return JwtHelper.GenerateAccessToken(
-            user, activeRoleId,
+            user, activeRoleId, familyId,
             _configuration[Key]!,
             _configuration[Issuer]!,
             _configuration[Audience]!,
@@ -178,40 +199,16 @@ public class AuthService : IAuthService
     private async Task<string> CreateRefreshTokenAsync(
         int userId,
         int? activeRoleId,
-        ClientSessionInfoDto clientSession)
+        string familyId,
+        ClientSessionInfoDto clientSession,
+        DateTime now)
     {
         var refreshToken = JwtHelper.GenerateRefreshToken();
         await _refreshTokens.AddAsync(new RefreshToken
         {
             UserId = userId,
             TokenHash = JwtHelper.HashRefreshToken(refreshToken),
-            FamilyId = Guid.NewGuid().ToString("N"),
-            ActiveRoleId = activeRoleId,
-            ExpiryDate = _timeProvider.GetUtcNow().UtcDateTime.AddDays(RefreshTokenExpiryDays),
-            CreatedDate = _timeProvider.GetUtcNow().UtcDateTime,
-            IpAddress = Limit(clientSession.IpAddress, 45),
-            UserAgent = Limit(clientSession.UserAgent, 512)
-        });
-
-        return refreshToken;
-    }
-
-    private async Task<string> RotateRefreshTokenAsync(
-        RefreshToken currentToken,
-        int? activeRoleId,
-        ClientSessionInfoDto clientSession,
-        DateTime now)
-    {
-        currentToken.RevokedDate = now;
-        currentToken.RevokedReason = "Rotated";
-        currentToken.LastUsedDate = now;
-
-        var refreshToken = JwtHelper.GenerateRefreshToken();
-        await _refreshTokens.AddAsync(new RefreshToken
-        {
-            UserId = currentToken.UserId,
-            TokenHash = JwtHelper.HashRefreshToken(refreshToken),
-            FamilyId = currentToken.FamilyId,
+            FamilyId = familyId,
             ActiveRoleId = activeRoleId,
             ExpiryDate = now.AddDays(RefreshTokenExpiryDays),
             CreatedDate = now,
@@ -220,18 +217,6 @@ public class AuthService : IAuthService
         });
 
         return refreshToken;
-    }
-
-    private async Task RevokeFamilyAsync(string familyId, DateTime now, string reason)
-    {
-        var activeTokens = await _refreshTokens.GetAllAsync(
-            rt => rt.FamilyId == familyId && !rt.RevokedDate.HasValue);
-
-        foreach (var activeToken in activeTokens)
-        {
-            activeToken.RevokedDate = now;
-            activeToken.RevokedReason = reason;
-        }
     }
 
     private static string? Limit(string? value, int maximumLength)

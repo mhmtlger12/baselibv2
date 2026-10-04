@@ -12,6 +12,8 @@ public static class BusinessServiceExtensions
         services.AddAutoMapper(typeof(MappingProfile).Assembly);
         services.AddSingleton(TimeProvider.System);
 
+        services.AddScoped<IRoleSecurityService, RoleSecurityService>();
+        services.AddScoped<ISessionService, SessionService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProfileService, ProfileService>();

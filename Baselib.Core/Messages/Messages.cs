@@ -38,12 +38,16 @@ public static class Messages
         public const string NotFound = "Rol bulunamadı";
         public const string NoSwitchAccess = "Bu role geçiş yetkiniz yok.";
         public const string InvalidPermissionSelection = "Geçersiz veya pasif izin seçildi.";
+        public const string PermissionDelegationNotAllowed = "Sahip olmadığınız izinleri başka bir role veya kullanıcıya veremezsiniz.";
+        public const string PrivilegedManagementNotAllowed = "Kritik izin veya ayrıcalıklı rol yönetme yetkiniz yok.";
         public const string SystemRoleCannotBeDeleted = "Sistem rolü silinemez veya devre dışı bırakılamaz.";
-        public const string SystemRoleCriticalPermissionsRequired = "Sistem rolünün kritik rol atama izinleri kaldırılamaz.";
+        public const string SystemRoleCriticalPermissionsRequired = "Sistem rolünün kritik yönetim izinleri kaldırılamaz.";
     }
 
     public static class Permission
     {
+        public const string SystemPermissionProtected = "Sistem izninin kodu ve işlem tanımı değiştirilemez; izin silinemez veya pasif yapılamaz.";
+
         public const string CodeAlreadyExists = "Bu izin kodu zaten kullanılıyor";
         public const string NotFound = "İzin bulunamadı";
         public const string AlreadyExistsForAction = "Bu controller/action için izin zaten mevcut";

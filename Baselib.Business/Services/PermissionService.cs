@@ -76,6 +76,10 @@ public class PermissionService : IPermissionService
             return Result.NotFound(Messages.Permission.NotFound);
 
         var normalized = BuildPermission(dto);
+        if (permission.IsSystem && (!dto.IsActive ||
+            normalized.Code != permission.Code || normalized.ControllerName != permission.ControllerName ||
+            normalized.ActionName != permission.ActionName))
+            return Result.BadRequest(Messages.Permission.SystemPermissionProtected);
 
         if (await _permissions.AnyAsync(
                 p => p.Code == normalized.Code && p.Id != id,
@@ -109,6 +113,9 @@ public class PermissionService : IPermissionService
         var permission = await _permissions.GetByIdAsync(id);
         if (permission == null)
             return Result.NotFound(Messages.Permission.NotFound);
+
+        if (permission.IsSystem)
+            return Result.BadRequest(Messages.Permission.SystemPermissionProtected);
 
         permission.IsActive = false;
         permission.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;

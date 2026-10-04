@@ -17,7 +17,8 @@ public class UserService : IUserService
     private readonly IRepository<User> _users;
     private readonly IRepository<UserRole> _userRoles;
     private readonly IRepository<Role> _roles;
-    private readonly IRepository<RefreshToken> _refreshTokens;
+    private readonly ISessionService _sessions;
+    private readonly IRoleSecurityService _roleSecurity;
     private readonly IPermissionCheckService _permissionCheckService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -27,7 +28,8 @@ public class UserService : IUserService
         IRepository<User> users,
         IRepository<UserRole> userRoles,
         IRepository<Role> roles,
-        IRepository<RefreshToken> refreshTokens,
+        ISessionService sessions,
+        IRoleSecurityService roleSecurity,
         IPermissionCheckService permissionCheckService,
         IUnitOfWork unitOfWork,
         IMapper mapper,
@@ -36,7 +38,8 @@ public class UserService : IUserService
         _users = users;
         _userRoles = userRoles;
         _roles = roles;
-        _refreshTokens = refreshTokens;
+        _sessions = sessions;
+        _roleSecurity = roleSecurity;
         _permissionCheckService = permissionCheckService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -74,7 +77,7 @@ public class UserService : IUserService
         if (!PasswordHelper.MeetsPolicy(dto.Password))
             return DataResult<UserDto>.BadRequest(Messages.User.PasswordPolicyNotMet);
 
-        var roleValidation = await ValidateRoleAssignmentAsync(principal, dto.RoleIds);
+        var roleValidation = await _roleSecurity.ValidateAssignmentAsync(principal, dto.RoleIds);
         if (!roleValidation.Success)
             return DataResult<UserDto>.ErrorDataResult(roleValidation.Message, roleValidation.StatusCode);
 
@@ -168,6 +171,8 @@ public class UserService : IUserService
         user.LastName = dto.LastName?.Trim();
         user.Phone = dto.Phone?.Trim();
         user.DepartmentId = dto.DepartmentId;
+        if (user.IsActive && !dto.IsActive)
+            await RevokeUserSessionsAsync(user.Id, "AccountDisabled");
         user.IsActive = dto.IsActive;
         user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
 
@@ -194,8 +199,7 @@ public class UserService : IUserService
             return Result.NotFound(Messages.User.NotFound);
 
         // Inactive accounts/roles must not bypass protection of a privileged account.
-        var isPrivileged = await _userRoles.AnyAsync(
-            userRole => userRole.UserId == id && userRole.Role.IsPrivileged, ignoreQueryFilters: true);
+        var isPrivileged = await _roleSecurity.HasPrivilegedRoleAsync(id);
         if (isPrivileged && !await _permissionCheckService.HasAccessAsync(
                 callerUserId, activeRoleId, Constants.Permissions.UsersResetPrivilegedPassword))
             return Result.Forbidden(Messages.User.PrivilegedPasswordResetNotAllowed);
@@ -221,6 +225,7 @@ public class UserService : IUserService
         if (await WouldRemoveLastPrivilegedAdminAsync(id, null, userWillRemainActive: false))
             return Result.BadRequest(Messages.User.LastPrivilegedAdminMustRemain);
 
+        await RevokeUserSessionsAsync(user.Id, "AccountDisabled");
         user.IsActive = false;
         user.UpdatedDate = _timeProvider.GetUtcNow().UtcDateTime;
         _users.Update(user);
@@ -237,14 +242,20 @@ public class UserService : IUserService
         if (!await _users.AnyAsync(u => u.Id == userId))
             return Result.NotFound(Messages.User.NotFound);
 
-        var roleValidation = await ValidateRoleAssignmentAsync(principal, roleIds);
+        var roleValidation = await _roleSecurity.ValidateAssignmentAsync(principal, roleIds, userId);
         if (!roleValidation.Success)
             return roleValidation;
 
         if (await WouldRemoveLastPrivilegedAdminAsync(userId, roleIds, userWillRemainActive: true))
             return Result.BadRequest(Messages.User.LastPrivilegedAdminMustRemain);
 
+        var currentRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId,
+            ignoreQueryFilters: true, asNoTracking: true);
+        if (currentRoles.Select(ur => ur.RoleId).ToHashSet().SetEquals(roleIds))
+            return Result.Ok(Messages.General.Saved);
+
         await ReplaceUserRolesAsync(userId, roleIds);
+        await RevokeUserSessionsAsync(userId, "RolesChanged");
         await _unitOfWork.SaveChangesAsync();
 
         return Result.Ok(Messages.General.Saved);
@@ -272,57 +283,7 @@ public class UserService : IUserService
         return Result.Ok(Messages.User.PasswordChanged);
     }
 
-    public async Task RevokeUserSessionsAsync(int userId, string reason)
-    {
-        var activeTokens = await _refreshTokens.GetAllAsync(
-            token => token.UserId == userId && !token.RevokedDate.HasValue, ignoreQueryFilters: true);
-
-        var revokedAt = _timeProvider.GetUtcNow().UtcDateTime;
-        foreach (var token in activeTokens)
-        {
-            token.RevokedDate = revokedAt;
-            token.RevokedReason = reason;
-        }
-    }
-
-    private async Task<IResult> ValidateRoleAssignmentAsync(
-        System.Security.Claims.ClaimsPrincipal? principal,
-        IEnumerable<int> roleIds)
-    {
-        var requestedRoleIds = roleIds.Distinct().ToArray();
-        if (requestedRoleIds.Length == 0)
-            return Result.Ok();
-
-        var roles = await _roles.GetAllAsync(
-            role => requestedRoleIds.Contains(role.Id),
-            asNoTracking: true);
-        var selectedRoles = roles.ToList();
-
-        if (selectedRoles.Count != requestedRoleIds.Length)
-            return Result.BadRequest(Messages.User.InvalidRoleSelection);
-
-        if (principal == null)
-            return Result.Forbidden(Messages.User.RoleAssignmentNotAllowed);
-
-        var callerUserId = ClaimsPrincipalHelper.GetUserId(principal);
-        var activeRoleId = ClaimsPrincipalHelper.GetActiveRoleId(principal);
-        if (!await _permissionCheckService.HasAccessAsync(
-                callerUserId,
-                activeRoleId,
-                Constants.Permissions.UsersAssignRoles))
-            return Result.Forbidden(Messages.User.RoleAssignmentNotAllowed);
-
-        if (selectedRoles.Any(role => role.IsPrivileged) &&
-            !await _permissionCheckService.HasAccessAsync(
-                callerUserId,
-                activeRoleId,
-                Constants.Permissions.UsersAssignPrivilegedRoles))
-        {
-            return Result.Forbidden(Messages.User.PrivilegedRoleAssignmentNotAllowed);
-        }
-
-        return Result.Ok();
-    }
+    public Task RevokeUserSessionsAsync(int userId, string reason) => _sessions.RevokeAllAsync(userId, reason);
 
     private async Task<bool> WouldRemoveLastPrivilegedAdminAsync(
         int userId,
@@ -355,7 +316,7 @@ public class UserService : IUserService
 
     private async Task ReplaceUserRolesAsync(int userId, IEnumerable<int> roleIds)
     {
-        var existingRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId);
+        var existingRoles = await _userRoles.GetAllAsync(ur => ur.UserId == userId, ignoreQueryFilters: true);
 
         _userRoles.RemoveRange(existingRoles);
 

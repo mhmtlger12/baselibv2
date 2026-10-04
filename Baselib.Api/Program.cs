@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Baselib.Api.Attributes;
+using Baselib.Api.Authentication;
 using Baselib.Api.Extensions;
 using Baselib.Api.Middleware;
 using Baselib.Business.Extensions;
@@ -42,9 +43,11 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDataServices(builder.Configuration);
 
+builder.Services.AddScoped<SessionJwtBearerEvents>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.EventsType = typeof(SessionJwtBearerEvents);
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,

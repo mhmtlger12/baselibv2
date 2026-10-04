@@ -16,6 +16,7 @@ public static class DataServiceExtensions
                 new MySqlServerVersion(new Version(8, 0, 0))));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         return services;

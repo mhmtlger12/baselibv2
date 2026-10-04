@@ -16,6 +16,7 @@ public static class JwtHelper
     public static string GenerateAccessToken(
         User user,
         int? activeRoleId,
+        string familyId,
         string key,
         string issuer,
         string audience,
@@ -29,7 +30,9 @@ public static class JwtHelper
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
-            new(ClaimTypes.Email, user.Email)
+            new(ClaimTypes.Email, user.Email),
+            new(SessionIdClaim, familyId),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
         };
 
         if (activeRoleId.HasValue)

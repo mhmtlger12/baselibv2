@@ -4,6 +4,7 @@ public static class Constants
 {
     public static class Jwt
     {
+        public const string SessionIdClaim = "session_id";
         public const string Key = "Jwt:Key";
         public const string Issuer = "Jwt:Issuer";
         public const string Audience = "Jwt:Audience";
