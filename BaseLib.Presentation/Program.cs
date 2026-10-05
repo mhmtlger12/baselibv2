@@ -31,8 +31,8 @@ builder.Services.AddManagementApi();
 builder.Services.AddSingleton<IServerSessionStore, ServerSessionStore>();
 builder.Services.AddScoped<IAccountSession, AccountSession>();
 builder.Services.AddScoped<SessionCookieEvents>();
-builder.Services.AddSingleton<ISiteContentService, MockSiteContentService>();
-builder.Services.AddSingleton<IContentService, MockContentService>();
+builder.Services.AddScoped<ISiteContentService, SiteApiService>();
+builder.Services.AddScoped<IContentService, ContentApiService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
 {
     options.Cookie.Name = "BaseLib.Presentation.Auth";

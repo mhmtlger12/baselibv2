@@ -10,7 +10,8 @@ public sealed class JobsController(ISiteContentService site, IPublicJobApiServic
     {
         // The visible list and category counts use the same response for this request.
         var items = await jobs.GetPublishedAsync("all", null, ct);
-        return View(site.Jobs(category, q, items.Select(JobListing.FromDto).ToArray()));
+        var categories = await jobs.GetCategoriesAsync(ct);
+        return View(site.Jobs(category, q, items.Select(JobListing.FromDto).ToArray(), categories));
     }
 
     [HttpGet("/ilanlar/{id:int}")]

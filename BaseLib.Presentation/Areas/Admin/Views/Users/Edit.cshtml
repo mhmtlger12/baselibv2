@@ -1,5 +1,5 @@
 @model UserEditModel
-@{ ViewData["Title"] = Model.Id == 0 ? "Yeni Kullanıcı" : "Kullanıcı Düzenle"; }
+@{ ViewData["Title"] = Model.Id == 0 ? "Yeni Kullanıcı" : "Kullanıcı Düzenle"; ViewData["SaveLabel"] = "Kullanıcı bilgilerini kaydet"; }
 <dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
     <partial name="_DialogHeader" />
 
@@ -53,25 +53,17 @@
                 <div class="sm:col-span-2">
                     <label asp-for="Password" class="field-label">Şifre</label>
                     <input asp-for="Password" aria-describedby="Password-hint Password-error" type="password" class="input" autocomplete="new-password" minlength="12" maxlength="128" required />
+                    <p class="mt-1 text-sm text-muted-foreground">Kullanıcı oluşturulduktan sonra Roller ekranından rol atayabilirsiniz.</p>
                     <p id="Password-hint" class="mt-1 text-xs text-muted-foreground">En az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir.</p>
                     <span asp-validation-for="Password" id="Password-error"></span>
                 </div>
                 }
                 else {
                 <div class="sm:col-span-2">
+                    <a asp-action="Roles" asp-route-id="@Model.Id" class="btn-soft">Rolleri yönet</a>
                     <a asp-action="ResetPassword" asp-route-id="@Model.Id" class="btn-soft">Şifreyi sıfırla</a>
                 </div>
                 }
-                <fieldset class="sm:col-span-2">
-                    <legend class="field-label">Roller
-                    </legend>
-                    <div class="flex flex-wrap gap-4">
-                        @foreach(var role in Model.AvailableRoles) {
-                        <label class="inline-flex items-center gap-2 text-sm text-navy-700">
-                        <input type="checkbox" name="RoleIds" value="@role.Id" checked="@Model.RoleIds.Contains(role.Id)" class="h-5 w-5 accent-teal-600" />@role.Name</label>
-                        }
-                    </div>
-                </fieldset>
                 @if(Model.Id > 0) {
                 <div class="sm:col-span-2">
                     <label class="flex items-center gap-2 text-sm text-navy-700">

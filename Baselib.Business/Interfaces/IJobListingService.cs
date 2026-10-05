@@ -5,6 +5,7 @@ namespace Baselib.Business.Interfaces;
 
 public interface IJobListingService
 {
+    Task<IDataResult<IReadOnlyList<JobCategoryDto>>> GetCategoriesAsync(CancellationToken cancellationToken = default);
     Task<IDataResult<IEnumerable<JobListingDto>>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<IDataResult<IEnumerable<JobListingDto>>> GetPublishedAsync(string? categoryKey = null, string? query = null, CancellationToken cancellationToken = default);
     Task<IDataResult<JobListingDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default);

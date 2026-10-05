@@ -11,6 +11,13 @@ namespace Baselib.Api.Controllers;
 [Authorize(Policy = "DynamicPermission")]
 public sealed class JobsController(IJobListingService jobs) : ControllerBase
 {
+    [HttpGet("categories"), AllowAnonymous]
+    public async Task<IActionResult> Categories(CancellationToken cancellationToken)
+    {
+        var result = await jobs.GetCategoriesAsync(cancellationToken);
+        return StatusCode(result.StatusCode, result);
+    }
+
     [HttpGet("published"), AllowAnonymous]
     public async Task<IActionResult> Published([FromQuery] string? categoryKey, [FromQuery] string? q, CancellationToken cancellationToken)
     {

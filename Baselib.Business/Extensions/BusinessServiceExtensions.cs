@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Baselib.Business.Content;
 using Baselib.Business.Interfaces;
 using Baselib.Business.Mappings;
 using Baselib.Business.Services;
@@ -11,6 +12,8 @@ public static class BusinessServiceExtensions
     {
         services.AddAutoMapper(typeof(MappingProfile).Assembly);
         services.AddSingleton(TimeProvider.System);
+        services.AddSiteContentModules();
+        services.AddScoped<ISiteContentService, SiteContentService>();
 
         services.AddScoped<IRoleSecurityService, RoleSecurityService>();
         services.AddScoped<ISessionService, SessionService>();

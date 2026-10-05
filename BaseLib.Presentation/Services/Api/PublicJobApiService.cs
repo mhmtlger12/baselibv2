@@ -4,12 +4,16 @@ namespace BaseLib.Presentation.Services.Api;
 
 public interface IPublicJobApiService
 {
+    Task<List<JobCategoryDto>> GetCategoriesAsync(CancellationToken ct);
     Task<List<JobListingDto>> GetPublishedAsync(string? categoryKey, string? query, CancellationToken ct);
     Task<JobListingDto?> GetAsync(int id, CancellationToken ct);
 }
 
 public sealed class PublicJobApiService(ApiTransport transport) : IPublicJobApiService
 {
+    public Task<List<JobCategoryDto>> GetCategoriesAsync(CancellationToken ct) =>
+        transport.SendAsync<List<JobCategoryDto>>(HttpMethod.Get, "api/jobs/categories", cancellationToken: ct);
+
     public Task<List<JobListingDto>> GetPublishedAsync(string? categoryKey, string? query, CancellationToken ct) =>
         transport.SendAsync<List<JobListingDto>>(HttpMethod.Get,
             $"{ApiRoutes.PublishedJobs}?categoryKey={Uri.EscapeDataString(categoryKey ?? "")}&q={Uri.EscapeDataString(query ?? "")}", cancellationToken: ct);

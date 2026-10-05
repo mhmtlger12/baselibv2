@@ -17,11 +17,24 @@
                     <span asp-validation-for="InstitutionId"></span>
                 </div>
                 <div class="sm:col-span-2"><label asp-for="Summary" class="field-label">İlan Özeti</label><input asp-for="Summary" class="input" maxlength="500" /></div>
-                <div><label asp-for="CategoryKey" class="field-label">Kategori Anahtarı</label><input asp-for="CategoryKey" class="input" placeholder="akademik-uye" /></div>
-                <div><label asp-for="CategoryLabel" class="field-label">Kategori Adı</label><input asp-for="CategoryLabel" class="input" /></div>
-                <div><label asp-for="PublishedAt" class="field-label">Yayın Tarihi</label><input asp-for="PublishedAt" type="date" class="input" /></div>
-                <div><label asp-for="StartDate" class="field-label">Başvuru Başlangıcı</label><input asp-for="StartDate" class="input" /></div>
-                <div><label asp-for="EndDate" class="field-label">Başvuru Bitişi</label><input asp-for="EndDate" class="input" /></div>
+                <div class="sm:col-span-2">
+                    <label asp-for="CategoryKey" class="field-label">İlan Kategorisi</label>
+                    <select asp-for="CategoryKey" class="input" required>
+                        <option value="">Kategori seçin</option>
+                        @foreach (var category in Model.Categories.Where(x => x.IsSelectable))
+                        {
+                            <option value="@category.Key">@category.Label</option>
+                        }
+                    </select>
+                    <span asp-validation-for="CategoryKey"></span>
+                </div>
+                @if (Model.LegacyDates is not null)
+                {
+                    <p class="sm:col-span-2 text-sm text-navy-700">@Model.LegacyDates</p>
+                }
+                <div><label asp-for="PublishedAt" class="field-label">Yayın Tarihi</label><input asp-for="PublishedAt" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" class="input" required /><p class="mt-1 text-xs text-muted-foreground">UTC saatidir. İlan, aktifse bu tarih ve saatten itibaren görünür.</p></div>
+                <div><label asp-for="StartDate" class="field-label">Başvuru Başlangıcı</label><input asp-for="StartDate" type="date" class="input" required /><span asp-validation-for="StartDate"></span></div>
+                <div><label asp-for="EndDate" class="field-label">Başvuru Bitişi</label><input asp-for="EndDate" type="date" class="input" required /><span asp-validation-for="EndDate"></span></div>
                 <div class="sm:col-span-2"><label asp-for="SourceUrl" class="field-label">Kaynak İlan URL</label><input asp-for="SourceUrl" class="input" maxlength="2048" /></div>
                 <div class="sm:col-span-2"><label asp-for="PdfUrl" class="field-label">İlan PDF URL</label><input asp-for="PdfUrl" class="input" maxlength="2048" /></div>
                 <label class="flex items-center gap-2 text-sm text-navy-700"><input asp-for="IsActive" class="h-5 w-5 accent-teal-600" /> Aktif</label>

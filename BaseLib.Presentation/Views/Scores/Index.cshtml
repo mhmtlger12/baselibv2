@@ -17,7 +17,7 @@
                 <h1 class="text-lg font-bold text-navy-900">@Model.Card.Title Taban Puanları</h1>
 
                 <nav aria-label="Öğrenim düzeyi" class="mt-4 flex flex-wrap gap-2">
-                    @foreach(var tab in Site.Content.LevelTabs) {
+                    @foreach(var tab in (await Site.GetAsync(Context.RequestAborted)).LevelTabs) {
                     <a asp-route-level="@tab.Key" asp-route-q="@Model.Query" class="rounded-full px-4 py-1.5 text-sm font-medium @(Model.Level == tab.Key ? "bg-navy-700 text-white" : "border border-border text-navy-700 hover:bg-navy-50")" aria-current="@(Model.Level == tab.Key ? "page" : null)">@tab.Label</a>
                     }
                 </nav>

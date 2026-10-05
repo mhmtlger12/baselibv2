@@ -7,7 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Baselib.Entities/Baselib.Entities.csproj" />
-    <Content Update="Data/*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="node_modules/**" />
     <None Remove="node_modules/**" />
   </ItemGroup>

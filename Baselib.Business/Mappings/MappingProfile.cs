@@ -47,7 +47,11 @@ public class MappingProfile : Profile
         // ── AppSetting ────────────────────────────────────────────
         CreateMap<AppSetting, SettingDto>();
         CreateMap<Slider, SliderDto>();
-        CreateMap<JobListing, JobListingDto>();
+        CreateMap<JobListing, JobListingDto>()
+            .ForMember(dest => dest.Institution,
+                opt => opt.MapFrom(src => src.InstitutionEntity != null ? src.InstitutionEntity.Name : src.Institution))
+            .ForMember(dest => dest.InstitutionLogoUrl,
+                opt => opt.MapFrom(src => src.InstitutionEntity != null ? src.InstitutionEntity.LogoUrl : null));
         CreateMap<Institution, InstitutionDto>();
     }
 }

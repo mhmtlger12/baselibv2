@@ -28,7 +28,7 @@
                     var hintId = inputId + "-hint";
                     var errorId = inputId + "-error";
                     var descriptionIds = field.Hint is null ? errorId : $"{hintId} {errorId}";
-                    <div class="@(field.Full || field.Type == "textarea" ? "sm:col-span-2" : "")">
+                    <div class="@(field.Type is "textarea" or "image" || field.MaxLength > 300 ? "sm:col-span-2" : "")">
                         @if (field.Type == "checkbox")
                         {
                             <label class="flex items-center gap-2 text-sm text-navy-700">
@@ -43,28 +43,30 @@
                             <label for="@inputId" class="field-label">@field.Label</label>
                             @if (field.Type == "textarea")
                             {
-                                <textarea id="@inputId" name="Values[@field.Key]" rows="4" maxlength="8000"
+                                <textarea id="@inputId" name="Values[@field.Key]" rows="4" maxlength="@field.MaxLength"
                                           aria-describedby="@descriptionIds" class="input">@value</textarea>
                             }
                             else if (field.Type == "select")
                             {
-                                <select id="@inputId" name="Values[@field.Key]" aria-describedby="@descriptionIds" class="input" required>
+                                <select id="@inputId" name="Values[@field.Key]" aria-describedby="@descriptionIds" class="input" required="@field.Required">
                                     <option value="">Seçiniz</option>
                                     @foreach (var option in field.Options ?? [])
                                     {
-                                        <option value="@option" selected="@(value == option)">@option</option>
+                                        <option value="@option.Value" selected="@(value == option.Value)">@option.Label</option>
                                     }
                                 </select>
                             }
                             else
                             {
                                 <input id="@inputId" name="Values[@field.Key]" value="@value"
-                                       type="@(field.Type is "date" or "number" ? field.Type : "text")"
+                                       type="@(field.Type is "date" or "datetime-local" or "number" ? field.Type : "text")"
+                                       readonly="@(Model.Id > 0 && field.Immutable)"
+                                       required="@field.Required"
                                        step="@(field.Type == "number" ? "any" : null)"
                                        min="@(field.Type == "number" ? "0" : null)"
                                        placeholder="@(field.Type == "image" ? "https://..." : null)"
                                        data-image-input="@(field.Key == imageField?.Key ? "true" : null)"
-                                       aria-describedby="@descriptionIds" maxlength="8000"
+                                       aria-describedby="@descriptionIds" maxlength="@field.MaxLength"
                                        class="input @(field.Type == "image" ? "font-mono text-xs" : "")" />
                             }
                         }

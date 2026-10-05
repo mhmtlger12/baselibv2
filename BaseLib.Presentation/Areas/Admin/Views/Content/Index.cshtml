@@ -26,10 +26,10 @@
             </thead>
             <tbody>
                 @foreach(var row in Model.Rows) {
-                var id = row["id"]!.GetValue<int>();
+                var id = int.Parse(row["id"]!, System.Globalization.CultureInfo.InvariantCulture);
 
                 <tr data-row>
-                    @foreach(var column in Model.Definition.Columns) { var value = row[column.Key]?.ToString() ?? "—";
+                    @foreach(var column in Model.Definition.Columns) { var value = row.GetValueOrDefault(column.Key) ?? "—";
 
                     <td>
                         @if(column.Key == "image" && Uri.TryCreate(value, UriKind.Absolute, out var imageUri) && imageUri.Scheme is "https" or "http") {
@@ -44,7 +44,7 @@
                         else if(column.Key is "status" or "level" or "categoryLabel") {
                         <span class="badge badge-admin">@value</span>
                         }
-                        else { @value }
+                        else { @(Model.Definition.Fields.FirstOrDefault(x => x.Key == column.Key)?.Options?.FirstOrDefault(x => x.Value == value)?.Label ?? value) }
 
                     </td>
                     }

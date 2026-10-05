@@ -4,11 +4,12 @@
     <partial name="_DialogHeader" />
     <form asp-action="Delete" asp-route-slug="@Model.Slug" asp-route-id="@Model.Id" method="post">
         <div class="px-6 py-5">
-            <p>@Model.Definition.Title içindeki bu kaydı silmek istediğinize emin misiniz?</p>
+            <div asp-validation-summary="All" role="alert"></div>
+            <p>@Model.Definition.Title içindeki bu kaydı çöp kutusuna taşımak istediğinize emin misiniz?</p>
         </div>
         <div class="flex justify-end gap-2 border-t border-navy-100 px-6 py-4">
             <a href="@ViewData["CancelUrl"]" class="btn-soft">İptal</a>
-            <button class="btn bg-rose-600 hover:bg-rose-700">Sil</button>
+            <button class="btn bg-rose-600 hover:bg-rose-700">Çöp kutusuna taşı</button>
         </div>
     </form>
 </dialog>

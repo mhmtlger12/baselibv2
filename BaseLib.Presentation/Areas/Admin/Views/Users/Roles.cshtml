@@ -1,0 +1,25 @@
+@model UserRolesModel
+@{ ViewData["Title"] = "Kullanıcı Rolleri"; ViewData["SaveLabel"] = "Rolleri kaydet"; }
+<dialog open data-edit-dialog aria-labelledby="edit-title" class="w-full max-w-xl rounded-2xl border border-navy-100 bg-white p-0 shadow-2xl">
+    <partial name="_DialogHeader" />
+    <form asp-action="Roles" asp-route-id="@Model.Id" method="post">
+        <div class="px-6 py-5">
+            <div asp-validation-summary="All" role="alert"></div>
+            <p class="mb-4 text-sm text-navy-700">@Model.Username kullanıcısının rol atamalarını düzenleyin.</p>
+            <fieldset>
+                <legend class="field-label">Roller</legend>
+                <div class="flex flex-wrap gap-4">
+                    @foreach (var role in Model.AvailableRoles)
+                    {
+                        <label class="inline-flex items-center gap-2 text-sm text-navy-700">
+                            <input type="checkbox" name="RoleIds" value="@role.Id" checked="@Model.RoleIds.Contains(role.Id)" class="h-5 w-5 accent-teal-600" />@role.Name
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="RoleIds"></span>
+                <p class="mt-2 text-sm text-muted-foreground">Hiçbir rol seçmezseniz mevcut aktif rol atamaları kaldırılır.</p>
+            </fieldset>
+        </div>
+        <partial name="_DialogFooter" />
+    </form>
+</dialog>

@@ -127,6 +127,88 @@ namespace Baselib.Data.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("Baselib.Entities.ContactMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactMessages", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "elif@example.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            Message = "Merhaba, KPSS puan hesaplamasında...",
+                            Name = "Elif Şahin",
+                            Status = "Yeni",
+                            Subject = "Puan hesaplama hakkında"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 17, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "burak@example.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            Message = "Sitenizde reklam vermek istiyorum.",
+                            Name = "Burak Demir",
+                            Status = "Okundu",
+                            Subject = "Reklam iş birliği"
+                        });
+                });
+
             modelBuilder.Entity("Baselib.Entities.Department", b =>
                 {
                     b.Property<int>("Id")
@@ -202,6 +284,201 @@ namespace Baselib.Data.Migrations
                             IsDeleted = false,
                             Name = "İnsan Kaynakları",
                             ParentDepartmentId = 1
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.ExamCountdown", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Target")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ExamCountdowns", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "YKS",
+                            SortOrder = 0,
+                            Target = new DateTime(2026, 6, 20, 10, 15, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "KPSS Ortaöğretim",
+                            SortOrder = 1,
+                            Target = new DateTime(2026, 9, 13, 10, 15, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "KPSS Önlisans",
+                            SortOrder = 2,
+                            Target = new DateTime(2026, 9, 6, 10, 15, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "KPSS Lisans",
+                            SortOrder = 3,
+                            Target = new DateTime(2026, 7, 19, 10, 15, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "DGS",
+                            SortOrder = 4,
+                            Target = new DateTime(2026, 7, 5, 10, 15, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "ALES",
+                            SortOrder = 5,
+                            Target = new DateTime(2026, 5, 10, 10, 15, 0, 0, DateTimeKind.Unspecified)
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.InformationPage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("varchar(8000)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("InformationPages", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Body = "Sınavlar, taban puanları ve kamu personel alım ilanlarını bir arada inceleyebileceğiniz bir platformdur.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Slug = "hakkimizda",
+                            Title = "Hakkımızda"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Body = "Sınavlar, taban puanları ve kamu personel alım ilanlarını bir arada inceleyebileceğiniz bir platformdur.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Slug = "gizlilik",
+                            Title = "Gizlilik Politikası"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Body = "Sınavlar, taban puanları ve kamu personel alım ilanlarını bir arada inceleyebileceğiniz bir platformdur.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Slug = "kullanim-kosullari",
+                            Title = "Kullanım Koşulları"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Body = "Sınavlar, taban puanları ve kamu personel alım ilanlarını bir arada inceleyebileceğiniz bir platformdur.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Slug = "ales",
+                            Title = "ALES"
                         });
                 });
 
@@ -803,6 +1080,296 @@ namespace Baselib.Data.Migrations
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Türkiye Adalet Akademisi"
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.JobCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsSelectable")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("ParentKey")
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("JobCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = false,
+                            Key = "memur",
+                            Label = "Memur",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "memur-a",
+                            Label = "A Grubu Memur (Kariyer Meslek)",
+                            ParentKey = "memur",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "memur-b",
+                            Label = "B Grubu Memur",
+                            ParentKey = "memur",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = false,
+                            Key = "sozlesmeli",
+                            Label = "Sözleşmeli Personel",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "sozlesmeli-kariyer",
+                            Label = "Kariyer Sözleşmeli Personel",
+                            ParentKey = "sozlesmeli",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "sozlesmeli-4b",
+                            Label = "4/B Sözleşmeli Personel",
+                            ParentKey = "sozlesmeli",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "sozlesmeli-kit",
+                            Label = "KİT Sözleşmeli Personel",
+                            ParentKey = "sozlesmeli",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "sozlesmeli-kurumsal",
+                            Label = "Kurumsal Sözleşmeli Personel",
+                            ParentKey = "sozlesmeli",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = false,
+                            Key = "akademik",
+                            Label = "Akademik Personel",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "akademik-uye",
+                            Label = "Öğretim Üyesi",
+                            ParentKey = "akademik",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "akademik-gorevli",
+                            Label = "Öğretim Görevlisi",
+                            ParentKey = "akademik",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "akademik-arastirma",
+                            Label = "Araştırma Görevlisi",
+                            ParentKey = "akademik",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = false,
+                            Key = "isci",
+                            Label = "İşçi",
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "isci-kariyer",
+                            Label = "Kariyer İşçi",
+                            ParentKey = "isci",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "isci-surekli",
+                            Label = "Sürekli İşçi",
+                            ParentKey = "isci",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "isci-gecici",
+                            Label = "Geçici İşçi",
+                            ParentKey = "isci",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "isci-engelli",
+                            Label = "Engelli İşçi",
+                            ParentKey = "isci",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "isci-eski-hukumlu",
+                            Label = "Eski Hükümlü İşçi",
+                            ParentKey = "isci",
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "askeri",
+                            Label = "Askeri Personel",
+                            SortOrder = 5
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSelectable = true,
+                            Key = "yargi",
+                            Label = "Yargı Mensubu (Hakim - Savcı)",
+                            SortOrder = 6
                         });
                 });
 
@@ -2416,6 +2983,58 @@ namespace Baselib.Data.Migrations
                     b.HasData(
                         new
                         {
+                            Id = 45,
+                            ActionName = "Read",
+                            CRUDActionType = 1,
+                            Code = "Content_Read",
+                            ControllerName = "Content",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSystem = true,
+                            Name = "Site İçeriği Görüntüle"
+                        },
+                        new
+                        {
+                            Id = 46,
+                            ActionName = "Create",
+                            CRUDActionType = 2,
+                            Code = "Content_Create",
+                            ControllerName = "Content",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSystem = true,
+                            Name = "Site İçeriği Oluştur"
+                        },
+                        new
+                        {
+                            Id = 47,
+                            ActionName = "Update",
+                            CRUDActionType = 3,
+                            Code = "Content_Update",
+                            ControllerName = "Content",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSystem = true,
+                            Name = "Site İçeriği Güncelle"
+                        },
+                        new
+                        {
+                            Id = 48,
+                            ActionName = "Delete",
+                            CRUDActionType = 6,
+                            Code = "Content_Delete",
+                            ControllerName = "Content",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSystem = true,
+                            Name = "Site İçeriği Sil"
+                        },
+                        new
+                        {
                             Id = 43,
                             ActionName = "ResetPassword",
                             CRUDActionType = 3,
@@ -3032,6 +3651,183 @@ namespace Baselib.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Baselib.Entities.PublicComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<bool>("HideName")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Likes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Page")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("Page", "Status");
+
+                    b.ToTable("PublicComments", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Author = "Ahmet Y.",
+                            Body = "KPSS lisans için bu puanlar yeterli mi? Bilgisayar mühendisliği düşünüyorum.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 3,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            Status = "Onaylı"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Author = "Ayşe K.",
+                            Body = "Geçen dönem bu puanla atananlar oldu, ama kadro sayısına da bakmak lazım.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 1,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            ParentId = 1,
+                            Status = "Onaylı"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Author = "Ahmet Y.",
+                            Body = "Teşekkürler, kadro sayısına bakayım.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 0,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            ParentId = 2,
+                            Status = "Onaylı"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Author = "Mehmet T.",
+                            Body = "Kurum tercihine göre değişir. Ankara dışını da işaretlersen şansın artar.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 2,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            ParentId = 1,
+                            Status = "Onaylı"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Author = "Zeynep D.",
+                            Body = "Sağlık Bakanlığı kadrolarında taban puan biraz daha düşük görünüyor.",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 4,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            Status = "Onaylı"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Author = "Ahmet Y.",
+                            Body = "KPSS lisans için bu puanlar yeterli mi?",
+                            CreatedDate = new DateTime(2026, 9, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 0,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            Status = "Onaylı"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Author = "Zeynep D.",
+                            Body = "Sağlık Bakanlığı kadrolarında taban puan daha düşük görünüyor.",
+                            CreatedDate = new DateTime(2026, 9, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 0,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            Status = "Beklemede"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Author = "guest_4821",
+                            Body = "ucuz takipçi -> bit.ly/xxx",
+                            CreatedDate = new DateTime(2026, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HideName = false,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Likes = 0,
+                            Page = "/taban-puanlari/kpss-lisans/bolum/5",
+                            Status = "Spam"
+                        });
+                });
+
             modelBuilder.Entity("Baselib.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -3165,6 +3961,26 @@ namespace Baselib.Data.Migrations
                     b.ToTable("RolePermissions");
 
                     b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 45
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 46
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 47
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 48
+                        },
                         new
                         {
                             RoleId = 1,
@@ -3387,6 +4203,1012 @@ namespace Baselib.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Baselib.Entities.ScoreCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("ScoreCategories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "kpss-lisans",
+                            Label = "Taban Puanı",
+                            SortOrder = 0,
+                            Title = "KPSS Lisans"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "kpss-onlisans",
+                            Label = "Taban Puanı",
+                            SortOrder = 1,
+                            Title = "KPSS Önlisans"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "kpss-orta",
+                            Label = "Taban Puanı",
+                            SortOrder = 2,
+                            Title = "KPSS Ortaöğretim"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "yks",
+                            Label = "Taban Puanı",
+                            SortOrder = 3,
+                            Title = "YKS"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "dgs",
+                            Label = "Taban Puanı",
+                            SortOrder = 4,
+                            Title = "DGS"
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.ScoreEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Institution")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasPrecision(10, 5)
+                        .HasColumnType("decimal(10,5)");
+
+                    b.Property<decimal>("MinScore")
+                        .HasPrecision(10, 5)
+                        .HasColumnType("decimal(10,5)");
+
+                    b.Property<string>("Qualification")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<int>("Quota")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScoreCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ScorePeriodId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudyProgramId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Vacant")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScorePeriodId");
+
+                    b.HasIndex("StudyProgramId");
+
+                    b.HasIndex("ScoreCategoryId", "StudyProgramId", "ScorePeriodId");
+
+                    b.ToTable("ScoreEntries", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            City = "Ankara",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Adalet Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 89.21876m,
+                            MinScore = 80.95434m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 12,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 2,
+                            City = "İstanbul",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Sağlık Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 81.21216m,
+                            MinScore = 80.99622m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 8,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 3,
+                            City = "İzmir",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Milli Eğitim Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 84.7719m,
+                            MinScore = 78.4512m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 5,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            City = "Bursa",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 83.4102m,
+                            MinScore = 79.1033m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 6,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 5,
+                            City = "Ankara",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Hazine ve Maliye Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 90.0021m,
+                            MinScore = 82.331m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 10,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 6,
+                            City = "Antalya",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Ulaştırma ve Altyapı Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 82.1109m,
+                            MinScore = 76.8801m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 4,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 2
+                        },
+                        new
+                        {
+                            Id = 7,
+                            City = "Konya",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Gençlik ve Spor Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 80.9931m,
+                            MinScore = 77.5522m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 3,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 8,
+                            City = "Samsun",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Tarım ve Orman Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 81.4407m,
+                            MinScore = 75.2201m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 7,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            City = "Ankara",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "İçişleri Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 91.2298m,
+                            MinScore = 83.7712m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 9,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 10,
+                            City = "Kocaeli",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Sanayi ve Teknoloji Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 85.5533m,
+                            MinScore = 79.9012m,
+                            Qualification = "3607 - Bilgisayar Müh.",
+                            Quota = 5,
+                            Rank = 0,
+                            ScoreCategoryId = 1,
+                            ScorePeriodId = 1,
+                            StudyProgramId = 5,
+                            Title = "Mühendis",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 11,
+                            City = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Sağlık Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 88.42m,
+                            MinScore = 88.42m,
+                            Qualification = "",
+                            Quota = 0,
+                            Rank = 1240,
+                            ScoreCategoryId = 2,
+                            ScorePeriodId = 5,
+                            StudyProgramId = 12,
+                            Title = "",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 12,
+                            City = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Adalet Bakanlığı",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 82.15m,
+                            MinScore = 82.15m,
+                            Qualification = "",
+                            Quota = 0,
+                            Rank = 3980,
+                            ScoreCategoryId = 2,
+                            ScorePeriodId = 5,
+                            StudyProgramId = 21,
+                            Title = "",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 13,
+                            City = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "İTÜ",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 342.8m,
+                            MinScore = 342.8m,
+                            Qualification = "",
+                            Quota = 0,
+                            Rank = 210,
+                            ScoreCategoryId = 5,
+                            ScorePeriodId = 5,
+                            StudyProgramId = 5,
+                            Title = "",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 14,
+                            City = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Ege Üniversitesi",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 318.5m,
+                            MinScore = 318.5m,
+                            Qualification = "",
+                            Quota = 0,
+                            Rank = 640,
+                            ScoreCategoryId = 5,
+                            ScorePeriodId = 5,
+                            StudyProgramId = 7,
+                            Title = "",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 15,
+                            City = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Hacettepe Üniversitesi",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 541.2m,
+                            MinScore = 541.2m,
+                            Qualification = "",
+                            Quota = 0,
+                            Rank = 850,
+                            ScoreCategoryId = 4,
+                            ScorePeriodId = 5,
+                            StudyProgramId = 22,
+                            Title = "",
+                            Vacant = 0
+                        },
+                        new
+                        {
+                            Id = 16,
+                            City = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Institution = "Ankara Üniversitesi",
+                            IsActive = true,
+                            IsDeleted = false,
+                            MaxScore = 498.6m,
+                            MinScore = 498.6m,
+                            Qualification = "",
+                            Quota = 0,
+                            Rank = 5400,
+                            ScoreCategoryId = 4,
+                            ScorePeriodId = 5,
+                            StudyProgramId = 8,
+                            Title = "",
+                            Vacant = 0
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.ScorePeriod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("ScorePeriods", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "2024/2",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "2024/1",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "2023/2",
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "2023/1",
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "2024",
+                            SortOrder = 4
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.SiteAdvertisement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("LinkUrl")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SiteAdvertisements", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ImageUrl = "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=250&fit=crop",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LinkUrl = "https://reklam.example.com",
+                            Name = "Anasayfa Üst Banner",
+                            Position = "home"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ImageUrl = "",
+                            IsActive = true,
+                            IsDeleted = false,
+                            LinkUrl = "https://reklam.example.com",
+                            Name = "Sidebar Reklamı",
+                            Position = "sidebar"
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.SiteNavigation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SiteNavigation", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "Ana Sayfa",
+                            SortOrder = 0,
+                            Url = "/"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "İlanlar",
+                            SortOrder = 1,
+                            Url = "/ilanlar"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "KPSS",
+                            SortOrder = 2,
+                            Url = "/taban-puanlari/kpss-lisans"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "YKS",
+                            SortOrder = 3,
+                            Url = "/taban-puanlari/yks"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "ALES",
+                            SortOrder = 4,
+                            Url = "/bilgi/ales"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "DGS",
+                            SortOrder = 5,
+                            Url = "/taban-puanlari/dgs"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Label = "İletişim",
+                            SortOrder = 6,
+                            Url = "/iletisim"
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.SiteNews", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SiteNews", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/kpss-lisans",
+                            PublishedAt = new DateTime(2024, 9, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 0,
+                            Title = "KPSS 2024/2 Atama Taban Puanları"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/kpss-lisans",
+                            PublishedAt = new DateTime(2024, 9, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 1,
+                            Title = "Bilgisayar Mühendisliği YKS Sıralamaları"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/kpss-lisans",
+                            PublishedAt = new DateTime(2024, 9, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 2,
+                            Title = "Adalet Öğretmenliği Atama Puanları"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/kpss-lisans",
+                            PublishedAt = new DateTime(2024, 9, 11, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 3,
+                            Title = "DGS Hemşirelik Geçiş Puanları"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "https://www.osym.gov.tr",
+                            PublishedAt = new DateTime(2024, 9, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "osym",
+                            SortOrder = 0,
+                            Title = "2024 KPSS tercih kılavuzu yayımlandı"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "https://www.osym.gov.tr",
+                            PublishedAt = new DateTime(2024, 9, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "osym",
+                            SortOrder = 1,
+                            Title = "ALES/3 başvuruları başladı"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "https://www.osym.gov.tr",
+                            PublishedAt = new DateTime(2024, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "osym",
+                            SortOrder = 2,
+                            Title = "YKS ek yerleştirme takvimi açıklandı"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Category = "YKS",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/yks/bolum/5",
+                            PublishedAt = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 1,
+                            Title = "Bilgisayar Mühendisliği 2024 Taban Puanı"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Category = "KPSS",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/kpss-onlisans",
+                            PublishedAt = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 2,
+                            Title = "KPSS Önlisans Atama Puanları"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Category = "DGS",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "/taban-puanlari/dgs/bolum/7",
+                            PublishedAt = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "recent",
+                            SortOrder = 3,
+                            Title = "Hemşirelik DGS Geçiş Puanları"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "https://osym.gov.tr",
+                            PublishedAt = new DateTime(2026, 2, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "osym",
+                            SortOrder = 0,
+                            Title = "2026 YKS Başvuru Kılavuzu Yayımlandı"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Link = "https://osym.gov.tr",
+                            PublishedAt = new DateTime(2026, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "osym",
+                            SortOrder = 0,
+                            Title = "KPSS 2026 Sınav Takvimi Açıklandı"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Category = "",
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = false,
+                            IsDeleted = false,
+                            Link = "https://osym.gov.tr",
+                            PublishedAt = new DateTime(2026, 7, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Section = "osym",
+                            SortOrder = 0,
+                            Title = "DGS Tercih İşlemleri Başladı"
+                        });
+                });
+
             modelBuilder.Entity("Baselib.Entities.Slider", b =>
                 {
                     b.Property<int>("Id")
@@ -3465,6 +5287,326 @@ namespace Baselib.Data.Migrations
                             LinkUrl = "/taban-puanlari/dgs",
                             Order = 3,
                             Title = "DGS ile Lisans Tamamlama Fırsatları"
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.StudyLevel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("StudyLevels", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "lisans",
+                            Label = "Lisans",
+                            SortOrder = 0
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "onlisans",
+                            Label = "Önlisans",
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Key = "ortaogretim",
+                            Label = "Ortaöğretim",
+                            SortOrder = 2
+                        });
+                });
+
+            modelBuilder.Entity("Baselib.Entities.StudyProgram", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("StudyLevelId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudyLevelId");
+
+                    b.ToTable("StudyPrograms", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Acil Yardım ve Afet Yönetimi",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Adalet Öğretmenliği",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Aktüerya",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Alman Dili ve Edebiyatı",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bilgisayar Mühendisliği",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Elektrik-Elektronik Mühendisliği",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hemşirelik",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hukuk",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "İşletme",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Psikoloji",
+                            StudyLevelId = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Adalet",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bilgisayar Programcılığı",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Büro Yönetimi ve Yönetici Asistanlığı",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "İlk ve Acil Yardım",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Muhasebe ve Vergi Uygulamaları",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tıbbi Dokümantasyon ve Sekreterlik",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Büro Memurluğu",
+                            StudyLevelId = 3
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Veri Hazırlama ve Kontrol İşletmeni",
+                            StudyLevelId = 3
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Zabıt Katipliği",
+                            StudyLevelId = 3
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hizmetli",
+                            StudyLevelId = 3
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Büro Yönetimi",
+                            StudyLevelId = 2
+                        },
+                        new
+                        {
+                            Id = 22,
+                            CreatedDate = new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tıp",
+                            StudyLevelId = 1
                         });
                 });
 
@@ -3675,6 +5817,16 @@ namespace Baselib.Data.Migrations
                     b.Navigation("Permission");
                 });
 
+            modelBuilder.Entity("Baselib.Entities.PublicComment", b =>
+                {
+                    b.HasOne("Baselib.Entities.PublicComment", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("Baselib.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Baselib.Entities.User", "User")
@@ -3703,6 +5855,44 @@ namespace Baselib.Data.Migrations
                     b.Navigation("Permission");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("Baselib.Entities.ScoreEntry", b =>
+                {
+                    b.HasOne("Baselib.Entities.ScoreCategory", "ScoreCategory")
+                        .WithMany()
+                        .HasForeignKey("ScoreCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Baselib.Entities.ScorePeriod", "ScorePeriod")
+                        .WithMany()
+                        .HasForeignKey("ScorePeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Baselib.Entities.StudyProgram", "StudyProgram")
+                        .WithMany()
+                        .HasForeignKey("StudyProgramId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ScoreCategory");
+
+                    b.Navigation("ScorePeriod");
+
+                    b.Navigation("StudyProgram");
+                });
+
+            modelBuilder.Entity("Baselib.Entities.StudyProgram", b =>
+                {
+                    b.HasOne("Baselib.Entities.StudyLevel", "StudyLevel")
+                        .WithMany()
+                        .HasForeignKey("StudyLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("StudyLevel");
                 });
 
             modelBuilder.Entity("Baselib.Entities.User", b =>

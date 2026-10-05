@@ -5,13 +5,23 @@
     </span>Son Eklenenler</h2>
 
     <ul class="space-y-3 p-4">
-        @foreach(var item in Site.Content.RecentItems) {
+        @foreach(var item in (await Site.GetAsync(Context.RequestAborted)).RecentItems) {
         <li>
-            <a href="/taban-puanlari/kpss-lisans" class="group block border-l-2 border-transparent pl-3 hover:border-teal-500">
+            <a href="@item.Link" class="group block border-l-2 border-transparent pl-3 hover:border-teal-500">
             <p class="text-sm font-medium text-navy-700 group-hover:text-teal-700">@item.Title</p>
             <p class="mt-0.5 text-xs text-muted-foreground">@item.Date</p>
             </a>
         </li>
+        }
+    </ul>
+</section>
+
+<section class="mt-6 overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+    <h2 class="border-b border-border px-4 py-3 text-sm font-semibold text-navy-800">ÖSYM Duyuruları</h2>
+    <ul class="space-y-3 p-4">
+        @foreach (var item in (await Site.GetAsync(Context.RequestAborted)).Announcements)
+        {
+            <li><a href="@item.Link" class="text-sm font-medium text-navy-700">@item.Title</a><p class="text-xs text-muted-foreground">@item.Date</p></li>
         }
     </ul>
 </section>

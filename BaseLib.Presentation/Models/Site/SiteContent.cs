@@ -1,30 +1,13 @@
 namespace BaseLib.Presentation.Models.Site;
-public sealed class SiteContent
-{
-    public List<NavLink> NavLinks { get; init; } = [];
-    public List<Countdown> Countdowns { get; init; } = [];
-    public List<ScoreCard> ScoreCards { get; init; } = [];
-    public List<NewsItem> RecentItems { get; init; } = [];
-    public List<NewsItem> Announcements { get; init; } = [];
-    public List<LevelTab> LevelTabs { get; init; } = [];
-    public List<StudyDepartment> Departments { get; init; } = [];
-    public List<string> DetailPeriods { get; init; } = [];
-    public List<ScoreRow> ScoreRows { get; init; } = [];
-    public List<JobCategory> JobCategories { get; init; } = [];
-    public List<SiteComment> Comments { get; init; } = [];
-}
-public sealed record NavLink(string Key, string Label);
-public sealed record Countdown(string Key, string Label, DateTime Target);
-public sealed record ScoreCard(string Key, string Title, string Category, string Href);
-public sealed record NewsItem(int Id, string Title, string Date);
-public sealed record LevelTab(string Key, string Label);
-public sealed record StudyDepartment(int Id, string Name, string Level);
-public sealed record ScoreRow(int Id, string Institution, string City, string Title, int Quota, int Vacant, decimal MinScore, decimal MaxScore, string Qualification);
 public sealed record JobCategory(string Key, string Label, List<JobCategory>? Children);
 public sealed record JobListing(int Id, string Institution, string Summary, string CategoryKey, string CategoryLabel, DateTime PublishedAt, string StartDate, string EndDate, string? SourceUrl = null, string? PdfUrl = null, string? InstitutionLogoUrl = null)
 {
     public static JobListing FromDto(Baselib.Business.DTOs.JobListingDto dto) =>
         new(dto.Id, dto.Institution, dto.Summary, dto.CategoryKey, dto.CategoryLabel, dto.PublishedAt,
-            dto.StartDate, dto.EndDate, dto.SourceUrl, dto.PdfUrl, dto.InstitutionLogoUrl);
+            DisplayDate(dto.StartDate), DisplayDate(dto.EndDate), dto.SourceUrl, dto.PdfUrl, dto.InstitutionLogoUrl);
+
+    private static string DisplayDate(string value) =>
+        DateOnly.TryParseExact(value, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out var date)
+            ? date.ToString("d MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("tr-TR")) : value;
 }
-public sealed record SiteComment(int Id, string Author, string Time, string Body, int Likes, List<SiteComment> Replies);

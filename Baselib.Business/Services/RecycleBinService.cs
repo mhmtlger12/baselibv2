@@ -1,4 +1,5 @@
 using Baselib.Business.DTOs;
+using Baselib.Business.Content;
 using Baselib.Business.Interfaces;
 using Baselib.Core.Enums;
 using Baselib.Core.Interfaces;
@@ -17,6 +18,7 @@ public sealed class RecycleBinService(
     IEntityRepository<Slider> sliders,
     IEntityRepository<JobListing> jobs,
     IEntityRepository<Institution> institutions,
+    IEnumerable<IContentModule> contentModules,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider) : IRecycleBinService
 {
@@ -32,11 +34,17 @@ public sealed class RecycleBinService(
         items.AddRange(await ReadAsync(sliders, RecycleBinType.Slider, item => item.Title, cancellationToken));
         items.AddRange(await ReadAsync(jobs, RecycleBinType.JobListing, item => item.Institution + " — " + item.Summary, cancellationToken));
         items.AddRange(await ReadAsync(institutions, RecycleBinType.Institution, item => item.Name, cancellationToken));
+        foreach (var module in contentModules) items.AddRange(await module.DeletedAsync(cancellationToken));
         return DataResult<IEnumerable<RecycleBinItemDto>>.Ok(items.OrderByDescending(item => item.DeletedDate));
     }
 
     public async Task<IResult> RestoreAsync(string type, int id, CancellationToken cancellationToken = default)
     {
+        if (type.StartsWith("Content:", StringComparison.Ordinal))
+        {
+            var module = contentModules.FirstOrDefault(x => x.Slug == type[8..]);
+            return module is null ? Result.NotFound() : await module.RestoreAsync(id, cancellationToken);
+        }
         if (!RecycleBinTypeExtensions.TryParse(type, out var binType))
             return Result.BadRequest(Messages.RecycleBin.InvalidType);
         return await RestoreAsync(binType, id, cancellationToken);

@@ -18,7 +18,7 @@ public sealed class UsersController(
         {
             var user = await users.GetAsync(id, ct);
             model = new() { Id = id, Username = user.Username, Email = user.Email, FirstName = user.FirstName,
-                LastName = user.LastName, Phone = user.Phone, DepartmentId = user.DepartmentId, RoleIds = user.RoleIds, IsActive = user.IsActive };
+                LastName = user.LastName, Phone = user.Phone, DepartmentId = user.DepartmentId, IsActive = user.IsActive };
         }
         await LoadOptionsAsync(model, ct);
         return View(model);
@@ -30,7 +30,7 @@ public sealed class UsersController(
         {
             if (model.Id == 0)
                 await users.CreateAsync(new CreateUserDto { Username = model.Username, Email = model.Email, Password = model.Password!,
-                    FirstName = model.FirstName, LastName = model.LastName, Phone = model.Phone, DepartmentId = model.DepartmentId, RoleIds = model.RoleIds }, ct);
+                    FirstName = model.FirstName, LastName = model.LastName, Phone = model.Phone, DepartmentId = model.DepartmentId }, ct);
             else
             {
                 await users.UpdateAsync(model.Id, new UpdateUserDto
@@ -39,12 +39,29 @@ public sealed class UsersController(
                     FirstName = model.FirstName, LastName = model.LastName, Phone = model.Phone,
                     DepartmentId = model.DepartmentId, IsActive = model.IsActive
                 }, ct);
-                try { await system.AssignRolesAsync(model.Id, model.RoleIds, ct); }
-                catch (ApiException error) when (error.StatusCode != 401)
-                { throw new ApiException(error.StatusCode == 403 ? 400 : error.StatusCode, "Kullanıcı bilgileri kaydedildi; rol atamaları kaydedilemedi. " + error.Message); }
             }
-        })) return Saved();
+        })) return Saved(model.Id == 0 ? "Kullanıcı oluşturuldu. Rol atamak için Roller ekranını açın." : "Kullanıcı bilgileri kaydedildi.");
         await LoadOptionsAsync(model, ct);
+        return View(model);
+    }
+    [HttpGet]
+    public async Task<IActionResult> Roles(int id, CancellationToken ct)
+    {
+        var user = await users.GetAsync(id, ct);
+        return View(new UserRolesModel
+        {
+            Id = id, Username = user.Username, RoleIds = user.RoleIds,
+            AvailableRoles = await roles.ListSelectOptionsAsync(ct)
+        });
+    }
+    [HttpPost]
+    public async Task<IActionResult> Roles(int id, UserRolesModel model, CancellationToken ct)
+    {
+        model.Id = id;
+        if (ModelState.IsValid && await ExecuteAsync(() => system.AssignRolesAsync(id, model.RoleIds, ct)))
+            return Saved("Kullanıcının rolleri kaydedildi.");
+        model.Username = (await users.GetAsync(id, ct)).Username;
+        model.AvailableRoles = await roles.ListSelectOptionsAsync(ct);
         return View(model);
     }
     [HttpGet]
@@ -71,7 +88,6 @@ public sealed class UsersController(
     }
     private async Task LoadOptionsAsync(UserEditModel model, CancellationToken ct)
     {
-        model.AvailableRoles = await roles.ListSelectOptionsAsync(ct);
         model.Departments = await departments.ListSelectOptionsAsync(ct);
     }
 }

@@ -1,8 +1,19 @@
 @model string
-<div class="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-navy-300 bg-navy-50/70 px-4 text-center @Model" aria-label="Reklam alanı">
-    <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-400 via-navy-300 to-teal-400">
-    </span>
-    <span class="rounded-full border border-navy-200 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-navy-500">Sponsorlu içerik</span>
-    <span class="mt-2 text-sm font-semibold text-navy-700">Reklam Alanı</span>
-    <span class="mt-1 text-xs text-muted-foreground">Reklam</span>
-</div>
+@inject ISiteContentService Site
+@{
+    var position = Context.Request.Path == "/" ? "home" : "sidebar";
+    var ads = (await Site.GetAsync(Context.RequestAborted)).Ads.Where(x => x.Position == position && !string.IsNullOrWhiteSpace(x.ImageUrl));
+}
+@foreach (var ad in ads)
+{
+    <aside class="overflow-hidden rounded-xl border border-border bg-white @Model" aria-label="Reklam">
+        @if (!string.IsNullOrWhiteSpace(ad.LinkUrl))
+        {
+            <a href="@ad.LinkUrl" rel="sponsored noopener" class="block h-full"><img src="@ad.ImageUrl" alt="@ad.Name" loading="lazy" class="h-full w-full object-cover" /></a>
+        }
+        else
+        {
+            <img src="@ad.ImageUrl" alt="@ad.Name" loading="lazy" class="h-full w-full object-cover" />
+        }
+    </aside>
+}

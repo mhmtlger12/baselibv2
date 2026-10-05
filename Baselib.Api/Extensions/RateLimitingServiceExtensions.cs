@@ -7,6 +7,7 @@ namespace Baselib.Api.Extensions;
 
 public static class RateLimitPolicies
 {
+    public const string SiteSubmission = "site-submission";
     public const string AuthLogin = "auth-login";
     public const string AuthRegister = "auth-register";
     public const string AuthRefresh = "auth-refresh";
@@ -19,6 +20,7 @@ public static class RateLimitingServiceExtensions
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy(RateLimitPolicies.SiteSubmission, context => CreateLimiter(context, 5, TimeSpan.FromMinutes(1)));
             options.AddPolicy(RateLimitPolicies.AuthLogin, context => CreateLimiter(
                 context,
                 permitLimit: 5,

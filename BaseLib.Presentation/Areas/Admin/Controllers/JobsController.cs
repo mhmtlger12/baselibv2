@@ -1,3 +1,4 @@
+using System.Globalization;
 using Baselib.Business.DTOs;
 using BaseLib.Presentation.Areas.Admin.Models;
 using BaseLib.Presentation.Services.Api;
@@ -10,18 +11,20 @@ namespace BaseLib.Presentation.Areas.Admin.Controllers;
 [Route("Admin/Jobs")]
 public sealed class JobsController(
     ICrudApiService<JobListingDto, SaveJobListingDto, SaveJobListingDto> jobs,
-    ICrudApiService<InstitutionDto, SaveInstitutionDto, SaveInstitutionDto> institutions) : AdminController
+    ICrudApiService<InstitutionDto, SaveInstitutionDto, SaveInstitutionDto> institutions,
+    IPublicJobApiService publicJobs) : AdminController
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken ct) => View(await jobs.ListAsync(ct));
 
+    [HttpGet("Categories")]
+    public IActionResult Categories() => RedirectToAction("Index", "Content", new { slug = "job-categories" });
+
     [HttpGet("Edit/{id:int?}")]
     public async Task<IActionResult> Edit(int id, CancellationToken ct)
     {
-        if (id == 0) return View(new JobListingEditModel { Institutions = await institutions.ListAsync(ct) });
-        var item = await jobs.GetAsync(id, ct);
-        var model = ToModel(item);
-        model.Institutions = await institutions.ListAsync(ct);
+        var model = id == 0 ? new JobListingEditModel() : ToModel(await jobs.GetAsync(id, ct));
+        await LoadOptionsAsync(model, ct);
         return View(model);
     }
 
@@ -29,25 +32,12 @@ public sealed class JobsController(
     public async Task<IActionResult> Edit(int id, JobListingEditModel model, CancellationToken ct)
     {
         model.Id = id;
-        model.Institutions = await institutions.ListAsync(ct);
-
-        // The form supplies only the ID; resolve the required API name on the server.
-        ModelState.Remove(nameof(model.Institution));
-        model.Institution = string.Empty;
-        if (model.InstitutionId is int institutionId)
-        {
-            var institution = model.Institutions.FirstOrDefault(x => x.Id == institutionId && x.IsActive);
-            if (institution is not null) model.Institution = institution.Name;
-        }
-        else if (id != 0)
-        {
-            // Preserve legacy listings that have a name but no institution relationship.
-            var existing = await jobs.GetAsync(id, ct);
-            if (existing.InstitutionId is null) model.Institution = existing.Institution;
-        }
-
-        if (string.IsNullOrWhiteSpace(model.Institution))
+        await LoadOptionsAsync(model, ct);
+        if (model.InstitutionId is int institutionId && !model.Institutions.Any(x => x.Id == institutionId && x.IsActive) ||
+            id == 0 && model.InstitutionId is null)
             ModelState.AddModelError(nameof(model.InstitutionId), "Lütfen geçerli ve aktif bir kurum seçin.");
+        if (!model.Categories.Any(x => x.Key == model.CategoryKey && x.IsSelectable))
+            ModelState.AddModelError(nameof(model.CategoryKey), "Lütfen geçerli ve aktif bir ilan kategorisi seçin.");
 
         if (!ModelState.IsValid) return View(model);
         var saved = await ExecuteAsync(() => id == 0 ? jobs.CreateAsync(model, ct) : jobs.UpdateAsync(id, model, ct));
@@ -69,11 +59,24 @@ public sealed class JobsController(
         return View("Delete", new DeleteModel(id, item.Institution));
     }
 
+    private async Task LoadOptionsAsync(JobListingEditModel model, CancellationToken ct)
+    {
+        model.Institutions = await institutions.ListAsync(ct);
+        model.Categories = await publicJobs.GetCategoriesAsync(ct);
+        if (model.Id > 0 && model.InstitutionId is null)
+            model.Institution = (await jobs.GetAsync(model.Id, ct)).Institution;
+    }
+
+    private static string DateInput(string value) =>
+        DateOnly.TryParseExact(value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _) ? value : "";
+
     private static JobListingEditModel ToModel(JobListingDto item) => new()
     {
         Id = item.Id, InstitutionId = item.InstitutionId, Institution = item.Institution, Summary = item.Summary,
         CategoryKey = item.CategoryKey, CategoryLabel = item.CategoryLabel,
-        PublishedAt = item.PublishedAt, StartDate = item.StartDate, EndDate = item.EndDate,
+        PublishedAt = item.PublishedAt, StartDate = DateInput(item.StartDate), EndDate = DateInput(item.EndDate),
+        LegacyDates = DateInput(item.StartDate) == "" || DateInput(item.EndDate) == ""
+            ? $"Eski tarih bilgisi: {item.StartDate} – {item.EndDate}. Kaydetmeden önce yıl içeren tarihleri seçin." : null,
         SourceUrl = item.SourceUrl, PdfUrl = item.PdfUrl, IsActive = item.IsActive
     };
 }

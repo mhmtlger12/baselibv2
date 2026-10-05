@@ -9,14 +9,15 @@ public sealed class HomeController(ISiteContentService site, IPublicJobApiServic
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         var listings = await jobs.GetPublishedAsync("all", null, ct);
-        return View(new HomePage(site.Content.Countdowns, site.Content.ScoreCards,
+        var data = await site.GetAsync(ct);
+        return View(new HomePage(data.Countdowns, data.ScoreCards,
             listings.Select(JobListing.FromDto).ToArray()));
     }
     [HttpGet("/arama")]
     public async Task<IActionResult> Search(string? q, CancellationToken ct)
     {
         var listings = await jobs.GetPublishedAsync("all", null, ct);
-        return View(site.Search(q, listings.Select(JobListing.FromDto).ToArray()));
+        return View(await site.SearchAsync(q, listings.Select(JobListing.FromDto).ToArray(), ct));
     }
     [Route("/hata/{code:int?}")]
     public IActionResult Error(int code = 500)

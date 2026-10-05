@@ -57,6 +57,7 @@
                     </td>
                     <td>
                         <partial name="_RowActions" model="item.Id" />
+                        <a asp-action="Roles" asp-route-id="@item.Id" class="btn-soft" aria-label="@($"{item.Username} için rolleri yönet")">Roller</a>
                     </td>
                 </tr>
                 }

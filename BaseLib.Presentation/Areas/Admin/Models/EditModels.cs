@@ -6,8 +6,6 @@ public sealed class UserEditModel : UpdateUserDto, IValidatableObject
 {
     public int Id { get; set; }
     [StringLength(128)] public string? Password { get; set; }
-    [MaxLength(100)] public List<int> RoleIds { get; set; } = [];
-    [ValidateNever] public List<SelectOptionDto> AvailableRoles { get; set; } = [];
     [ValidateNever] public List<SelectOptionDto> Departments { get; set; } = [];
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -17,6 +15,13 @@ public sealed class UserEditModel : UpdateUserDto, IValidatableObject
         if (!string.IsNullOrEmpty(Password) && (Password.Length < 12 || !Password.Any(char.IsUpper) || !Password.Any(char.IsLower) || !Password.Any(char.IsDigit) || !Password.Any(x => !char.IsLetterOrDigit(x))))
             yield return new("Şifre en az 12 karakter; büyük harf, küçük harf, rakam ve özel karakter içermelidir.", [nameof(Password)]);
     }
+}
+public sealed class UserRolesModel
+{
+    public int Id { get; set; }
+    [ValidateNever] public string Username { get; set; } = "";
+    [MaxLength(100)] public List<int> RoleIds { get; set; } = [];
+    [ValidateNever] public List<SelectOptionDto> AvailableRoles { get; set; } = [];
 }
 public sealed class RoleEditModel : UpdateRoleDto
 {

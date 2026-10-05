@@ -17,7 +17,7 @@
             @for(var i = 0; i < Model.Countdowns.Count; i++)
             {
             var item = Model.Countdowns[i];
-            var remaining = Math.Max(0, (int)Math.Ceiling((item.Target - DateTime.Now).TotalDays));
+            var remaining = Math.Max(0, (int)Math.Ceiling((new DateTimeOffset(DateTime.SpecifyKind(item.Target, DateTimeKind.Unspecified), TimeSpan.FromHours(3)) - DateTimeOffset.UtcNow).TotalDays));
 
             <div class="group relative flex flex-col justify-between overflow-hidden rounded-xl border p-4 text-navy-900 transition-all hover:-translate-y-0.5 hover:shadow-md @SiteStyle.Pastels[i % 5]">
                 <span aria-hidden="true" class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-teal-400 to-navy-600">
